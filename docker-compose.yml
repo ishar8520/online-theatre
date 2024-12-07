@@ -10,8 +10,6 @@ services:
     depends_on:
       - redis
       - elsticsearch
-    volumes:
-      - redis_vol:/opt/
     networks:
       - movies-network
   
@@ -20,6 +18,8 @@ services:
     container_name: redis
     env_file:
       - .env
+    volumes:
+      - redis_vol:/data
     networks:
       - movies-network
 
