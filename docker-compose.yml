@@ -1,0 +1,42 @@
+version: '3'
+services:
+  movies:
+    build: ./
+    container_name: movies
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    depends_on:
+      - redis
+      - elsticsearch
+    volumes:
+      - redis_vol:/opt/
+    networks:
+      - movies-network
+  
+  redis:
+    image: redis
+    container_name: redis
+    env_file:
+      - .env
+    networks:
+      - movies-network
+
+  elsticsearch:
+    image: elasticsearch:8.6.2
+    container_name: elastic
+    env_file:
+      - .env
+    environment:
+      - discovery.type=${ELASTIC_DISCOVERY_TYPE}
+      - xpack.security.enabled=${ELASTIC_XPACK_SECURITY_ENABLED}
+      - ES_JAVA_OPTS=${ELASTIC_JAVA_OPTS}
+    networks:
+      - movies-network
+
+
+networks:
+  movies-network:
+volumes:
+  redis_vol:
