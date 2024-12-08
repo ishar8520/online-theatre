@@ -1,7 +1,9 @@
-from typing import Optional
+from __future__ import annotations
+
 from elasticsearch import AsyncElasticsearch
 
-es: Optional[AsyncElasticsearch] = None
+es: AsyncElasticsearch | None = None
+
 
 async def get_elastic() -> AsyncElasticsearch:
     return es

@@ -22,6 +22,6 @@ ENV VIRTUAL_ENV=/venv
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
 COPY --from=venv "$VIRTUAL_ENV" "$VIRTUAL_ENV"
-COPY ./src/ .
+COPY ./movies/ ./movies
 
-ENTRYPOINT [ "fastapi", "run", "./main.py" ]
+ENTRYPOINT [ "fastapi", "run", "./movies/main.py" ]
