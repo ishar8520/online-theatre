@@ -1,0 +1,62 @@
+services:
+  movies:
+    build: ./
+    ports:
+      - '8000:8000'
+    depends_on:
+      redis:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+    networks:
+      - movies-network
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - ELASTIC_HOST=elasticsearch
+      - ELASTIC_PORT=9200
+    healthcheck:
+      test: [ 'CMD-SHELL', 'curl -s http://localhost:8000/api/openapi.json' ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+
+  redis:
+    image: 'bitnami/redis:7.4.1-debian-12-r2'
+    networks:
+      - movies-network
+    volumes:
+      - 'redis-data:/bitnami/redis/data'
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+    command: [ '/opt/bitnami/scripts/redis/run.sh', '--maxmemory', '${REDIS_MAXMEMORY:-200mb}' ]
+    healthcheck:
+      test: [ 'CMD', '/bin/bash', '-c', '[[ $(redis-cli ping) == "PONG" ]]' ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+
+  elasticsearch:
+    image: 'bitnami/elasticsearch:8.16.1-debian-12-r1'
+    networks:
+      - movies-network
+    volumes:
+      - 'elasticsearch-data:/bitnami/elasticsearch/data'
+    environment:
+      - ELASTICSEARCH_HEAP_SIZE=${ELASTICSEARCH_HEAP_SIZE:-200m}
+    restart: always
+    healthcheck:
+      test: [ 'CMD-SHELL', '/opt/bitnami/scripts/elasticsearch/healthcheck.sh' ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+networks:
+  movies-network:
+
+volumes:
+  redis-data:
+  elasticsearch-data:
