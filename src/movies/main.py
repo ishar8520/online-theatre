@@ -1,11 +1,11 @@
+from elasticsearch import AsyncElasticsearch
 from fastapi import FastAPI
 from fastapi.responses import ORJSONResponse
 from redis.asyncio import Redis
-from elasticsearch import AsyncElasticsearch
 
-from api.v1 import films
-from core import config
-from db import redis, elastic
+from .api.v1 import films
+from .core import config
+from .db import redis, elastic
 
 app = FastAPI(
     title=config.PROJECT_NAME,
@@ -13,8 +13,8 @@ app = FastAPI(
     openapi_url='/api/openapi.json',
     default_response_class=ORJSONResponse,
 )
- 
- 
+
+
 @app.on_event('startup')
 async def startup():
     redis.redis = Redis(host=config.REDIS_HOST, port=config.REDIS_PORT)
@@ -25,5 +25,6 @@ async def startup():
 async def shutdown():
     await redis.redis.close()
     await elastic.es.close()
+
 
 app.include_router(films.router, prefix='/api/v1/films', tags=['films'])
