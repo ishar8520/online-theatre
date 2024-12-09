@@ -1,52 +1,108 @@
 from __future__ import annotations
 
+import uuid
 from functools import lru_cache
+from typing import List
 
-from elasticsearch import AsyncElasticsearch, NotFoundError
+from elasticsearch import AsyncElasticsearch
 from fastapi import Depends
 from redis.asyncio import Redis
 
+from .abstract import AbstractService
 from ..db import (
     get_elastic,
     get_redis,
 )
 from ..models import Film
 
-FILM_CACHE_EXPIRE_IN_SECONDS = 60 * 5
+FILM_ELASTIC_INDEX_NAME = 'movies'
 
 
-class FilmService:
-    def __init__(self, redis: Redis, elastic: AsyncElasticsearch) -> None:
-        self.redis = redis
-        self.elastic = elastic
+class FilmService(AbstractService):
 
-    async def get_by_id(self, film_id: str) -> Film | None:
-        film = await self._film_from_cache(film_id)
-        if not film:
-            film = await self._get_film_from_elastic(film_id)
-            if not film:
-                return None
-            await self._put_film_to_cache(film)
+    async def get_list(
+            self,
+            sort: dict[str, str],
+            page_number: int,
+            page_size: int,
+            genre_uuid: uuid.UUID = None,
+    ) -> list[Film]:
 
-        return film
+        body = {
+            "sort": {
+                sort['field']: {
+                    "order": sort['order']
+                }
+            },
+            "size": page_size,
+            "from": (page_number - 1) * page_size,
+        }
 
-    async def _get_film_from_elastic(self, film_id: str) -> Film | None:
-        try:
-            doc = await self.elastic.get(index='movies', id=film_id)
-        except NotFoundError:
-            return None
-        return Film(**doc['_source'])
+        if genre_uuid:
+            body["query"] = {
+                "nested": {
+                    # @todo only for test
+                    # "path": "genres",
+                    "path": "actors",
+                    "query": {
+                        "term": {
+                            # @todo only for test
+                            # "genres.id": genre_uuid
+                            "actors.id": genre_uuid
+                        }
+                    }
+                }
+            }
 
-    async def _film_from_cache(self, film_id: str) -> Film | None:
-        data = await self.redis.get(film_id)
+        result = await self._search_in_elastic(index=FILM_ELASTIC_INDEX_NAME, body=body)
+
+        if result is None:
+            return list()
+
+        return [Film(**source_item['_source']) for source_item in result]
+
+    async def search(
+            self,
+            query: str,
+            page_number: int,
+            page_size: int
+    ) -> List[Film] | None:
+
+        body = {
+            "query": {
+                "match": {
+                    "title": query
+                }
+            },
+            "size": page_size,
+            "from": (page_number - 1) * page_size,
+        }
+
+        result = await self._search_in_elastic(index=FILM_ELASTIC_INDEX_NAME, body=body)
+
+        if result is None:
+            return list()
+
+        return [Film(**item['_source']) for item in result]
+
+    async def get_by_id(
+            self,
+            id: str
+    ) -> Film | None:
+
+        data = await self._get_from_cache(id)
+
         if not data:
-            return None
+            data = await self._get_from_elastic(FILM_ELASTIC_INDEX_NAME, id)
+            if not data:
+                return None
 
-        film = Film.parse_raw(data)
-        return film
+            film = Film(**data)
+            await self._put_to_cache(film.id, film)
 
-    async def _put_film_to_cache(self, film: Film):
-        await self.redis.set(film.id, film.json(), FILM_CACHE_EXPIRE_IN_SECONDS)
+            return film
+
+        return Film.model_validate_json(data)
 
 
 @lru_cache()
