@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-FROM python:3.12.7-bookworm as base
+FROM python:3.13.1-bookworm as base
 
 ENV PYTHONUNBUFFERED=1
 
