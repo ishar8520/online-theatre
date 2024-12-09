@@ -1,8 +1,9 @@
+from __future__ import annotations
+
 from abc import ABC
 
 from elasticsearch import AsyncElasticsearch, NotFoundError
 from pydantic import BaseModel
-from typing import Dict, List
 from redis.asyncio import Redis
 
 REDIS_CACHE_EXPIRE_IN_SECONDS = 60 * 5
@@ -14,7 +15,7 @@ class AbstractService(ABC):
         self.redis = redis
         self.elastic = elastic
 
-    async def _get_from_elastic(self, index: str, id: str) -> Dict | None:
+    async def _get_from_elastic(self, index: str, id: str) -> dict | None:
         try:
             doc = await self.elastic.get(index=index, id=id)
         except NotFoundError:
@@ -22,7 +23,7 @@ class AbstractService(ABC):
 
         return doc['_source']
 
-    async def _search_in_elastic(self, index: str, body: Dict) -> List[Dict] | None:
+    async def _search_in_elastic(self, index: str, body: dict) -> list[dict] | None:
         try:
             doc = await self.elastic.search(
                 index=index,

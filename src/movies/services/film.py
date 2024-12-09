@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import uuid
 from functools import lru_cache
-from typing import List
 
 from elasticsearch import AsyncElasticsearch
 from fastapi import Depends
@@ -66,7 +65,7 @@ class FilmService(AbstractService):
             query: str,
             page_number: int,
             page_size: int
-    ) -> List[Film] | None:
+    ) -> list[Film] | None:
 
         body = {
             "query": {

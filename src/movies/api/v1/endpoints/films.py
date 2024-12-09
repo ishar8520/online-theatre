@@ -1,9 +1,10 @@
+from __future__ import annotations
+
 import uuid
 from enum import Enum
 from http import HTTPStatus
 
 from fastapi import APIRouter, Depends, HTTPException
-from typing import List
 
 from movies.services.film import FilmService, get_film_service
 from ..models.films import FilmInfo, Film
@@ -23,7 +24,7 @@ async def get_list(
         page_number: int = 1,
         page_size: int = 50,
         film_service: FilmService = Depends(get_film_service),
-) -> List[Film]:
+) -> list[Film]:
 
     sort_by = dict()
     if not sort:
@@ -67,7 +68,7 @@ async def search(
         page_number: int = 1,
         page_size: int = 50,
         film_service: FilmService = Depends(get_film_service),
-) -> List[Film]:
+) -> list[Film]:
 
     film_list = await film_service.search(query=query, page_number=page_number, page_size=page_size)
     if not film_list:

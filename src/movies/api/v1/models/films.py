@@ -1,6 +1,7 @@
+from __future__ import annotations
+
 import uuid
 
-from typing import List
 from pydantic import BaseModel
 
 
@@ -31,10 +32,10 @@ class FilmInfo(BaseModel):
     title: str
     description: str
     # @todo TMP solution
-    # genre: List[Genre]
-    directors: List[Director] | None
-    actors: List[Actor] | None
-    writers: List[Writer] | None
+    # genre: list[Genre]
+    directors: list[Director] | None
+    actors: list[Actor] | None
+    writers: list[Writer] | None
 
 
 class Film(BaseModel):
