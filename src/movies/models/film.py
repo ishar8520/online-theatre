@@ -23,7 +23,7 @@ class Writer(BaseModel, PersonMixin):
 
 class Genre(BaseModel):
     id: uuid.UUID
-    title: str
+    name: str
 
 
 class Film(BaseModel):
