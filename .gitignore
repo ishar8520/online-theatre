@@ -5,4 +5,5 @@
 .env
 !.gitkeep
 
-/compose/etl/data
+/compose/etl/data/*
+!/compose/etl/data/.gitkeep
