@@ -2,9 +2,14 @@
 
 ARG PYTHON_VERSION=3.13.1
 
-FROM python:${PYTHON_VERSION} AS venv
+FROM python:${PYTHON_VERSION}-slim AS base
 
 ENV PYTHONUNBUFFERED=1
+
+WORKDIR /opt/app
+
+FROM base AS venv
+
 ENV VIRTUAL_ENV=/venv
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
@@ -13,11 +18,8 @@ RUN --mount=type=bind,source=requirements.txt,target=requirements.txt \
     --mount=type=cache,target=/root/.cache/pip \
     pip install -r requirements.txt
 
-FROM python:${PYTHON_VERSION}-slim
+FROM base
 
-WORKDIR /opt/app
-
-ENV PYTHONUNBUFFERED=1
 ENV VIRTUAL_ENV=/venv
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 

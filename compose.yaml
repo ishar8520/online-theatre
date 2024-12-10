@@ -2,13 +2,13 @@ services:
   movies:
     build:
       context: ./src
-    ports:
-      - '8000:8000'
     depends_on:
       redis:
         condition: service_healthy
       elasticsearch:
         condition: service_healthy
+    ports:
+      - '8000:8000'
     networks:
       - movies-network
     environment:
@@ -41,15 +41,58 @@ services:
 
   elasticsearch:
     image: 'bitnami/elasticsearch:8.16.1-debian-12-r1'
+    ports:
+      - '9200:9200'
     networks:
       - movies-network
     volumes:
       - 'elasticsearch-data:/bitnami/elasticsearch/data'
     environment:
       - ELASTICSEARCH_HEAP_SIZE=${ELASTICSEARCH_HEAP_SIZE:-200m}
-    restart: always
+    restart: unless-stopped
     healthcheck:
       test: [ 'CMD-SHELL', '/opt/bitnami/scripts/elasticsearch/healthcheck.sh' ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  etl:
+    build:
+      context: ./compose/etl
+    depends_on:
+      postgresql:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+    networks:
+      - movies-network
+    volumes:
+      - 'etl-data:/opt/app/data'
+      - 'etl-logs:/opt/app/logs'
+    environment:
+      - POSTGRESQL_HOST=postgresql
+      - POSTGRESQL_PORT=5432
+      - POSTGRESQL_DATABASE=$POSTGRESQL_DATABASE
+      - POSTGRESQL_USERNAME=$POSTGRESQL_USERNAME
+      - POSTGRESQL_PASSWORD=$POSTGRESQL_PASSWORD
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
+    restart: unless-stopped
+
+  postgresql:
+    image: 'bitnami/postgresql:17.2.0-debian-12-r2'
+    networks:
+      - movies-network
+    volumes:
+      - 'postgresql-data:/bitnami/postgresql'
+      - './compose/postgresql/database_dump.sql:/docker-entrypoint-initdb.d/init.sql'
+    environment:
+      - POSTGRESQL_DATABASE=$POSTGRESQL_DATABASE
+      - POSTGRESQL_USERNAME=$POSTGRESQL_USERNAME
+      - POSTGRESQL_PASSWORD=$POSTGRESQL_PASSWORD
+    restart: unless-stopped
+    healthcheck:
+      test: [ 'CMD-SHELL', 'pg_isready --username=$POSTGRESQL_USERNAME --dbname=$POSTGRESQL_DATABASE' ]
       interval: 10s
       timeout: 10s
       retries: 5
@@ -61,3 +104,6 @@ networks:
 volumes:
   redis-data:
   elasticsearch-data:
+  etl-data:
+  etl-logs:
+  postgresql-data:
