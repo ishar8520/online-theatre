@@ -83,6 +83,8 @@ services:
     image: 'bitnami/postgresql:17.2.0-debian-12-r2'
     networks:
       - movies-network
+    ports:
+      - '5432:5432'
     volumes:
       - 'postgresql-data:/bitnami/postgresql'
       - './compose/postgresql/database_dump.sql:/docker-entrypoint-initdb.d/init.sql'
