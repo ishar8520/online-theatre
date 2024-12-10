@@ -13,9 +13,11 @@ from .db import elastic, redis
 async def lifespan(app: FastAPI):
     redis.redis = Redis(host=config.REDIS_HOST, port=config.REDIS_PORT)
     elastic.es = AsyncElasticsearch(hosts=[f'http://{config.ELASTIC_HOST}:{config.ELASTIC_PORT}'])
-    yield
-    await redis.redis.close()
-    await elastic.es.close()
+    try:
+        yield
+    finally:
+        await redis.redis.close()
+        await elastic.es.close()
 
 
 app = FastAPI(

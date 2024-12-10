@@ -20,13 +20,13 @@ class SortOrderEnum(str, Enum):
 @router.get('/', response_model=list[Film])
 async def get_list(
         sort: str = '',
-        genre: uuid.UUID = None,
+        genre: uuid.UUID | None = None,
         page_number: int = 1,
         page_size: int = 50,
         film_service: FilmService = Depends(get_film_service),
 ) -> list[Film]:
 
-    sort_by = dict()
+    sort_by = {}
     if not sort:
         sort_by = {'field': 'id', 'order': SortOrderEnum.asc}
     else:
@@ -44,7 +44,7 @@ async def get_list(
         page_size=page_size
     )
     if not film_list:
-        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail='film not found')
+        return []
 
     return [Film(**item.model_dump()) for item in film_list]
 
@@ -52,12 +52,12 @@ async def get_list(
 # @todo use for test -> 5065b37b-fd5b-4c48-8a24-435198c44830
 @router.get('/{id}', response_model=FilmInfo)
 async def get_by_id(
-        id: str,
+        id: uuid.UUID,
         film_service: FilmService = Depends(get_film_service)
 ) -> FilmInfo:
     film = await film_service.get_by_id(id)
     if not film:
-        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail='film not found')
+        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail='Film not found')
 
     return FilmInfo(**film.model_dump())
 
@@ -72,6 +72,6 @@ async def search(
 
     film_list = await film_service.search(query=query, page_number=page_number, page_size=page_size)
     if not film_list:
-        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail='film not found')
+        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail='Films not found')
 
     return [Film(**item.model_dump()) for item in film_list]
