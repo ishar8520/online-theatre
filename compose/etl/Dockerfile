@@ -1,32 +1,40 @@
 # syntax=docker/dockerfile:1
 
-FROM python:3.13.1-bookworm as base
+ARG PYTHON_VERSION=3.13.1
+
+FROM python:${PYTHON_VERSION}-slim AS base
 
 ENV PYTHONUNBUFFERED=1
 
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /opt/app
 
-FROM base as venv
+FROM base AS venv
 
 ENV PATH="/root/.local/bin:$PATH"
 
-RUN pip install --user pipx==1.7.1
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install --user pipx==1.7.1
 RUN pipx install poetry==1.8.4
 
 ENV VIRTUAL_ENV=/venv
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
-RUN python -m venv "$VIRTUAL_ENV"
 
-COPY ./pyproject.toml .
-COPY ./poetry.lock .
-RUN poetry install --no-ansi --no-interaction
+RUN python -m venv "$VIRTUAL_ENV"
+RUN --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
+    --mount=type=bind,source=poetry.lock,target=poetry.lock \
+    --mount=type=cache,target=/root/.cache/pypoetry \
+    poetry install --no-ansi --no-interaction
 
 FROM base
 
 ENV VIRTUAL_ENV=/venv
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
-COPY --from=venv "$VIRTUAL_ENV" "$VIRTUAL_ENV"
 
+COPY --from=venv "$VIRTUAL_ENV" "$VIRTUAL_ENV"
 COPY ./schema/ ./schema/
 COPY ./etl/ ./etl/
 
