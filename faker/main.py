@@ -19,8 +19,10 @@ DB_CONFIG = {
     'port': db_config.port,
 }
 
-NUMBER_OF_FILMS = 200000
+NUMBER_OF_FILMS = 5003
 NUMBER_OF_PERSONS = 4000
+CHUNK_OF_FILMS = 1000
+
 TIME_NOW = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S.%f")
 
 GENRES = {
@@ -63,7 +65,7 @@ def generate_films_data():
     id = str(uuid4())
     title = fake.sentence(nb_words=3)
     description = fake.text(max_nb_chars=200).replace('\n', '')
-    rating = str(round(random.uniform(1.0,10.0), 1))
+    rating = str(round(random.uniform(1.0, 10.0), 1))
     type = 'movie'
     created = TIME_NOW
     modified = TIME_NOW
@@ -97,7 +99,8 @@ def generate_person_film_relation(person_id, film_id, role):
     return [id, person_id, film_id, role, created]
 
 
-def copy_query(conn: psycopg2.connect, cursor: DictCursor, table: str, fields: str, copy_data: str):
+def copy_query(conn: psycopg2.connect, cursor: DictCursor,
+               table: str, fields: str, copy_data: str):
     query = f"""
             COPY content.{table} {fields} FROM stdin;
             """
@@ -105,61 +108,91 @@ def copy_query(conn: psycopg2.connect, cursor: DictCursor, table: str, fields: s
     return conn.commit()
 
 
+def commit_films(films_list, gf_list, pf_list):
+    films_string = '\n'.join(['\t'.join(film) for film in films_list])
+    genres_films_string = '\n'.join(['\t'.join(genre) for genre in gf_list])
+    persons_films_string = '\n'.join(['\t'.join(person) for person in pf_list])
+
+    copy_query(conn=conn,
+               cursor=cursor,
+               table='film_work',
+               fields='(id, title, description, '
+               'rating, type, created, modified)',
+               copy_data=films_string)
+    copy_query(conn=conn,
+               cursor=cursor,
+               table='genre_film_work',
+               fields='(id, genre_id, film_work_id, '
+               'created)',
+               copy_data=genres_films_string)
+    copy_query(conn=conn,
+               cursor=cursor,
+               table='person_film_work',
+               fields='(id, person_id, film_work_id, role, '
+               'created)',
+               copy_data=persons_films_string)
+
+    print(datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S.%f"))
+
+
 if __name__ == '__main__':
+    print(datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S.%f"))
     with psycopg2.connect(**DB_CONFIG) as conn:
         with conn.cursor(cursor_factory=DictCursor) as cursor:
-            
-            genres_list = [generate_genre_data(genre, disription) for genre, disription in GENRES.items()]
-            genres_query = '\n'.join(['\t'.join(genre) for genre in genres_list])     
+
+            genres_list = [generate_genre_data(genre, disription)
+                           for genre, disription in GENRES.items()]
+
+            genres_query = '\n'.join(
+                    ['\t'.join(genre) for genre in genres_list])
+
             copy_query(conn=conn,
                        cursor=cursor,
                        table='genre',
                        fields='(id, name, description, created, modified)',
                        copy_data=genres_query)
-            
-            persons_list = [generate_person_data() for x in range(NUMBER_OF_PERSONS)]
-            persons_query = '\n'.join(['\t'.join(person) for person in persons_list])
+
+            persons_list = [generate_person_data()
+                            for x in range(NUMBER_OF_PERSONS)]
+            persons_query = '\n'.join(
+                    ['\t'.join(person) for person in persons_list])
+
             copy_query(conn=conn,
                        cursor=cursor,
                        table='person',
                        fields='(id, full_name, created, modified)',
                        copy_data=persons_query)
-            
+
             films_list = []
-            genres_films_list = []
-            persons_films_list = []
+            gf_list = []
+            pf_list = []
             for film_number in range(NUMBER_OF_FILMS):
-                genre_film = random.sample(genres_list, random.randint(1,2))
-                actors = random.sample(persons_list, random.randint(1,6))
-                directors = random.sample(persons_list, random.randint(1,2))
-                writers = random.sample(persons_list, random.randint(1,2))
+                genre_film = random.sample(genres_list, random.randint(1, 2))
+                actors = random.sample(persons_list, random.randint(1, 6))
+                directors = random.sample(persons_list, random.randint(1, 2))
+                writers = random.sample(persons_list, random.randint(1, 2))
                 film = generate_films_data()
                 films_list.append(film)
                 for genre in genre_film:
-                    genres_films_list.append(generate_genre_film_relation(genre[0], film[0]))
+                    gf_list.append(
+                        generate_genre_film_relation(genre[0], film[0]))
                 for actor in actors:
-                    persons_films_list.append(generate_person_film_relation(actor[0], film[0], 'actor'))
+                    pf_list.append(
+                        generate_person_film_relation(
+                            actor[0], film[0], 'actor'))
                 for director in directors:
-                    persons_films_list.append(generate_person_film_relation(director[0], film[0], 'director'))
+                    pf_list.append(
+                        generate_person_film_relation(
+                            director[0], film[0], 'director'))
                 for writer in writers:
-                    persons_films_list.append(generate_person_film_relation(writer[0], film[0], 'writer'))
-                    
-            films_string = '\n'.join(['\t'.join(film) for film in films_list])
-            genres_films_string = '\n'.join(['\t'.join(genre) for genre in genres_films_list])
-            persons_films_string = '\n'.join(['\t'.join(person) for person in persons_films_list])
-            
-            copy_query(conn=conn,
-                       cursor=cursor,
-                       table='film_work',
-                       fields='(id, title, description, rating, type, created, modified)',
-                       copy_data=films_string)
-            copy_query(conn=conn,
-                       cursor=cursor,
-                       table='genre_film_work',
-                       fields='(id, genre_id, film_work_id, created)',
-                       copy_data=genres_films_string)
-            copy_query(conn=conn,
-                       cursor=cursor,
-                       table='person_film_work',
-                       fields='(id, person_id, film_work_id, role, created)',
-                       copy_data=persons_films_string)
+                    pf_list.append(
+                        generate_person_film_relation(
+                            writer[0], film[0], 'writer'))
+
+                if film_number % CHUNK_OF_FILMS == 0 and film_number > 0:
+                    commit_films(films_list, gf_list, pf_list)
+                    films_list = []
+                    gf_list = []
+                    pf_list = []
+            if films_list:
+                commit_films(films_list, gf_list, pf_list)
