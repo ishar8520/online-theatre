@@ -5,5 +5,7 @@
 .env
 !.gitkeep
 
+compose.override.yaml
+
 /compose/etl/data/*
 !/compose/etl/data/.gitkeep

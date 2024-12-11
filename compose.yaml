@@ -41,8 +41,6 @@ services:
 
   elasticsearch:
     image: 'bitnami/elasticsearch:8.16.1-debian-12-r1'
-    ports:
-      - '9200:9200'
     networks:
       - movies-network
     volumes:
