@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from psycopg import sql
 
-from .state import LastModified
+from ..state import LastModified
 
 
 class TableModifiedCondition:

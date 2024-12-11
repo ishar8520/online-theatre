@@ -13,10 +13,10 @@ sys.path.insert(0, str(BASE_DIR))
 from etl.extract import (
     FilmWorksExtractor,
     FilmWorksParser,
-    JsonFileStorage,
 )
 from etl.load import FilmsLoader
 from etl.settings import settings
+from etl.state import JsonFileStorage
 from etl.transform import FilmsTransformer
 from etl.utils import setup_logging
 

@@ -8,10 +8,8 @@ from .serializers import (
     FilmActor,
     FilmWriter,
 )
-from ..extract import (
-    FilmWorksVisitor,
-    LastModified,
-)
+from ..extract import FilmWorksVisitor
+from ..state import LastModified
 
 
 @dataclasses.dataclass(kw_only=True)

@@ -11,7 +11,7 @@ from .query import (
     ExtractSQLStatement,
     ExtractFilmWorksSQLStatement,
 )
-from .state import LastModified
+from ..state import LastModified
 
 
 class PostgreSQLConnectionFactory:
