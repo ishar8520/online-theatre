@@ -1,11 +1,11 @@
 from .serializers import (
-    Movie,
-    Person,
-    Director,
-    Actor,
-    Writer,
+    Film,
+    FilmPerson,
+    FilmDirector,
+    FilmActor,
+    FilmWriter,
 )
 from .transformer import (
-    MoviesTransformer,
-    MoviesTransformResult,
+    FilmsTransformer,
+    FilmsTransformResult,
 )

@@ -1,1 +1,1 @@
-from .loader import MoviesLoader
+from .loader import FilmsLoader

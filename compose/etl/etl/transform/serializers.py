@@ -9,7 +9,7 @@ from pydantic import (
 )
 
 
-class Movie(BaseModel):
+class Film(BaseModel):
     id: uuid.UUID
     imdb_rating: float | None
     genres: list[str]
@@ -18,16 +18,16 @@ class Movie(BaseModel):
     directors_names: list[str]
     actors_names: list[str]
     writers_names: list[str]
-    directors: list[Director]
-    actors: list[Actor]
-    writers: list[Writer]
+    directors: list[FilmDirector]
+    actors: list[FilmActor]
+    writers: list[FilmWriter]
 
     @field_serializer('id')
     def serialize_id(self, value: uuid.UUID, _info: SerializationInfo) -> str:
         return str(value)
 
 
-class Person(BaseModel):
+class FilmPerson(BaseModel):
     id: uuid.UUID
     name: str
 
@@ -36,13 +36,13 @@ class Person(BaseModel):
         return str(value)
 
 
-class Director(Person):
+class FilmDirector(FilmPerson):
     pass
 
 
-class Actor(Person):
+class FilmActor(FilmPerson):
     pass
 
 
-class Writer(Person):
+class FilmWriter(FilmPerson):
     pass
