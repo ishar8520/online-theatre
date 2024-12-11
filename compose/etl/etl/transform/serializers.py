@@ -12,15 +12,25 @@ from pydantic import (
 class Film(BaseModel):
     id: uuid.UUID
     imdb_rating: float | None
-    genres: list[str]
     title: str
     description: str | None
+    genres_names: list[str]
     directors_names: list[str]
     actors_names: list[str]
     writers_names: list[str]
+    genres: list[FilmGenre]
     directors: list[FilmDirector]
     actors: list[FilmActor]
     writers: list[FilmWriter]
+
+    @field_serializer('id')
+    def serialize_id(self, value: uuid.UUID, _info: SerializationInfo) -> str:
+        return str(value)
+
+
+class FilmGenre(BaseModel):
+    id: uuid.UUID
+    name: str
 
     @field_serializer('id')
     def serialize_id(self, value: uuid.UUID, _info: SerializationInfo) -> str:

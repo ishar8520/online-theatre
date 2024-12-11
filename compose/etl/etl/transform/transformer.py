@@ -4,6 +4,7 @@ import dataclasses
 
 from .serializers import (
     Film,
+    FilmGenre,
     FilmDirector,
     FilmActor,
     FilmWriter,
@@ -14,10 +15,11 @@ from ..state import LastModified
 
 @dataclasses.dataclass(kw_only=True)
 class FilmTransformState:
-    genres: list[str] = dataclasses.field(default_factory=list)
+    genres_names: list[str] = dataclasses.field(default_factory=list)
     directors_names: list[str] = dataclasses.field(default_factory=list)
     actors_names: list[str] = dataclasses.field(default_factory=list)
     writers_names: list[str] = dataclasses.field(default_factory=list)
+    genres: list[FilmGenre] = dataclasses.field(default_factory=list)
     directors: list[FilmDirector] = dataclasses.field(default_factory=list)
     actors: list[FilmActor] = dataclasses.field(default_factory=list)
     writers: list[FilmWriter] = dataclasses.field(default_factory=list)
@@ -47,12 +49,13 @@ class FilmsTransformer(FilmWorksVisitor):
         self.result.films.append(Film(
             id=film_work_data['id'],
             imdb_rating=film_work_data['rating'],
-            genres=self.film_state.genres,
             title=film_work_data['title'],
             description=film_work_data['description'],
+            genres_names=self.film_state.genres_names,
             directors_names=self.film_state.directors_names,
             actors_names=self.film_state.actors_names,
             writers_names=self.film_state.writers_names,
+            genres=self.film_state.genres,
             directors=self.film_state.directors,
             actors=self.film_state.actors,
             writers=self.film_state.writers,
@@ -64,7 +67,11 @@ class FilmsTransformer(FilmWorksVisitor):
         )
 
     def handle_genre(self, *, genre_data: dict) -> None:
-        self.film_state.genres.append(genre_data['name'])
+        self.film_state.genres_names.append(genre_data['name'])
+        self.film_state.genres.append(FilmGenre(
+            id=genre_data['id'],
+            name=genre_data['name'],
+        ))
 
     def handle_person(self, *, person_data: dict) -> None:
         if person_data['role'] == 'director':
