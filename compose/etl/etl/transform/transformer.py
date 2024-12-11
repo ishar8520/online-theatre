@@ -22,15 +22,6 @@ class FilmTransformState:
     actors: list[FilmActor] = dataclasses.field(default_factory=list)
     writers: list[FilmWriter] = dataclasses.field(default_factory=list)
 
-    def reset(self) -> None:
-        self.genres = []
-        self.directors_names = []
-        self.actors_names = []
-        self.writers_names = []
-        self.directors = []
-        self.actors = []
-        self.writers = []
-
 
 @dataclasses.dataclass(kw_only=True)
 class FilmsTransformResult:
@@ -50,7 +41,7 @@ class FilmsTransformer(FilmWorksVisitor):
         return self.result
 
     def start_handle_film_work(self, *, film_work_data: dict) -> None:
-        self.film_state.reset()
+        self.film_state = FilmTransformState()
 
     def end_handle_film_work(self, *, film_work_data: dict) -> None:
         self.result.films.append(Film(
