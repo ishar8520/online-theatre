@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-import logging
 import sys
 import time
 from pathlib import Path
@@ -14,11 +13,11 @@ sys.path.insert(0, str(BASE_DIR))
 from etl.extract import (
     FilmWorksExtractor,
     FilmWorksParser,
-    JsonFileStorage,
 )
-from etl.load import MoviesLoader
+from etl.load import FilmsLoader
 from etl.settings import settings
-from etl.transform import MoviesTransformer
+from etl.state import JsonFileStorage
+from etl.transform import FilmsTransformer
 from etl.utils import setup_logging
 
 
@@ -34,27 +33,29 @@ def main() -> None:
     ):
         film_works_extractor = FilmWorksExtractor(connection_params=postgresql_connection_params)
 
-        with open(BASE_DIR / 'schema' / 'movies.json', 'rb') as movies_index_file:
-            movies_index_json = movies_index_file.read().decode()
+        with open(BASE_DIR / 'schema' / 'films.json', 'rb') as films_index_file:
+            films_index_json = films_index_file.read().decode()
 
-        movies_index_data: dict = json.loads(movies_index_json)
-        movies_loader = MoviesLoader(
+        films_index_data: dict = json.loads(films_index_json)
+        films_loader = FilmsLoader(
             client=elasticsearch_client,
-            index_data=movies_index_data,
+            index_data=films_index_data,
         )
 
         while True:
-            film_works = film_works_extractor.extract(last_modified=state.last_modified)
+            film_works = film_works_extractor.extract(
+                last_modified=state.extractors.film_works.last_modified,
+            )
 
             film_works_parser = FilmWorksParser(film_works=film_works)
-            movies_transformer = MoviesTransformer()
-            film_works_parser.parse(visitor=movies_transformer)
+            films_transformer = FilmsTransformer()
+            film_works_parser.parse(visitor=films_transformer)
 
-            movies_transform_result = movies_transformer.get_result()
+            films_transform_result = films_transformer.get_result()
 
-            if movies_transform_result.movies:
-                movies_loader.load(movies=movies_transform_result.movies)
-                state.last_modified = movies_transform_result.last_modified
+            if films_transform_result.films:
+                films_loader.load(films=films_transform_result.films)
+                state.extractors.film_works.last_modified = films_transform_result.last_modified
                 storage.save(state)
             else:
                 time.sleep(10)

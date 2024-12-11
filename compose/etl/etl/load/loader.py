@@ -7,12 +7,12 @@ import backoff
 import elasticsearch
 import elasticsearch.helpers
 
-from ..transform import Movie
+from ..transform import Film
 
 logger = logging.getLogger(__name__)
 
 
-class MoviesLoader:
+class FilmsLoader:
     client: elasticsearch.Elasticsearch
     index_name: str
     index_data: dict | None
@@ -24,7 +24,7 @@ class MoviesLoader:
                  index_name: str | None = None,
                  index_data: dict | None = None) -> None:
         self.client = client
-        self.index_name = index_name or 'movies'
+        self.index_name = index_name or 'films'
         self.index_data = index_data
         self.index_created = False
 
@@ -32,16 +32,16 @@ class MoviesLoader:
             elasticsearch.ConnectionError,
             elasticsearch.ConnectionTimeout,
     ))
-    def load(self, *, movies: Iterable[Movie]) -> None:
+    def load(self, *, films: Iterable[Film]) -> None:
         if self.index_data and not self.index_created:
             self._create_index()
 
         try:
             elasticsearch.helpers.bulk(self.client, ({
                 '_index': self.index_name,
-                '_id': movie.id,
-                '_source': movie.model_dump(),
-            } for movie in movies))
+                '_id': film.id,
+                '_source': film.model_dump(),
+            } for film in films))
 
         except elasticsearch.helpers.BulkIndexError as e:
             logger.exception(e)
