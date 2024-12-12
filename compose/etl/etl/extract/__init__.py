@@ -1,4 +1,5 @@
 from .extractors import (
+    PostgreSQLExtractor,
     FilmWorksExtractor,
     GenresExtractor,
 )
