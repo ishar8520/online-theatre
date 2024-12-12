@@ -16,14 +16,13 @@ from etl.extract import (
     GenresExtractor,
     GenresParser,
 )
-from etl.load import (
-    FilmsLoader,
-    GenresLoader,
-)
+from etl.load import ElasticsearchLoader
 
 from etl.settings import settings
 from etl.state import JsonFileStorage
 from etl.transform import (
+    Film,
+    Genre,
     FilmsTransformer,
     GenresTransformer,
 )
@@ -47,8 +46,9 @@ def main() -> None:
             films_index_json = films_index_file.read().decode()
 
         films_index_data: dict = json.loads(films_index_json)
-        films_loader = FilmsLoader(
+        films_loader = ElasticsearchLoader[Film](
             client=elasticsearch_client,
+            index_name='films',
             index_data=films_index_data,
         )
 
@@ -58,8 +58,9 @@ def main() -> None:
             genres_index_json = genres_index_file.read().decode()
 
         genres_index_data: dict = json.loads(genres_index_json)
-        genres_loader = GenresLoader(
+        genres_loader = ElasticsearchLoader[Genre](
             client=elasticsearch_client,
+            index_name='genres',
             index_data=genres_index_data,
         )
 

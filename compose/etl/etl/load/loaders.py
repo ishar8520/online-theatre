@@ -7,30 +7,26 @@ import backoff
 import elasticsearch
 import elasticsearch.helpers
 
-from ..transform import (
-    Document,
-    Film,
-    Genre,
-)
+from ..transform import Document
 
 logger = logging.getLogger(__name__)
 
 
 class ElasticsearchLoader[TDocument: Document]:
-    index_name: str
-
     client: elasticsearch.Elasticsearch
+    index_name: str
     index_data: dict | None
     index_created: bool
 
     def __init__(self,
                  *,
                  client: elasticsearch.Elasticsearch,
-                 index_name: str | None = None,
+                 index_name: str,
                  index_data: dict | None = None) -> None:
         self.client = client
-        self.index_name = index_name or self.index_name
+        self.index_name = index_name
         self.index_data = index_data
+
         self.index_created = False
 
     @backoff.on_exception(backoff.expo, (
@@ -65,11 +61,3 @@ class ElasticsearchLoader[TDocument: Document]:
                 pass
 
         self.index_created = True
-
-
-class FilmsLoader(ElasticsearchLoader[Film]):
-    index_name = 'films'
-
-
-class GenresLoader(ElasticsearchLoader[Genre]):
-    index_name = 'genres'

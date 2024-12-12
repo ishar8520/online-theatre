@@ -1,4 +1,1 @@
-from .loader import (
-    FilmsLoader,
-    GenresLoader,
-)
+from .loaders import ElasticsearchLoader
