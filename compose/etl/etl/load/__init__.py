@@ -1,1 +1,4 @@
-from .loader import FilmsLoader
+from .loader import (
+    FilmsLoader,
+    GenresLoader,
+)

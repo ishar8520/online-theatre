@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-import uuid
+from .base import (
+    Document,
+    DocumentRelation,
+)
 
-from pydantic import BaseModel
 
-
-class Film(BaseModel):
-    id: uuid.UUID
+class Film(Document):
     imdb_rating: float | None
     title: str
     description: str | None
@@ -20,13 +20,11 @@ class Film(BaseModel):
     writers: list[FilmWriter]
 
 
-class FilmGenre(BaseModel):
-    id: uuid.UUID
+class FilmGenre(DocumentRelation):
     name: str
 
 
-class FilmPerson(BaseModel):
-    id: uuid.UUID
+class FilmPerson(DocumentRelation):
     name: str
 
 

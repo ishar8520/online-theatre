@@ -2,14 +2,19 @@ from __future__ import annotations
 
 import dataclasses
 
-from .serializers import (
+from .models import (
     Film,
     FilmGenre,
     FilmDirector,
     FilmActor,
     FilmWriter,
+    Genre,
 )
-from ..extract import FilmWorksVisitor
+from ..extract import (
+    FilmWorksVisitor,
+    GenresVisitor,
+)
+
 from ..state import LastModified
 
 
@@ -96,3 +101,30 @@ class FilmsTransformer(FilmWorksVisitor):
                 id=person_data['id'],
                 name=person_data['full_name'],
             ))
+
+
+@dataclasses.dataclass(kw_only=True)
+class GenresTransformResult:
+    genres: list[Genre] = dataclasses.field(default_factory=list)
+    last_modified: LastModified = dataclasses.field(default_factory=lambda: LastModified())
+
+
+class GenresTransformer(GenresVisitor):
+    result: GenresTransformResult
+
+    def __init__(self) -> None:
+        self.result = GenresTransformResult()
+
+    def get_result(self) -> GenresTransformResult:
+        return self.result
+
+    def handle_genre(self, *, genre_data: dict) -> None:
+        self.result.genres.append(Genre(
+            id=genre_data['id'],
+            name=genre_data['name'],
+        ))
+
+        self.result.last_modified = LastModified(
+            modified=genre_data['modified'],
+            id=genre_data['id'],
+        )

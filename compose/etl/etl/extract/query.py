@@ -114,3 +114,31 @@ class ExtractFilmWorksSQLStatement(ExtractSQLStatement):
             where_condition=where_condition,
             batch_size=self.batch_size,
         )
+
+
+class ExtractGenresSQLStatement(ExtractSQLStatement):
+    table_modified_condition: TableModifiedCondition
+
+    def __init__(self, *, batch_size: int) -> None:
+        super().__init__(batch_size=batch_size)
+        self.table_modified_condition = TableModifiedCondition(table_name='genre')
+
+    def compile(self, *, last_modified: LastModified) -> sql.Composed:
+        where_condition = self.table_modified_condition.compile(last_modified=last_modified)
+
+        # noinspection SqlNoDataSourceInspection,SqlResolve
+        return sql.SQL('''
+            SELECT
+                genre.id,
+                genre.modified,
+                genre.name
+            FROM content.genre AS genre
+            WHERE {where_condition}
+            ORDER BY
+                genre.modified,
+                genre.id
+            LIMIT {batch_size}
+        ''').format(
+            where_condition=where_condition,
+            batch_size=self.batch_size,
+        )

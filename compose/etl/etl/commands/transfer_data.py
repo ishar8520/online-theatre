@@ -13,17 +13,27 @@ sys.path.insert(0, str(BASE_DIR))
 from etl.extract import (
     FilmWorksExtractor,
     FilmWorksParser,
+    GenresExtractor,
+    GenresParser,
 )
-from etl.load import FilmsLoader
+from etl.load import (
+    FilmsLoader,
+    GenresLoader,
+)
+
 from etl.settings import settings
 from etl.state import JsonFileStorage
-from etl.transform import FilmsTransformer
+from etl.transform import (
+    FilmsTransformer,
+    GenresTransformer,
+)
 from etl.utils import setup_logging
 
 
 def main() -> None:
     setup_logging(filename=BASE_DIR / 'logs' / 'transfer_data.log')
     postgresql_connection_params = settings.postgresql.get_connection_params()
+    schema_dir = BASE_DIR / 'schema'
 
     storage = JsonFileStorage(file_path=BASE_DIR / 'data' / 'state.json')
     state = storage.load()
@@ -33,7 +43,7 @@ def main() -> None:
     ):
         film_works_extractor = FilmWorksExtractor(connection_params=postgresql_connection_params)
 
-        with open(BASE_DIR / 'schema' / 'films.json', 'rb') as films_index_file:
+        with open(schema_dir / 'films.json', 'rb') as films_index_file:
             films_index_json = films_index_file.read().decode()
 
         films_index_data: dict = json.loads(films_index_json)
@@ -42,23 +52,53 @@ def main() -> None:
             index_data=films_index_data,
         )
 
+        genres_extractor = GenresExtractor(connection_params=postgresql_connection_params)
+
+        with open(schema_dir / 'genres.json', 'rb') as genres_index_file:
+            genres_index_json = genres_index_file.read().decode()
+
+        genres_index_data: dict = json.loads(genres_index_json)
+        genres_loader = GenresLoader(
+            client=elasticsearch_client,
+            index_data=genres_index_data,
+        )
+
         while True:
-            film_works = film_works_extractor.extract(
-                last_modified=state.extractors.film_works.last_modified,
-            )
+            while True:
+                film_works = film_works_extractor.extract(
+                    last_modified=state.extractors.film_works.last_modified,
+                )
 
-            film_works_parser = FilmWorksParser(film_works=film_works)
-            films_transformer = FilmsTransformer()
-            film_works_parser.parse(visitor=films_transformer)
+                film_works_parser = FilmWorksParser(film_works=film_works)
+                films_transformer = FilmsTransformer()
+                film_works_parser.parse(visitor=films_transformer)
+                films_transform_result = films_transformer.get_result()
 
-            films_transform_result = films_transformer.get_result()
+                if not films_transform_result.films:
+                    break
 
-            if films_transform_result.films:
-                films_loader.load(films=films_transform_result.films)
+                films_loader.load(documents=films_transform_result.films)
                 state.extractors.film_works.last_modified = films_transform_result.last_modified
                 storage.save(state)
-            else:
-                time.sleep(10)
+
+            while True:
+                genres = genres_extractor.extract(
+                    last_modified=state.extractors.genres.last_modified,
+                )
+
+                genres_parser = GenresParser(genres=genres)
+                genres_transformer = GenresTransformer()
+                genres_parser.parse(visitor=genres_transformer)
+                genres_transform_result = genres_transformer.get_result()
+
+                if not genres_transform_result.genres:
+                    break
+
+                genres_loader.load(documents=genres_transform_result.genres)
+                state.extractors.genres.last_modified = genres_transform_result.last_modified
+                storage.save(state)
+
+            time.sleep(10)
 
 
 if __name__ == '__main__':

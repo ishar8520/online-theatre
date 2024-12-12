@@ -7,14 +7,19 @@ import backoff
 import elasticsearch
 import elasticsearch.helpers
 
-from ..transform import Film
+from ..transform import (
+    Document,
+    Film,
+    Genre,
+)
 
 logger = logging.getLogger(__name__)
 
 
-class FilmsLoader:
-    client: elasticsearch.Elasticsearch
+class ElasticsearchLoader[TDocument: Document]:
     index_name: str
+
+    client: elasticsearch.Elasticsearch
     index_data: dict | None
     index_created: bool
 
@@ -24,7 +29,7 @@ class FilmsLoader:
                  index_name: str | None = None,
                  index_data: dict | None = None) -> None:
         self.client = client
-        self.index_name = index_name or 'films'
+        self.index_name = index_name or self.index_name
         self.index_data = index_data
         self.index_created = False
 
@@ -32,16 +37,16 @@ class FilmsLoader:
             elasticsearch.ConnectionError,
             elasticsearch.ConnectionTimeout,
     ))
-    def load(self, *, films: Iterable[Film]) -> None:
+    def load(self, *, documents: Iterable[TDocument]) -> None:
         if self.index_data and not self.index_created:
             self._create_index()
 
         try:
             elasticsearch.helpers.bulk(self.client, ({
                 '_index': self.index_name,
-                '_id': film.id,
-                '_source': film.model_dump(mode='json'),
-            } for film in films))
+                '_id': document.id,
+                '_source': document.model_dump(mode='json'),
+            } for document in documents))
 
         except elasticsearch.helpers.BulkIndexError as e:
             logger.exception(e)
@@ -60,3 +65,11 @@ class FilmsLoader:
                 pass
 
         self.index_created = True
+
+
+class FilmsLoader(ElasticsearchLoader[Film]):
+    index_name = 'films'
+
+
+class GenresLoader(ElasticsearchLoader[Genre]):
+    index_name = 'genres'
