@@ -2,11 +2,7 @@ from __future__ import annotations
 
 import uuid
 
-from pydantic import (
-    BaseModel,
-    field_serializer,
-    SerializationInfo,
-)
+from pydantic import BaseModel
 
 
 class Film(BaseModel):
@@ -23,27 +19,15 @@ class Film(BaseModel):
     actors: list[FilmActor]
     writers: list[FilmWriter]
 
-    @field_serializer('id')
-    def serialize_id(self, value: uuid.UUID, _info: SerializationInfo) -> str:
-        return str(value)
-
 
 class FilmGenre(BaseModel):
     id: uuid.UUID
     name: str
 
-    @field_serializer('id')
-    def serialize_id(self, value: uuid.UUID, _info: SerializationInfo) -> str:
-        return str(value)
-
 
 class FilmPerson(BaseModel):
     id: uuid.UUID
     name: str
-
-    @field_serializer('id')
-    def serialize_id(self, value: uuid.UUID, _info: SerializationInfo) -> str:
-        return str(value)
 
 
 class FilmDirector(FilmPerson):
