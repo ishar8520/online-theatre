@@ -2,11 +2,10 @@ from __future__ import annotations
 
 from abc import ABC
 
+from ..core import config
 from elasticsearch import AsyncElasticsearch, NotFoundError
 from pydantic import BaseModel
 from redis.asyncio import Redis
-
-REDIS_CACHE_EXPIRE_IN_SECONDS = 60 * 5
 
 
 class AbstractService(ABC):
@@ -45,4 +44,4 @@ class AbstractService(ABC):
         return data
 
     async def _put_to_cache(self, name: str, model: BaseModel):
-        await self.redis.set(name, model.model_dump_json(), REDIS_CACHE_EXPIRE_IN_SECONDS)
+        await self.redis.set(name, model.model_dump_json(), config.REDIS_CACHE_EXPIRE_IN_SECONDS)

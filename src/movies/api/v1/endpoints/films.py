@@ -26,6 +26,9 @@ async def get_list(
         film_service: FilmService = Depends(get_film_service),
 ) -> list[Film]:
 
+    if page_size > 150:
+        page_size = 50
+
     sort_by = {}
     if not sort:
         sort_by = {'field': 'id', 'order': SortOrderEnum.asc}
