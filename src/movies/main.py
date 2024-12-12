@@ -4,7 +4,7 @@ from fastapi.responses import JSONResponse
 from redis.asyncio import Redis
 from contextlib import asynccontextmanager
 
-from .api.v1.endpoints import films, persons
+from .api.v1.endpoints import films, genres, persons
 from .core import config
 from .db import elastic, redis
 
@@ -30,3 +30,5 @@ app = FastAPI(
 
 
 app.include_router(films.router, prefix='/api/v1/films', tags=['films'])
+app.include_router(genres.router, prefix='/api/v1/genres', tags=['genres'])
+app.include_router(persons.router, prefix='/api/v1/persons', tags=['persons'])
