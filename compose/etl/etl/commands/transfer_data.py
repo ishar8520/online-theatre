@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json
 import sys
 import time
 from pathlib import Path
@@ -12,18 +11,30 @@ sys.path.insert(0, str(BASE_DIR))
 
 from etl.extract import (
     FilmWorksExtractor,
-    FilmWorksParser,
+    GenresExtractor,
 )
-from etl.load import FilmsLoader
+from etl.load import ElasticsearchLoader
+from etl.pipelines import (
+    ETLPipeline,
+    FilmsTransformExecutor,
+    GenresTransformExecutor,
+)
 from etl.settings import settings
 from etl.state import JsonFileStorage
-from etl.transform import FilmsTransformer
-from etl.utils import setup_logging
+from etl.transform import (
+    Film,
+    Genre,
+)
+from etl.utils import (
+    setup_logging,
+    load_index_file,
+)
 
 
 def main() -> None:
-    setup_logging(filename=BASE_DIR / 'logs' / 'transfer_data.log')
+    setup_logging(file_path=BASE_DIR / 'logs' / 'transfer_data.log')
     postgresql_connection_params = settings.postgresql.get_connection_params()
+    schema_dir = BASE_DIR / 'schema'
 
     storage = JsonFileStorage(file_path=BASE_DIR / 'data' / 'state.json')
     state = storage.load()
@@ -31,34 +42,43 @@ def main() -> None:
     with (
         elasticsearch.Elasticsearch(settings.elasticsearch.url) as elasticsearch_client,
     ):
-        film_works_extractor = FilmWorksExtractor(connection_params=postgresql_connection_params)
+        films_pipeline = ETLPipeline[Film](
+            extractor=FilmWorksExtractor(connection_params=postgresql_connection_params),
+            transform_executor=FilmsTransformExecutor(),
+            loader=ElasticsearchLoader[Film](
+                client=elasticsearch_client,
+                index_name='films',
+                index_data=load_index_file(schema_dir / 'films.json'),
+            ),
+        )
 
-        with open(BASE_DIR / 'schema' / 'films.json', 'rb') as films_index_file:
-            films_index_json = films_index_file.read().decode()
-
-        films_index_data: dict = json.loads(films_index_json)
-        films_loader = FilmsLoader(
-            client=elasticsearch_client,
-            index_data=films_index_data,
+        genres_pipeline = ETLPipeline[Genre](
+            extractor=GenresExtractor(connection_params=postgresql_connection_params),
+            transform_executor=GenresTransformExecutor(),
+            loader=ElasticsearchLoader[Genre](
+                client=elasticsearch_client,
+                index_name='genres',
+                index_data=load_index_file(schema_dir / 'genres.json'),
+            ),
         )
 
         while True:
-            film_works = film_works_extractor.extract(
-                last_modified=state.extractors.film_works.last_modified,
-            )
+            for etl_pipeline, extractor_state in [
+                (films_pipeline, state.extractors.film_works),
+                (genres_pipeline, state.extractors.genres),
+            ]:
+                while True:
+                    documents_transform_result = etl_pipeline.transfer_data(
+                        last_modified=extractor_state.last_modified,
+                    )
 
-            film_works_parser = FilmWorksParser(film_works=film_works)
-            films_transformer = FilmsTransformer()
-            film_works_parser.parse(visitor=films_transformer)
+                    if not documents_transform_result.documents:
+                        break
 
-            films_transform_result = films_transformer.get_result()
+                    extractor_state.last_modified = documents_transform_result.last_modified
+                    storage.save(state)
 
-            if films_transform_result.films:
-                films_loader.load(films=films_transform_result.films)
-                state.extractors.film_works.last_modified = films_transform_result.last_modified
-                storage.save(state)
-            else:
-                time.sleep(10)
+            time.sleep(10)
 
 
 if __name__ == '__main__':

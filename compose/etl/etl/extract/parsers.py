@@ -34,3 +34,19 @@ class FilmWorksVisitor:
 
     def handle_person(self, *, person_data: dict) -> None:
         pass
+
+
+class GenresParser:
+    genres: Iterable[dict]
+
+    def __init__(self, *, genres: Iterable[dict]) -> None:
+        self.genres = genres
+
+    def parse(self, *, visitor: GenresVisitor) -> None:
+        for genre_data in self.genres:
+            visitor.handle_genre(genre_data=genre_data)
+
+
+class GenresVisitor:
+    def handle_genre(self, *, genre_data: dict) -> None:
+        pass

@@ -1,1 +1,1 @@
-from .loader import FilmsLoader
+from .loaders import ElasticsearchLoader

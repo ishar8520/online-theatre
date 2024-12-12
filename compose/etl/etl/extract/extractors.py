@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
+from typing import ClassVar
 
 import backoff
 import psycopg
@@ -10,6 +11,7 @@ import psycopg.rows
 from .query import (
     ExtractSQLStatement,
     ExtractFilmWorksSQLStatement,
+    ExtractGenresSQLStatement,
 )
 from ..state import LastModified
 
@@ -39,13 +41,17 @@ class PostgreSQLCursorExecutor:
         return self.cursor.execute(query, params)
 
 
-class FilmWorksExtractor:
+class PostgreSQLExtractor:
+    batch_size: int = 100
+    extract_sql_statement_class: ClassVar[type[ExtractSQLStatement]]
+
     connection_factory: PostgreSQLConnectionFactory
     extract_sql_statement: ExtractSQLStatement
 
     def __init__(self, *, connection_params: dict, batch_size: int | None = None) -> None:
         self.connection_factory = PostgreSQLConnectionFactory(connection_params=connection_params)
-        self.extract_sql_statement = ExtractFilmWorksSQLStatement(batch_size=batch_size or 100)
+        self.batch_size = batch_size or self.batch_size
+        self.extract_sql_statement = self.extract_sql_statement_class(batch_size=self.batch_size)
 
     def extract(self, *, last_modified: LastModified) -> Iterable[dict]:
         with self.connection_factory.create() as connection:
@@ -53,3 +59,11 @@ class FilmWorksExtractor:
                 cursor_executor = PostgreSQLCursorExecutor(cursor=cursor)
                 query = self.extract_sql_statement.compile(last_modified=last_modified)
                 yield from cursor_executor.execute(query=query)
+
+
+class FilmWorksExtractor(PostgreSQLExtractor):
+    extract_sql_statement_class = ExtractFilmWorksSQLStatement
+
+
+class GenresExtractor(PostgreSQLExtractor):
+    extract_sql_statement_class = ExtractGenresSQLStatement
