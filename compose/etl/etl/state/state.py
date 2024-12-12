@@ -27,7 +27,7 @@ class ExtractorState(StateModel):
 
 
 class LastModified(StateModel):
-    model_config = ConfigDict(strict=True, frozen=True)
+    model_config = ConfigDict(frozen=True)
 
     modified: datetime.datetime | None = Field(default=None)
     id: uuid.UUID | None = Field(default=None)

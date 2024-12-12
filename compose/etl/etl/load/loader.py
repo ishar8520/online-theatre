@@ -40,7 +40,7 @@ class FilmsLoader:
             elasticsearch.helpers.bulk(self.client, ({
                 '_index': self.index_name,
                 '_id': film.id,
-                '_source': film.model_dump(),
+                '_source': film.model_dump(mode='json'),
             } for film in films))
 
         except elasticsearch.helpers.BulkIndexError as e:
