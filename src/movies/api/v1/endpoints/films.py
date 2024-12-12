@@ -46,20 +46,20 @@ async def get_list(
     if not film_list:
         return []
 
-    return [Film(**item.model_dump()) for item in film_list]
+    return [Film(**item.model_dump(by_alias=True)) for item in film_list]
 
 
 # @todo use for test -> 5065b37b-fd5b-4c48-8a24-435198c44830
-@router.get('/{id}', response_model=FilmInfo)
+@router.get('/{uuid}', response_model=FilmInfo)
 async def get_by_id(
-        id: uuid.UUID,
+        uuid: uuid.UUID,
         film_service: FilmService = Depends(get_film_service)
 ) -> FilmInfo:
-    film = await film_service.get_by_id(id)
+    film = await film_service.get_by_id(uuid)
     if not film:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail='Film not found')
 
-    return FilmInfo(**film.model_dump())
+    return FilmInfo(**film.model_dump(by_alias=True))
 
 
 @router.get('/search/', response_model=list[Film])
@@ -72,6 +72,6 @@ async def search(
 
     film_list = await film_service.search(query=query, page_number=page_number, page_size=page_size)
     if not film_list:
-        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail='Films not found')
+        return []
 
-    return [Film(**item.model_dump()) for item in film_list]
+    return [Film(**item.model_dump(by_alias=True)) for item in film_list]

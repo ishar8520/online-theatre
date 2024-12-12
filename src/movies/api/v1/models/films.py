@@ -6,7 +6,7 @@ from pydantic import BaseModel
 
 
 class PersonMixin:
-    id: uuid.UUID
+    uuid: uuid.UUID
     name: str
 
 
@@ -23,12 +23,12 @@ class Writer(BaseModel, PersonMixin):
 
 
 class Genre(BaseModel):
-    id: uuid.UUID
+    uuid: uuid.UUID
     name: str
 
 
 class FilmInfo(BaseModel):
-    id: uuid.UUID
+    uuid: uuid.UUID
     title: str
     description: str
     # @todo TMP solution
@@ -39,6 +39,6 @@ class FilmInfo(BaseModel):
 
 
 class Film(BaseModel):
-    id: str
+    uuid: uuid.UUID
     title: str
     imdb_rating: float

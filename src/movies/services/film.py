@@ -86,18 +86,19 @@ class FilmService(AbstractService):
 
     async def get_by_id(
             self,
-            id: str
+            id: uuid.UUID
     ) -> Film | None:
 
-        data = await self._get_from_cache(id)
+        str_id = str(id)
+        data = await self._get_from_cache(str_id)
 
         if not data:
-            data = await self._get_from_elastic(FILM_ELASTIC_INDEX_NAME, id)
+            data = await self._get_from_elastic(FILM_ELASTIC_INDEX_NAME, str_id)
             if not data:
                 return None
 
             film = Film(**data)
-            await self._put_to_cache(film.id, film)
+            await self._put_to_cache(str(film.id), film)
 
             return film
 

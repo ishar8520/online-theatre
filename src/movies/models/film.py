@@ -1,11 +1,11 @@
 from __future__ import annotations
 
 import uuid
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class PersonMixin:
-    id: uuid.UUID
+    id: uuid.UUID = Field(serialization_alias='uuid')
     name: str
 
 
@@ -22,12 +22,12 @@ class Writer(BaseModel, PersonMixin):
 
 
 class Genre(BaseModel):
-    id: uuid.UUID
+    id: uuid.UUID = Field(serialization_alias='uuid')
     name: str
 
 
 class Film(BaseModel):
-    id: uuid.UUID
+    id: uuid.UUID = Field(serialization_alias='uuid')
     title: str
     description: str | None
     imdb_rating: float
