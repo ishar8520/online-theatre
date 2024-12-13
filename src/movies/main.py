@@ -1,10 +1,11 @@
+from contextlib import asynccontextmanager
+
 from elasticsearch import AsyncElasticsearch
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from redis.asyncio import Redis
-from contextlib import asynccontextmanager
 
-from .api.v1.endpoints import films, persons
+from .api.v1.endpoints import films
 from .core import config
 from .db import elastic, redis
 
@@ -27,6 +28,5 @@ app = FastAPI(
     default_response_class=JSONResponse,
     lifespan=lifespan
 )
-
 
 app.include_router(films.router, prefix='/api/v1/films', tags=['films'])
