@@ -3,12 +3,12 @@ from __future__ import annotations
 import uuid
 from functools import lru_cache
 
-from ..core import config
 from elasticsearch import AsyncElasticsearch
 from fastapi import Depends
 from redis.asyncio import Redis
 
 from .abstract import AbstractService
+from ..core import config
 from ..db import (
     get_elastic,
     get_redis,
@@ -52,7 +52,7 @@ class FilmService(AbstractService):
                 }
             }
 
-        result = await self._search_in_elastic(index=config.ELASTIC_INDEX_NAME_MOVIES, body=body)
+        result = await self._search_in_elastic(index=config.ELASTIC_INDEX_NAME_FILMS, body=body)
 
         if result is None:
             return list()
@@ -76,7 +76,7 @@ class FilmService(AbstractService):
             "from": (page_number - 1) * page_size,
         }
 
-        result = await self._search_in_elastic(index=config.ELASTIC_INDEX_NAME_MOVIES, body=body)
+        result = await self._search_in_elastic(index=config.ELASTIC_INDEX_NAME_FILMS, body=body)
 
         if result is None:
             return list()
@@ -92,7 +92,7 @@ class FilmService(AbstractService):
         data = await self._get_from_cache(str_id)
 
         if not data:
-            data = await self._get_from_elastic(index=config.ELASTIC_INDEX_NAME_MOVIES, id=str_id)
+            data = await self._get_from_elastic(index=config.ELASTIC_INDEX_NAME_FILMS, id=str_id)
             if not data:
                 return None
 
