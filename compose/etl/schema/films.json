@@ -45,9 +45,6 @@
       "id": {
         "type": "keyword"
       },
-      "imdb_rating": {
-        "type": "float"
-      },
       "title": {
         "type": "text",
         "analyzer": "ru_en",
@@ -60,6 +57,9 @@
       "description": {
         "type": "text",
         "analyzer": "ru_en"
+      },
+      "rating": {
+        "type": "float"
       },
       "genres_names": {
         "type": "keyword"
@@ -95,7 +95,7 @@
           "id": {
             "type": "keyword"
           },
-          "name": {
+          "full_name": {
             "type": "text",
             "analyzer": "ru_en"
           }
@@ -108,7 +108,7 @@
           "id": {
             "type": "keyword"
           },
-          "name": {
+          "full_name": {
             "type": "text",
             "analyzer": "ru_en"
           }
@@ -121,7 +121,7 @@
           "id": {
             "type": "keyword"
           },
-          "name": {
+          "full_name": {
             "type": "text",
             "analyzer": "ru_en"
           }
