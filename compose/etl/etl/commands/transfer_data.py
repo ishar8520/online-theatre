@@ -24,6 +24,7 @@ from etl.pipelines import (
 from etl.settings import settings
 from etl.state import JsonFileStorage
 from etl.transform import (
+    Document,
     Film,
     Genre,
     Person,
@@ -45,51 +46,49 @@ def main() -> None:
     with (
         elasticsearch.Elasticsearch(settings.elasticsearch.url) as elasticsearch_client,
     ):
-        films_pipeline = ETLPipeline[Film](
-            extractor=FilmWorksExtractor(connection_params=postgresql_connection_params),
-            transform_executor=FilmsTransformExecutor(),
-            loader=ElasticsearchLoader[Film](
-                client=elasticsearch_client,
-                index_name='films',
-                index_data=load_index_file(schema_dir / 'films.json'),
+        etl_pipelines: list[ETLPipeline[Document]] = [
+            ETLPipeline[Film](
+                extractor=FilmWorksExtractor(connection_params=postgresql_connection_params),
+                extractor_state=state.extractors.film_works,
+                transform_executor=FilmsTransformExecutor(),
+                loader=ElasticsearchLoader[Film](
+                    client=elasticsearch_client,
+                    index_name='films',
+                    index_data=load_index_file(schema_dir / 'films.json'),
+                ),
             ),
-        )
 
-        genres_pipeline = ETLPipeline[Genre](
-            extractor=GenresExtractor(connection_params=postgresql_connection_params),
-            transform_executor=GenresTransformExecutor(),
-            loader=ElasticsearchLoader[Genre](
-                client=elasticsearch_client,
-                index_name='genres',
-                index_data=load_index_file(schema_dir / 'genres.json'),
+            ETLPipeline[Genre](
+                extractor=GenresExtractor(connection_params=postgresql_connection_params),
+                extractor_state=state.extractors.genres,
+                transform_executor=GenresTransformExecutor(),
+                loader=ElasticsearchLoader[Genre](
+                    client=elasticsearch_client,
+                    index_name='genres',
+                    index_data=load_index_file(schema_dir / 'genres.json'),
+                ),
             ),
-        )
 
-        persons_pipeline = ETLPipeline[Person](
-            extractor=PersonsExtractor(connection_params=postgresql_connection_params),
-            transform_executor=PersonsTransformExecutor(),
-            loader=ElasticsearchLoader[Person](
-                client=elasticsearch_client,
-                index_name='persons',
-                index_data=load_index_file(schema_dir / 'persons.json'),
-            ),
-        )
+            ETLPipeline[Person](
+                extractor=PersonsExtractor(connection_params=postgresql_connection_params),
+                extractor_state=state.extractors.persons,
+                transform_executor=PersonsTransformExecutor(),
+                loader=ElasticsearchLoader[Person](
+                    client=elasticsearch_client,
+                    index_name='persons',
+                    index_data=load_index_file(schema_dir / 'persons.json'),
+                ),
+            )
+        ]
 
         while True:
-            for etl_pipeline, extractor_state in [
-                (films_pipeline, state.extractors.film_works),
-                (genres_pipeline, state.extractors.genres),
-                (persons_pipeline, state.extractors.persons),
-            ]:
+            for etl_pipeline in etl_pipelines:
                 while True:
-                    documents_transform_result = etl_pipeline.transfer_data(
-                        last_modified=extractor_state.last_modified,
-                    )
+                    documents_transform_result = etl_pipeline.transfer_data()
 
                     if not documents_transform_result.documents:
                         break
 
-                    extractor_state.last_modified = documents_transform_result.last_modified
                     storage.save(state)
 
             time.sleep(10)

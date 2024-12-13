@@ -11,7 +11,10 @@ from ..extract import (
     PersonsParser,
 )
 from ..load import ElasticsearchLoader
-from ..state import LastModified
+from ..state import (
+    ExtractorState,
+    LastModified
+)
 from ..transform import (
     Document,
     Film,
@@ -79,25 +82,29 @@ class PersonsTransformExecutor(DocumentsTransformExecutor[Person]):
 
 class ETLPipeline[TDocument: Document]:
     extractor: PostgreSQLExtractor
+    extractor_state: ExtractorState
     transform_executor: DocumentsTransformExecutor[TDocument]
     loader: ElasticsearchLoader[TDocument]
 
     def __init__(self,
                  *,
                  extractor: PostgreSQLExtractor,
+                 extractor_state: ExtractorState,
                  transform_executor: DocumentsTransformExecutor[TDocument],
                  loader: ElasticsearchLoader[TDocument]) -> None:
         self.extractor = extractor
+        self.extractor_state = extractor_state
         self.transform_executor = transform_executor
         self.loader = loader
 
-    def transfer_data(self, *, last_modified: LastModified) -> DocumentsTransformResult[TDocument]:
-        documents_data = self.extractor.extract(last_modified=last_modified)
+    def transfer_data(self) -> DocumentsTransformResult[TDocument]:
+        documents_data = self.extractor.extract(last_modified=self.extractor_state.last_modified)
         documents_transform_result = self.transform_executor.transform_documents(
             documents_data=documents_data,
         )
 
         if documents_transform_result.documents:
             self.loader.load(documents=documents_transform_result.documents)
+            self.extractor_state.last_modified = documents_transform_result.last_modified
 
         return documents_transform_result
