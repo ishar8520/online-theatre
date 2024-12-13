@@ -12,6 +12,7 @@ from .query import (
     ExtractSQLStatement,
     ExtractFilmWorksSQLStatement,
     ExtractGenresSQLStatement,
+    ExtractPersonsSQLStatement,
 )
 from ..state import LastModified
 
@@ -67,3 +68,7 @@ class FilmWorksExtractor(PostgreSQLExtractor):
 
 class GenresExtractor(PostgreSQLExtractor):
     extract_sql_statement_class = ExtractGenresSQLStatement
+
+
+class PersonsExtractor(PostgreSQLExtractor):
+    extract_sql_statement_class = ExtractPersonsSQLStatement

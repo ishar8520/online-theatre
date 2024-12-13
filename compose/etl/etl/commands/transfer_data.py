@@ -12,18 +12,21 @@ sys.path.insert(0, str(BASE_DIR))
 from etl.extract import (
     FilmWorksExtractor,
     GenresExtractor,
+    PersonsExtractor,
 )
 from etl.load import ElasticsearchLoader
 from etl.pipelines import (
     ETLPipeline,
     FilmsTransformExecutor,
     GenresTransformExecutor,
+    PersonsTransformExecutor,
 )
 from etl.settings import settings
 from etl.state import JsonFileStorage
 from etl.transform import (
     Film,
     Genre,
+    Person,
 )
 from etl.utils import (
     setup_logging,
@@ -62,10 +65,21 @@ def main() -> None:
             ),
         )
 
+        persons_pipeline = ETLPipeline[Person](
+            extractor=PersonsExtractor(connection_params=postgresql_connection_params),
+            transform_executor=PersonsTransformExecutor(),
+            loader=ElasticsearchLoader[Person](
+                client=elasticsearch_client,
+                index_name='persons',
+                index_data=load_index_file(schema_dir / 'persons.json'),
+            ),
+        )
+
         while True:
             for etl_pipeline, extractor_state in [
                 (films_pipeline, state.extractors.film_works),
                 (genres_pipeline, state.extractors.genres),
+                (persons_pipeline, state.extractors.persons),
             ]:
                 while True:
                     documents_transform_result = etl_pipeline.transfer_data(

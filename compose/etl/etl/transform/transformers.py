@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import dataclasses
+import uuid
+from collections import defaultdict
 
 from .models import (
     Film,
@@ -9,12 +11,14 @@ from .models import (
     FilmActor,
     FilmWriter,
     Genre,
+    Person,
+    PersonFilm,
 )
 from ..extract import (
     FilmWorksVisitor,
     GenresVisitor,
+    PersonsVisitor,
 )
-
 from ..state import LastModified
 
 
@@ -128,3 +132,47 @@ class GenresTransformer(GenresVisitor):
             modified=genre_data['modified'],
             id=genre_data['id'],
         )
+
+
+@dataclasses.dataclass(kw_only=True)
+class PersonTransformState:
+    films: dict[uuid.UUID, list[str]] = dataclasses.field(default_factory=lambda: defaultdict(list))
+
+
+@dataclasses.dataclass(kw_only=True)
+class PersonsTransformResult:
+    persons: list[Film] = dataclasses.field(default_factory=list)
+    last_modified: LastModified = dataclasses.field(default_factory=lambda: LastModified())
+
+
+class PersonsTransformer(PersonsVisitor):
+    person_state: PersonTransformState
+    result: PersonsTransformResult
+
+    def __init__(self) -> None:
+        self.person_state = PersonTransformState()
+        self.result = PersonsTransformResult()
+
+    def get_result(self) -> PersonsTransformResult:
+        return self.result
+
+    def start_handle_person(self, *, person_data: dict) -> None:
+        self.person_state = PersonTransformState()
+
+    def end_handle_person(self, *, person_data: dict) -> None:
+        self.result.persons.append(Person(
+            id=person_data['id'],
+            full_name=person_data['full_name'],
+            films=[
+                PersonFilm(id=film_id, roles=person_roles)
+                for film_id, person_roles in self.person_state.films.items()
+            ],
+        ))
+
+        self.result.last_modified = LastModified(
+            modified=person_data['modified'],
+            id=person_data['id'],
+        )
+
+    def handle_film_work(self, *, film_work_data: dict) -> None:
+        self.person_state.films[film_work_data['id']].append(film_work_data['role'])

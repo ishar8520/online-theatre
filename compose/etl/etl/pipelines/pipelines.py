@@ -8,6 +8,7 @@ from ..extract import (
     PostgreSQLExtractor,
     FilmWorksParser,
     GenresParser,
+    PersonsParser,
 )
 from ..load import ElasticsearchLoader
 from ..state import LastModified
@@ -15,8 +16,10 @@ from ..transform import (
     Document,
     Film,
     Genre,
+    Person,
     FilmsTransformer,
     GenresTransformer,
+    PersonsTransformer,
 )
 
 
@@ -58,6 +61,19 @@ class GenresTransformExecutor(DocumentsTransformExecutor[Genre]):
         return DocumentsTransformResult[Genre](
             documents=genres_transform_result.genres,
             last_modified=genres_transform_result.last_modified,
+        )
+
+
+class PersonsTransformExecutor(DocumentsTransformExecutor[Person]):
+    def transform_documents(self, *, documents_data: Iterable[dict]) -> DocumentsTransformResult[Person]:
+        persons_parser = PersonsParser(persons=documents_data)
+        persons_transformer = PersonsTransformer()
+        persons_parser.parse(visitor=persons_transformer)
+        persons_transform_result = persons_transformer.get_result()
+
+        return DocumentsTransformResult[Person](
+            documents=persons_transform_result.persons,
+            last_modified=persons_transform_result.last_modified,
         )
 
 

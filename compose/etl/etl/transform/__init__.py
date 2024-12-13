@@ -6,10 +6,14 @@ from .models import (
     FilmActor,
     FilmWriter,
     Genre,
+    Person,
+    PersonFilm,
 )
 from .transformers import (
     FilmsTransformer,
     FilmsTransformResult,
     GenresTransformer,
     GenresTransformResult,
+    PersonsTransformer,
+    PersonsTransformResult,
 )

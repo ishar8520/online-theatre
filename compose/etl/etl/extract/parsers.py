@@ -50,3 +50,30 @@ class GenresParser:
 class GenresVisitor:
     def handle_genre(self, *, genre_data: dict) -> None:
         pass
+
+
+class PersonsParser:
+    persons: Iterable[dict]
+
+    def __init__(self, *, persons: Iterable[dict]) -> None:
+        self.persons = persons
+
+    def parse(self, *, visitor: PersonsVisitor) -> None:
+        for person_data in self.persons:
+            visitor.start_handle_person(person_data=person_data)
+
+            for film_work_data in person_data['film_works']:
+                visitor.handle_film_work(film_work_data=film_work_data)
+
+            visitor.end_handle_person(person_data=person_data)
+
+
+class PersonsVisitor:
+    def start_handle_person(self, *, person_data: dict) -> None:
+        pass
+
+    def end_handle_person(self, *, person_data: dict) -> None:
+        pass
+
+    def handle_film_work(self, *, film_work_data: dict) -> None:
+        pass

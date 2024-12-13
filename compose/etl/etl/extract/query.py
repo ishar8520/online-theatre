@@ -142,3 +142,56 @@ class ExtractGenresSQLStatement(ExtractSQLStatement):
             where_condition=where_condition,
             batch_size=self.batch_size,
         )
+
+
+class ExtractPersonsSQLStatement(ExtractSQLStatement):
+    table_modified_condition: TableModifiedCondition
+
+    def __init__(self, *, batch_size: int) -> None:
+        super().__init__(batch_size=batch_size)
+        self.table_modified_condition = TableModifiedCondition(table_name='modified_person')
+
+    def compile(self, *, last_modified: LastModified) -> sql.Composed:
+        where_condition = self.table_modified_condition.compile(last_modified=last_modified)
+
+        # noinspection SqlNoDataSourceInspection,SqlResolve
+        return sql.SQL('''
+            SELECT DISTINCT
+                person.id,
+                modified_person.modified,
+                person.full_name,
+                COALESCE(jsonb_agg(DISTINCT jsonb_build_object(
+                    'id', film_work.id,
+                    'modified', film_work.modified,
+                    'role', person_film_work.role
+                )) FILTER (WHERE film_work.id IS NOT NULL), '[]'::jsonb) AS film_works
+            FROM content.person AS person
+                LEFT JOIN content.person_film_work AS person_film_work
+                    ON person_film_work.person_id = person.id
+                LEFT JOIN content.film_work AS film_work
+                    ON person_film_work.film_work_id = film_work.id
+                INNER JOIN (
+                    SELECT
+                        person.id,
+                        GREATEST(person.modified, max(film_work.modified)) AS modified
+                    FROM content.person AS person
+                        LEFT JOIN content.person_film_work AS person_film_work
+                            ON person_film_work.person_id = person.id
+                        LEFT JOIN content.film_work AS film_work
+                            ON person_film_work.film_work_id = film_work.id
+                    GROUP BY
+                        person.id
+                ) AS modified_person
+                    ON person.id = modified_person.id
+            WHERE {where_condition}
+            GROUP BY
+                person.id,
+                modified_person.modified
+            ORDER BY
+                modified_person.modified,
+                person.id
+            LIMIT {batch_size}
+        ''').format(
+            where_condition=where_condition,
+            batch_size=self.batch_size,
+        )
