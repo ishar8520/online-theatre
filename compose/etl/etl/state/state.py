@@ -21,6 +21,7 @@ class State(StateModel):
 class ExtractorsState(StateModel):
     film_works: ExtractorState = Field(default_factory=lambda: ExtractorState())
     genres: ExtractorState = Field(default_factory=lambda: ExtractorState())
+    persons: ExtractorState = Field(default_factory=lambda: ExtractorState())
 
 
 class ExtractorState(StateModel):

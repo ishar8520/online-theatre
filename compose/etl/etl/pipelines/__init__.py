@@ -4,4 +4,5 @@ from .pipelines import (
     DocumentsTransformExecutor,
     FilmsTransformExecutor,
     GenresTransformExecutor,
+    PersonsTransformExecutor,
 )
