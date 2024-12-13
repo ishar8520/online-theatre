@@ -57,9 +57,9 @@ class FilmsTransformer(FilmWorksVisitor):
     def end_handle_film_work(self, *, film_work_data: dict) -> None:
         self.result.films.append(Film(
             id=film_work_data['id'],
-            imdb_rating=film_work_data['rating'],
             title=film_work_data['title'],
             description=film_work_data['description'],
+            rating=film_work_data['rating'],
             genres_names=self.film_state.genres_names,
             directors_names=self.film_state.directors_names,
             actors_names=self.film_state.actors_names,
@@ -87,7 +87,7 @@ class FilmsTransformer(FilmWorksVisitor):
             self.film_state.directors_names.append(person_data['full_name'])
             self.film_state.directors.append(FilmDirector(
                 id=person_data['id'],
-                name=person_data['full_name'],
+                full_name=person_data['full_name'],
             ))
             return
 
@@ -95,7 +95,7 @@ class FilmsTransformer(FilmWorksVisitor):
             self.film_state.actors_names.append(person_data['full_name'])
             self.film_state.actors.append(FilmActor(
                 id=person_data['id'],
-                name=person_data['full_name'],
+                full_name=person_data['full_name'],
             ))
             return
 
@@ -103,7 +103,7 @@ class FilmsTransformer(FilmWorksVisitor):
             self.film_state.writers_names.append(person_data['full_name'])
             self.film_state.writers.append(FilmWriter(
                 id=person_data['id'],
-                name=person_data['full_name'],
+                full_name=person_data['full_name'],
             ))
 
 

@@ -7,7 +7,7 @@ from pydantic import BaseModel
 
 class PersonMixin:
     uuid: uuid.UUID
-    name: str
+    full_name: str
 
 
 class Director(BaseModel, PersonMixin):
@@ -30,7 +30,8 @@ class Genre(BaseModel):
 class FilmInfo(BaseModel):
     uuid: uuid.UUID
     title: str
-    description: str
+    imdb_rating: float | None
+    description: str | None
     # @todo TMP solution
     # genre: list[Genre]
     directors: list[Director] | None
@@ -41,4 +42,4 @@ class FilmInfo(BaseModel):
 class Film(BaseModel):
     uuid: uuid.UUID
     title: str
-    imdb_rating: float
+    imdb_rating: float | None

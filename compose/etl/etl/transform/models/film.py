@@ -7,9 +7,9 @@ from .base import (
 
 
 class Film(Document):
-    imdb_rating: float | None
     title: str
     description: str | None
+    rating: float | None
     genres_names: list[str]
     directors_names: list[str]
     actors_names: list[str]
@@ -25,7 +25,7 @@ class FilmGenre(DocumentRelation):
 
 
 class FilmPerson(DocumentRelation):
-    name: str
+    full_name: str
 
 
 class FilmDirector(FilmPerson):
