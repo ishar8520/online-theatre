@@ -32,8 +32,7 @@ class Film(BaseModel):
     title: str
     description: str | None
     rating: float | None = Field(serialization_alias='imdb_rating')
-    # @todo TMP
-    # genres: list[Genre]
+    genres: list[Genre]
     directors: list[Director] | None
     actors: list[Actor] | None
     writers: list[Writer] | None

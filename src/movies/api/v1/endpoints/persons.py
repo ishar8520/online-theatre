@@ -6,7 +6,7 @@ from http import HTTPStatus
 from fastapi import APIRouter, Depends, HTTPException
 
 from movies.services.person import PersonService, get_person_service
-from ..models.person import Person, PersonFilm
+from ..models.persons import Person, PersonFilm
 
 router = APIRouter()
 

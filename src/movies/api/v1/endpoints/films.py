@@ -52,7 +52,6 @@ async def get_list(
     return [Film(**item.model_dump(by_alias=True)) for item in film_list]
 
 
-# @todo use for test -> 5065b37b-fd5b-4c48-8a24-435198c44830
 @router.get('/{uuid}', response_model=FilmInfo)
 async def get_by_id(
         uuid: uuid.UUID,

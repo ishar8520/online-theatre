@@ -32,8 +32,7 @@ class FilmInfo(BaseModel):
     title: str
     imdb_rating: float | None
     description: str | None
-    # @todo TMP solution
-    # genre: list[Genre]
+    genre: list[Genre]
     directors: list[Director] | None
     actors: list[Actor] | None
     writers: list[Writer] | None
