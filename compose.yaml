@@ -81,10 +81,88 @@ services:
     image: 'bitnami/postgresql:17.2.0-debian-12-r2'
     networks:
       - movies-network
+    ports:
+      - '5432:5432'
     volumes:
       - 'postgresql-data:/bitnami/postgresql'
       - './compose/postgresql/database_dump.sql:/docker-entrypoint-initdb.d/init.sql'
     environment:
+      - POSTGRESQL_DATABASE=$POSTGRESQL_DATABASE
+      - POSTGRESQL_USERNAME=$POSTGRESQL_USERNAME
+      - POSTGRESQL_PASSWORD=$POSTGRESQL_PASSWORD
+    restart: unless-stopped
+    healthcheck:
+      test: [ 'CMD-SHELL', 'pg_isready --username=$POSTGRESQL_USERNAME --dbname=$POSTGRESQL_DATABASE' ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  faker:
+    build: 
+      context: ./faker
+    depends_on:
+        faker-postgresql:
+          condition: service_healthy
+    networks:
+      - movies-network
+    environment:
+      - POSTGRESQL_DATABASE=$POSTGRESQL_DATABASE
+      - POSTGRESQL_USERNAME=$POSTGRESQL_USERNAME
+      - POSTGRESQL_PASSWORD=$POSTGRESQL_PASSWORD
+
+  faker-elasticsearch:
+    image: 'bitnami/elasticsearch:8.16.1-debian-12-r1'
+    ports:
+      - '9300:9200'
+    networks:
+      - movies-network
+    volumes:
+      - 'faker-elasticsearch-data:/bitnami/elasticsearch/data'
+    environment:
+      - ELASTICSEARCH_HEAP_SIZE=${ELASTICSEARCH_HEAP_SIZE:-200m}
+    restart: unless-stopped
+    healthcheck:
+      test: [ 'CMD-SHELL', '/opt/bitnami/scripts/elasticsearch/healthcheck.sh' ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  faker-etl:
+    build:
+      context: ./compose/etl
+    depends_on:
+      faker-postgresql:
+        condition: service_healthy
+      faker-elasticsearch:
+        condition: service_healthy
+    networks:
+      - movies-network
+    volumes:
+      - 'etl-data:/opt/app/data'
+      - 'etl-logs:/opt/app/logs'
+    environment:
+      - POSTGRESQL_HOST=fake_postgresql
+      - POSTGRESQL_PORT=6432
+      - POSTGRESQL_DATABASE=$POSTGRESQL_DATABASE
+      - POSTGRESQL_USERNAME=$POSTGRESQL_USERNAME
+      - POSTGRESQL_PASSWORD=$POSTGRESQL_PASSWORD
+      - ELASTICSEARCH_URL=http://elasticsearch:9300
+    restart: unless-stopped
+
+  faker-postgresql:
+    image: 'bitnami/postgresql:17.2.0-debian-12-r2'
+    container_name: faker-postgresql
+    networks:
+      - movies-network
+    ports:
+      - '6432:5432'
+    volumes:
+      - 'faker-postgresql-data:/bitnami/postgresql'
+      - './faker/database_dump.sql:/docker-entrypoint-initdb.d/init.sql'
+    environment:
+      - POSTGRESQL_PORT=6432
       - POSTGRESQL_DATABASE=$POSTGRESQL_DATABASE
       - POSTGRESQL_USERNAME=$POSTGRESQL_USERNAME
       - POSTGRESQL_PASSWORD=$POSTGRESQL_PASSWORD
@@ -105,3 +183,5 @@ volumes:
   etl-data:
   etl-logs:
   postgresql-data:
+  faker-elasticsearch-data:
+  faker-postgresql-data:
