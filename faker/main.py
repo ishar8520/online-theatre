@@ -19,9 +19,9 @@ DB_CONFIG = {
     'port': db_config.port,
 }
 
-NUMBER_OF_FILMS = 12345
-NUMBER_OF_PERSONS = 4000
-CHUNK_OF_FILMS = 1000
+NUMBER_OF_FILMS = 200000
+NUMBER_OF_PERSONS = 5000
+CHUNK_OF_FILMS = 5000
 
 TIME_NOW = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S.%f")
 
@@ -136,7 +136,7 @@ def commit_films(films_list, gf_list, pf_list):
 
 
 if __name__ == '__main__':
-    print(datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S.%f"))
+    print('start', datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S.%f"))
     with psycopg2.connect(**DB_CONFIG) as conn:
         with conn.cursor(cursor_factory=DictCursor) as cursor:
 
@@ -166,6 +166,11 @@ if __name__ == '__main__':
             films_list = []
             gf_list = []
             pf_list = []
+            
+            cursor.execute(f"SELECT COUNT(*) FROM content.film_work;")
+            count_film_work = cursor.fetchone()[0]
+            if count_film_work > NUMBER_OF_FILMS:
+                NUMBER_OF_FILMS = NUMBER_OF_FILMS - count_film_work
             for film_number in range(NUMBER_OF_FILMS):
                 genre_film = random.sample(genres_list, random.randint(1, 2))
                 actors = random.sample(persons_list, random.randint(1, 6))
