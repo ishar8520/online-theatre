@@ -28,7 +28,7 @@ class PersonService(AbstractService):
         body = {
             "query": {
                 "match": {
-                    "title": query
+                    "full_name": query
                 }
             },
             "size": page_size,

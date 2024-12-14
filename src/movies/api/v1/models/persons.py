@@ -19,4 +19,3 @@ class Person(BaseModel):
 class PersonFilm(BaseModel):
     uuid: uuid.UUID
     title: str
-    imdb_rating: float
