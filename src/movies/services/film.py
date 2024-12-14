@@ -18,6 +18,58 @@ from ..models import Film
 
 class FilmService(AbstractService):
 
+    async def get_list_by_person(
+            self,
+            person_uuid: uuid.UUID = None,
+    ) -> list[Film]:
+
+        body = {
+            "query": {
+                "bool": {
+                    "should": [
+                        {
+                            "nested": {
+                                "path": "actors",
+                                "query": {
+                                    "term": {
+                                        "actors.id": str(person_uuid)
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "nested": {
+                                "path": "directors",
+                                "query": {
+                                    "term": {
+                                        "directors.id": str(person_uuid)
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "nested": {
+                                "path": "writers",
+                                "query": {
+                                    "term": {
+                                        "writers.id": str(person_uuid)
+                                    }
+                                }
+                            }
+                        },
+                    ],
+                    "minimum_should_match": 1
+                }
+            }
+        }
+
+        result = await self._search_in_elastic(index=config.ELASTIC_INDEX_NAME_FILMS, body=body)
+
+        if result is None:
+            return list()
+
+        return [Film(**source_item['_source']) for source_item in result]
+
     async def get_list(
             self,
             sort: dict[str, str],

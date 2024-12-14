@@ -6,6 +6,7 @@ from http import HTTPStatus
 from fastapi import APIRouter, Depends, HTTPException
 
 from movies.services.person import PersonService, get_person_service
+from movies.services.film import FilmService, get_film_service
 from ..models.persons import Person, PersonFilm
 
 router = APIRouter()
@@ -26,14 +27,14 @@ async def get_by_id(
 @router.get('/{uuid}/film/', response_model=list[PersonFilm])
 async def get_by_id_with_films(
         uuid: uuid.UUID,
-        person_service: PersonService = Depends(get_person_service),
+        film_service: FilmService = Depends(get_film_service),
 ) -> list[PersonFilm]:
 
-    person = await person_service.get_by_id(uuid)
-    if not person:
-        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail='Person not found')
+    films_person = await film_service.get_list_by_person(uuid)
+    if not films_person:
+        return []
 
-    return [PersonFilm(**item.model_dump(by_alias=True)) for item in person]
+    return [PersonFilm(**item.model_dump(by_alias=True)) for item in films_person]
 
 
 @router.get('/search/', response_model=list[Person])
