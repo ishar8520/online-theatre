@@ -63,10 +63,10 @@ class FilmService(AbstractService):
             }
         }
 
-        result = await self._search_in_elastic(index=config.ELASTIC_INDEX_NAME_FILMS, body=body)
+        result = await self.search_service.search(index=config.ELASTIC_INDEX_NAME_FILMS, body=body)
 
         if result is None:
-            return list()
+            return []
 
         return [Film(**source_item['_source']) for source_item in result]
 
@@ -100,10 +100,10 @@ class FilmService(AbstractService):
                 }
             }
 
-        result = await self._search_in_elastic(index=config.ELASTIC_INDEX_NAME_FILMS, body=body)
+        result = await self.search_service.search(index=config.ELASTIC_INDEX_NAME_FILMS, body=body)
 
         if result is None:
-            return list()
+            return []
 
         return [Film(**source_item['_source']) for source_item in result]
 
@@ -124,10 +124,10 @@ class FilmService(AbstractService):
             "from": (page_number - 1) * page_size,
         }
 
-        result = await self._search_in_elastic(index=config.ELASTIC_INDEX_NAME_FILMS, body=body)
+        result = await self.search_service.search(index=config.ELASTIC_INDEX_NAME_FILMS, body=body)
 
         if result is None:
-            return list()
+            return []
 
         return [Film(**item['_source']) for item in result]
 
@@ -135,21 +135,12 @@ class FilmService(AbstractService):
             self,
             id: uuid.UUID
     ) -> Film | None:
-
-        str_id = str(id)
-        data = await self._get_from_cache(str_id)
+        data = await self.search_service.get(index=config.ELASTIC_INDEX_NAME_FILMS, id=str(id))
 
         if not data:
-            data = await self._get_from_elastic(index=config.ELASTIC_INDEX_NAME_FILMS, id=str_id)
-            if not data:
-                return None
+            return None
 
-            film = Film(**data)
-            await self._put_to_cache(str(film.id), film)
-
-            return film
-
-        return Film.model_validate_json(data)
+        return Film(**data)
 
 
 @lru_cache()
