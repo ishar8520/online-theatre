@@ -39,14 +39,10 @@ class FilmService(AbstractService):
         if genre_uuid:
             body["query"] = {
                 "nested": {
-                    # @todo only for test
-                    # "path": "genres",
-                    "path": "actors",
+                    "path": "genres",
                     "query": {
                         "term": {
-                            # @todo only for test
-                            # "genres.id": genre_uuid
-                            "actors.id": genre_uuid
+                            "genres.id": str(genre_uuid)
                         }
                     }
                 }
