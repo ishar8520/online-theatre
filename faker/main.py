@@ -140,15 +140,15 @@ if __name__ == '__main__':
     with psycopg2.connect(**DB_CONFIG) as conn:
         with conn.cursor(cursor_factory=DictCursor) as cursor:
 
-            cursor.execute(f"SELECT COUNT(*) FROM content.film_work;")
+            cursor.execute("SELECT COUNT(*) FROM content.film_work;")
             count_film_work = cursor.fetchone()[0]
 
             NUMBER_OF_FILMS = NUMBER_OF_FILMS - count_film_work
             if NUMBER_OF_FILMS <= 0:
                 exit()
 
-            genres_list = [generate_genre_data(genre, disription)
-                           for genre, disription in GENRES.items()]
+            genres_list = [generate_genre_data(genre, desription)
+                           for genre, desription in GENRES.items()]
 
             genres_query = '\n'.join(
                     ['\t'.join(genre) for genre in genres_list])
