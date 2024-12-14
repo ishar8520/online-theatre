@@ -41,4 +41,3 @@ async def get_by_id(
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail='Genre not found')
 
     return Genre(**genre.model_dump(by_alias=True))
-

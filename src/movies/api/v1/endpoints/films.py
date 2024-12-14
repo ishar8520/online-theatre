@@ -73,6 +73,8 @@ async def search(
         page_size: int = 50,
         film_service: FilmService = Depends(get_film_service),
 ) -> list[Film]:
+    if not query:
+        return []
 
     film_list = await film_service.search(query=query, page_number=page_number, page_size=page_size)
     if not film_list:

@@ -7,7 +7,7 @@ from elasticsearch import AsyncElasticsearch
 from fastapi import Depends
 from redis.asyncio import Redis
 
-from..core import config
+from ..core import config
 from .abstract import AbstractService
 from ..db import (
     get_elastic,
