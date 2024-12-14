@@ -30,15 +30,17 @@ async def get_list(
         page_size = 50
 
     sort_by = {}
-    if not sort:
+    if sort:
+        is_first_dash = sort[0] == '-'
+
+        field = sort[1:] if is_first_dash else sort
+        sort = SortOrderEnum.desc if is_first_dash else SortOrderEnum.asc
+
+        if field == 'imdb_rating':
+            sort_by = {'field': 'rating', 'order': sort}
+
+    if not sort_by:
         sort_by = {'field': 'id', 'order': SortOrderEnum.asc}
-    else:
-        if sort[0] == '-':
-            sort_by['field'] = sort[1:]
-            sort_by['order'] = SortOrderEnum.desc
-        else:
-            sort_by['field'] = sort
-            sort_by['order'] = SortOrderEnum.asc
 
     film_list = await film_service.get_list(
         sort=sort_by,
