@@ -5,7 +5,7 @@ class DBConfig(BaseSettings):
     database: str
     username: str
     password: str
-    host: str = 'faker-postgresql'
+    host: str = 'postgresql'
     port: int = 5432
 
     class Config:
