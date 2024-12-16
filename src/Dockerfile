@@ -24,6 +24,15 @@ ENV VIRTUAL_ENV=/venv
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
 COPY --from=venv "$VIRTUAL_ENV" "$VIRTUAL_ENV"
-COPY ./movies/ ./movies
+COPY ./movies/ ./movies/
 
-ENTRYPOINT [ "fastapi", "run", "./movies/main.py" ]
+COPY ./commands/ ./commands/
+RUN chmod +x ./commands/*.sh
+
+COPY ./docker-entrypoint.sh .
+RUN chmod +x docker-entrypoint.sh
+
+EXPOSE 8000
+
+ENTRYPOINT ["/opt/app/docker-entrypoint.sh"]
+CMD ["/opt/app/commands/gunicorn.sh"]

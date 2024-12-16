@@ -12,6 +12,7 @@ services:
     networks:
       - movies-network
     environment:
+      - GUNICORN_WORKERS
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - ELASTIC_HOST=elasticsearch
