@@ -1,4 +1,16 @@
 services:
+  nginx:
+    image: 'bitnami/nginx:1.27.3-debian-12-r0'
+    depends_on:
+      movies:
+        condition: service_healthy
+    ports:
+      - '8000:8080'
+    networks:
+      - movies-network
+    volumes:
+      - './compose/nginx/movies.conf:/opt/bitnami/nginx/conf/server_blocks/movies.conf:ro'
+
   movies:
     build:
       context: ./src
@@ -7,8 +19,6 @@ services:
         condition: service_healthy
       elasticsearch:
         condition: service_healthy
-    ports:
-      - '8000:8000'
     networks:
       - movies-network
     environment:
