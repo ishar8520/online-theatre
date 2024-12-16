@@ -58,7 +58,7 @@ services:
     volumes:
       - 'elasticsearch-data:/bitnami/elasticsearch/data'
     environment:
-      - ELASTICSEARCH_HEAP_SIZE=${ELASTICSEARCH_HEAP_SIZE:-200mb}
+      - ELASTICSEARCH_HEAP_SIZE=${ELASTICSEARCH_HEAP_SIZE:-200m}
     restart: unless-stopped
     healthcheck:
       test: [ 'CMD-SHELL', '/opt/bitnami/scripts/elasticsearch/healthcheck.sh' ]
