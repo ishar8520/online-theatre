@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from movies.services.film import FilmService, get_film_service
 from ..models.films import FilmInfo, Film
+from ..dependencies.page import Page
 
 router = APIRouter()
 
@@ -17,17 +18,18 @@ class SortOrderEnum(str, Enum):
     desc = "desc"
 
 
-@router.get('/', response_model=list[Film])
+@router.get(
+    '/',
+    response_model=list[Film],
+    summary='Get list of films',
+    description='Get list of films with sorting, pagination and filter by concrete genre. The maximum count of films on one page are 150.'
+)
 async def get_list(
         sort: str = '',
         genre: uuid.UUID | None = None,
-        page_number: int = 1,
-        page_size: int = 50,
+        page: Page = Depends(Page),
         film_service: FilmService = Depends(get_film_service),
 ) -> list[Film]:
-
-    if page_size > 150:
-        page_size = 50
 
     sort_by = {}
     if sort:
@@ -45,8 +47,8 @@ async def get_list(
     film_list = await film_service.get_list(
         sort=sort_by,
         genre_uuid=genre,
-        page_number=page_number,
-        page_size=page_size
+        page_number=page.number,
+        page_size=page.size
     )
     if not film_list:
         return []
@@ -54,7 +56,12 @@ async def get_list(
     return [Film(**item.model_dump(by_alias=True)) for item in film_list]
 
 
-@router.get('/{uuid}', response_model=FilmInfo)
+@router.get(
+    '/{uuid}',
+    response_model=FilmInfo,
+    summary='Get film by uuid',
+    description='Get concrete film by uuid.'
+)
 async def get_by_id(
         uuid: uuid.UUID,
         film_service: FilmService = Depends(get_film_service)
@@ -66,17 +73,21 @@ async def get_by_id(
     return FilmInfo(**film.model_dump(by_alias=True))
 
 
-@router.get('/search/', response_model=list[Film])
+@router.get(
+    '/search/',
+    response_model=list[Film],
+    summary='Search film by query',
+    description='Search film by title with pagination. The maximum count of films on one page are 150.'
+)
 async def search(
         query: str = '',
-        page_number: int = 1,
-        page_size: int = 50,
+        page: Page = Depends(Page),
         film_service: FilmService = Depends(get_film_service),
 ) -> list[Film]:
     if not query:
         return []
 
-    film_list = await film_service.search(query=query, page_number=page_number, page_size=page_size)
+    film_list = await film_service.search(query=query, page_number=page.number, page_size=page.size)
     if not film_list:
         return []
 

@@ -7,23 +7,25 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from movies.services.genre import GenreService, get_genre_service
 from ..models.genres import Genre
+from ..dependencies.page import Page
 
 router = APIRouter()
 
 
-@router.get('/', response_model=list[Genre])
+@router.get(
+    '/',
+    response_model=list[Genre],
+    summary='Get list of genres',
+    description='Get list of genres with pagination. The maximum count of genres on one page are 150.'
+)
 async def get_list(
-        page_number: int = 1,
-        page_size: int = 50,
+        page: Page = Depends(Page),
         get_genre_service: GenreService = Depends(get_genre_service),
 ) -> list[Genre]:
 
-    if page_size > 150:
-        page_size = 50
-
     genre_list = await get_genre_service.get_list(
-        page_number=page_number,
-        page_size=page_size
+        page_number=page.number,
+        page_size=page.size
     )
     if not genre_list:
         return []
@@ -31,7 +33,12 @@ async def get_list(
     return [Genre(**item.model_dump(by_alias=True)) for item in genre_list]
 
 
-@router.get('/{uuid}', response_model=Genre)
+@router.get(
+    '/{uuid}',
+    response_model=Genre,
+    summary='Get genre by uuid',
+    description='Get concrete genre by uuid.'
+)
 async def get_by_id(
         uuid: uuid.UUID,
         get_genre_service: GenreService = Depends(get_genre_service)
