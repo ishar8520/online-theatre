@@ -7,7 +7,7 @@ from typing import Any
 import elasticsearch
 import redis.asyncio as redis
 
-from ..core import config
+from ..core.config import settings
 
 
 class SearchService:
@@ -91,7 +91,7 @@ class SearchCache:
         await self.redis_client.set(
             cache_key,
             value_json,
-            ex=config.REDIS_CACHE_EXPIRE_IN_SECONDS,
+            ex=settings.redis.cache_expire_in_seconds,
         )
 
     def _create_cache_key(self, *, index: str, command: str, params: dict) -> str:

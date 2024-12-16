@@ -8,7 +8,7 @@ from fastapi import Depends
 from redis.asyncio import Redis
 
 from .abstract import AbstractService
-from ..core import config
+from ..core.config import settings
 from ..db import (
     get_elastic,
     get_redis,
@@ -35,7 +35,7 @@ class PersonService(AbstractService):
             "from": (page_number - 1) * page_size,
         }
 
-        result = await self.search_service.search(index=config.ELASTIC_INDEX_NAME_PERSONS, body=body)
+        result = await self.search_service.search(index=settings.elasticsearch.index_name_persons, body=body)
 
         if result is None:
             return []
@@ -46,7 +46,7 @@ class PersonService(AbstractService):
             self,
             id: uuid.UUID
     ) -> Person | None:
-        data = await self.search_service.get(index=config.ELASTIC_INDEX_NAME_PERSONS, id=str(id))
+        data = await self.search_service.get(index=settings.elasticsearch.index_name_persons, id=str(id))
 
         if not data:
             return None

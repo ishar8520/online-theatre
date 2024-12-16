@@ -8,7 +8,7 @@ from fastapi import Depends
 from redis.asyncio import Redis
 
 from .abstract import AbstractService
-from ..core import config
+from ..core.config import settings
 from ..db import (
     get_elastic,
     get_redis,
@@ -29,7 +29,7 @@ class GenreService(AbstractService):
             "from": (page_number - 1) * page_size,
         }
 
-        result = await self.search_service.search(index=config.ELASTIC_INDEX_NAME_GENRES, body=body)
+        result = await self.search_service.search(index=settings.elasticsearch.index_name_genres, body=body)
 
         if result is None:
             return []
@@ -41,7 +41,7 @@ class GenreService(AbstractService):
             id: uuid.UUID
     ) -> Genre | None:
 
-        data = await self.search_service.get(index=config.ELASTIC_INDEX_NAME_GENRES, id=str(id))
+        data = await self.search_service.get(index=settings.elasticsearch.index_name_genres, id=str(id))
 
         if not data:
             return None
