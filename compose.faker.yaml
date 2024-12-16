@@ -99,7 +99,8 @@ services:
       - POSTGRESQL_DATABASE=$POSTGRESQL_DATABASE
       - POSTGRESQL_USERNAME=$POSTGRESQL_USERNAME
       - POSTGRESQL_PASSWORD=$POSTGRESQL_PASSWORD
-      - ELASTICSEARCH_URL=http://elasticsearch:9200
+      - ELASTIC_HOST=elasticsearch
+      - ELASTIC_PORT=9200
     restart: unless-stopped
 
   postgresql:
