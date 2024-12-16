@@ -20,6 +20,10 @@ RUN --mount=type=bind,source=requirements.txt,target=requirements.txt \
 
 FROM base
 
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
 ENV VIRTUAL_ENV=/venv
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
