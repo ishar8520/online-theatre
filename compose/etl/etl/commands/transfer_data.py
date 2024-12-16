@@ -44,7 +44,7 @@ def main() -> None:
     state = storage.load()
 
     with (
-        elasticsearch.Elasticsearch(settings.elasticsearch.url) as elasticsearch_client,
+        elasticsearch.Elasticsearch(f'http://{settings.elasticsearch.host}:{settings.elasticsearch.port}') as elasticsearch_client,
     ):
         etl_pipelines: list[ETLPipeline[Document]] = [
             ETLPipeline[Film](

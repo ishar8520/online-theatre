@@ -1,21 +1,50 @@
 import os
 from logging import config as logging_config
+from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import Field
 
 from .logger import LOGGING
 
 logging_config.dictConfig(LOGGING)
 
-PROJECT_NAME = os.getenv('PROJECT_NAME', 'movies')
 
-REDIS_HOST = os.getenv('REDIS_HOST', '127.0.0.1')
-REDIS_PORT = int(os.getenv('REDIS_PORT', 6379))
-REDIS_CACHE_EXPIRE_IN_SECONDS = 60 * 5
+class ProjectConfig(BaseSettings):
+    model_config = SettingsConfigDict(env_prefix='project_')
+    
+    name: str | None = Field(default=None)
 
-ELASTIC_HOST = os.getenv('ELASTIC_HOST', '127.0.0.1')
-ELASTIC_PORT = int(os.getenv('ELASTIC_PORT', 9200))
 
-ELASTIC_INDEX_NAME_FILMS = 'films'
-ELASTIC_INDEX_NAME_GENRES = 'genres'
-ELASTIC_INDEX_NAME_PERSONS = 'persons'
+class RedisConfig(BaseSettings):
+    model_config = SettingsConfigDict(env_prefix='redis_')
+    
+    host: str | None = Field(default=None)
+    port: int | None = Field(default=None)
+    cache_expire_in_seconds: int = 60 * 5
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+class ElasticConfig(BaseSettings):
+    model_config = SettingsConfigDict(env_prefix='elastic_')
+    
+    host: str | None = Field(default=None)
+    port: int | None = Field(default=None)
+    index_name_films: str = Field(default='films')
+    index_name_genres: str = Field(default='genres')
+    index_name_persons: str = Field(default='persons')  
+
+
+# class PostgresqlConfig(BaseSettings):
+#     model_config = SettingsConfigDict(env_prefix='postgresql_')
+    
+#     host: str | None = Field(default=None)
+#     port: int | None = Field(default=None)
+#     database: str = Field()
+#     username: str | None = Field(default=None)
+#     password: str | None = Field(default=None)
+    
+class Settings(BaseSettings):
+    project: ProjectConfig=ProjectConfig()
+    redis: RedisConfig=RedisConfig()
+    elasticsearch: ElasticConfig=ElasticConfig()
+    # postgresql: PostgresqlConfig=PostgresqlConfig()
+
+settings = Settings()

@@ -32,9 +32,11 @@ class PostgreSQLSettings(BaseSettings):
 
 
 class ElasticsearchSettings(BaseSettings):
-    model_config = SettingsConfigDict(env_prefix='elasticsearch_')
+    model_config = SettingsConfigDict(env_prefix='elastic_')
 
-    url: str = Field(default='http://localhost:9200')
+    host: str | None = Field(default=None)
+    port: int | None = Field(default=None)
+    # url: str = Field(default='http://localhost:9200')
 
 
 class Settings(BaseSettings):

@@ -6,14 +6,14 @@ from fastapi.responses import JSONResponse
 from redis.asyncio import Redis
 
 from .api.v1.endpoints import films, genres, persons
-from .core import config
+from .core.config import settings
 from .db import elastic, redis
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    redis.redis = Redis(host=config.REDIS_HOST, port=config.REDIS_PORT)
-    elastic.es = AsyncElasticsearch(hosts=[f'http://{config.ELASTIC_HOST}:{config.ELASTIC_PORT}'])
+    redis.redis = Redis(host=settings.redis.host, port=settings.redis.port)
+    elastic.es = AsyncElasticsearch(hosts=[f'http://{settings.elasticsearch.host}:{settings.elasticsearch.port}'])
     try:
         yield
     finally:
@@ -22,7 +22,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title=config.PROJECT_NAME,
+    title=settings.project.name,
     docs_url='/api/openapi',
     openapi_url='/api/openapi.json',
     default_response_class=JSONResponse,

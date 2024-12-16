@@ -8,7 +8,7 @@ from fastapi import Depends
 from redis.asyncio import Redis
 
 from .abstract import AbstractService
-from ..core import config
+from ..core.config import settings
 from ..db import (
     get_elastic,
     get_redis,
@@ -63,7 +63,7 @@ class FilmService(AbstractService):
             }
         }
 
-        result = await self.search_service.search(index=config.ELASTIC_INDEX_NAME_FILMS, body=body)
+        result = await self.search_service.search(index=settings.elasticsearch.index_name_films, body=body)
 
         if result is None:
             return []
@@ -100,7 +100,7 @@ class FilmService(AbstractService):
                 }
             }
 
-        result = await self.search_service.search(index=config.ELASTIC_INDEX_NAME_FILMS, body=body)
+        result = await self.search_service.search(index=settings.elasticsearch.index_name_films, body=body)
 
         if result is None:
             return []
@@ -124,7 +124,7 @@ class FilmService(AbstractService):
             "from": (page_number - 1) * page_size,
         }
 
-        result = await self.search_service.search(index=config.ELASTIC_INDEX_NAME_FILMS, body=body)
+        result = await self.search_service.search(index=settings.elasticsearch.index_name_films, body=body)
 
         if result is None:
             return []
@@ -135,7 +135,7 @@ class FilmService(AbstractService):
             self,
             id: uuid.UUID
     ) -> Film | None:
-        data = await self.search_service.get(index=config.ELASTIC_INDEX_NAME_FILMS, id=str(id))
+        data = await self.search_service.get(index=settings.elasticsearch.index_name_films, id=str(id))
 
         if not data:
             return None
