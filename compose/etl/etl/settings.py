@@ -15,8 +15,8 @@ load_dotenv()
 class PostgreSQLSettings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix='postgresql_')
 
-    host: str | None = Field(default=None)
-    port: int | None = Field(default=None)
+    host: str | None = Field(default='localhost')
+    port: int | None = Field(default=5432)
     database: str = Field()
     username: str | None = Field(default=None)
     password: str | None = Field(default=None)
@@ -34,9 +34,8 @@ class PostgreSQLSettings(BaseSettings):
 class ElasticsearchSettings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix='elastic_')
 
-    host: str | None = Field(default=None)
-    port: int | None = Field(default=None)
-    # url: str = Field(default='http://localhost:9200')
+    host: str | None = Field(default='localhost')
+    port: int | None = Field(default=9200)
 
 
 class Settings(BaseSettings):
