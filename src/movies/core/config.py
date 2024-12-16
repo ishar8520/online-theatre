@@ -31,20 +31,11 @@ class ElasticConfig(BaseSettings):
     index_name_genres: str = Field(default='genres')
     index_name_persons: str = Field(default='persons')  
 
-
-# class PostgresqlConfig(BaseSettings):
-#     model_config = SettingsConfigDict(env_prefix='postgresql_')
-    
-#     host: str | None = Field(default=None)
-#     port: int | None = Field(default=None)
-#     database: str = Field()
-#     username: str | None = Field(default=None)
-#     password: str | None = Field(default=None)
     
 class Settings(BaseSettings):
     project: ProjectConfig=ProjectConfig()
     redis: RedisConfig=RedisConfig()
     elasticsearch: ElasticConfig=ElasticConfig()
-    # postgresql: PostgresqlConfig=PostgresqlConfig()
+
 
 settings = Settings()
