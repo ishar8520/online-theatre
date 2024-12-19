@@ -41,4 +41,4 @@ COPY ./docker-entrypoint.sh .
 RUN chmod +x docker-entrypoint.sh
 
 ENTRYPOINT ["/opt/app/docker-entrypoint.sh"]
-CMD ["true"]
+CMD ["sleep", "infinity"]
