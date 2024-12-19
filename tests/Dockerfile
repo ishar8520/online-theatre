@@ -31,7 +31,11 @@ ENV VIRTUAL_ENV=/venv
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
 COPY --from=venv "$VIRTUAL_ENV" "$VIRTUAL_ENV"
+COPY ./pyproject.toml .
 COPY ./tests/ ./tests/
+
+COPY ./commands/ ./commands/
+RUN chmod +x ./commands/*.sh
 
 COPY ./docker-entrypoint.sh .
 RUN chmod +x docker-entrypoint.sh
