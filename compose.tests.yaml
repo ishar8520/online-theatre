@@ -9,6 +9,8 @@ services:
         condition: service_healthy
     networks:
       - movies-network
+    environment:
+      - MOVIES_URL=http://movies:8000
 
   movies:
     build:
