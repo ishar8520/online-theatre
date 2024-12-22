@@ -1,4 +1,6 @@
-settings_data = {
+from __future__ import annotations
+
+settings_data: dict = {
     'refresh_interval': '1s',
     'analysis': {
         'filter': {

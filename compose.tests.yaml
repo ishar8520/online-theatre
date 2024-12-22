@@ -11,6 +11,8 @@ services:
       - movies-network
     environment:
       - MOVIES_URL=http://movies:8000
+      - ELASTIC_HOST=elasticsearch
+      - ELASTIC_PORT=9200
 
   movies:
     build:
