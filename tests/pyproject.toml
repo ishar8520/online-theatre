@@ -4,7 +4,7 @@ package-mode = false
 [tool.poetry.dependencies]
 python = "^3.13"
 
-aiohttp = "^3.11.11"
+aiohttp = { version = "^3.11.11", extras = ["speedups"] }
 elasticsearch = { version = "^8.17.0", extras = ["async"] }
 pydantic = "^2.10.4"
 pydantic-settings = "^2.7.0"
