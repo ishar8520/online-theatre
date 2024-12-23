@@ -3,18 +3,17 @@ include:
 
 services:
   faker:
-    build: 
+    build:
       context: ./faker
     depends_on:
-        postgresql:
-          condition: service_healthy
+      postgresql:
+        condition: service_healthy
     networks:
       - movies-network
     environment:
       - POSTGRESQL_DATABASE=$POSTGRESQL_DATABASE
       - POSTGRESQL_USERNAME=$POSTGRESQL_USERNAME
       - POSTGRESQL_PASSWORD=$POSTGRESQL_PASSWORD
-
 
 networks:
   movies-network:

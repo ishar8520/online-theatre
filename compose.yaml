@@ -22,12 +22,13 @@ services:
     networks:
       - movies-network
     environment:
+      - PROJECT_NAME=$PROJECT_NAME
       - GUNICORN_WORKERS
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - ELASTIC_HOST=elasticsearch
       - ELASTIC_PORT=9200
-      - PROJECT_NAME=$PROJECT_NAME
+    command: [ '/opt/app/commands/gunicorn.sh' ]
     healthcheck:
       test: [ 'CMD-SHELL', 'curl -s http://localhost:8000/api/openapi.json' ]
       interval: 10s

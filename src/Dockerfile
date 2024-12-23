@@ -39,4 +39,4 @@ RUN chmod +x docker-entrypoint.sh
 EXPOSE 8000
 
 ENTRYPOINT ["/opt/app/docker-entrypoint.sh"]
-CMD ["/opt/app/commands/gunicorn.sh"]
+CMD ["/opt/app/commands/fastapi.sh"]
