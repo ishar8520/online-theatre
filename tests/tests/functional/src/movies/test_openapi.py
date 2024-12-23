@@ -9,18 +9,17 @@ from ...settings import settings
 
 
 @pytest.mark.asyncio(loop_scope='session')
-async def test_openapi() -> None:
-    async with aiohttp.ClientSession() as session:
-        openapi_url = urljoin(settings.movies_api_url, 'openapi.json')
+async def test_openapi(aiohttp_session) -> None:
+    openapi_url = urljoin(settings.movies_api_url, 'openapi.json')
 
-        async with session.get(openapi_url) as response:
-            assert response.status == 200
-            response_data: dict = await response.json()
+    async with aiohttp_session.get(openapi_url) as response:
+        assert response.status == 200
+        response_data: dict = await response.json()
 
-            assert set(response_data) == {
-                'openapi',
-                'info',
-                'paths',
-                'components',
-            }
-            assert response_data['info']['title'] == 'movies'
+        assert set(response_data) == {
+            'openapi',
+            'info',
+            'paths',
+            'components',
+        }
+        assert response_data['info']['title'] == 'movies'
