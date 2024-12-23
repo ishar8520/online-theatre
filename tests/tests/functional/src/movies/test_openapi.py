@@ -8,8 +8,8 @@ import pytest
 from ...settings import settings
 
 
-@pytest.mark.asyncio
-async def test_openapi():
+@pytest.mark.asyncio(loop_scope='session')
+async def test_openapi() -> None:
     async with aiohttp.ClientSession() as session:
         openapi_url = urljoin(settings.movies_api_url, 'openapi.json')
 
