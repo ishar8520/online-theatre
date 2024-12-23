@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import uuid
+
 import pytest
 
 from ...utils.elasticsearch import ElasticsearchIndex
@@ -17,3 +19,8 @@ async def test_elasticsearch_indices(create_elasticsearch_index) -> None:
         elasticsearch_indices[index_name] = await create_elasticsearch_index(
             index_name=index_name,
         )
+        await elasticsearch_indices['films'].load_data(documents=[
+            {
+                'id': uuid.uuid4(),
+            },
+        ])

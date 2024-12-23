@@ -44,7 +44,8 @@ async def create_elasticsearch_index(
             index_data=index_data,
         )
         elasticsearch_indices_registry[index_name] = elasticsearch_index
-        await elasticsearch_index.create_index()
+        await elasticsearch_index.create_index(recreate=True)
+
         return elasticsearch_index
 
     yield _create_elasticsearch_index
