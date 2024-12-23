@@ -2,12 +2,19 @@ from __future__ import annotations
 
 from collections.abc import Callable, Awaitable, AsyncGenerator
 
+import aiohttp
 import elasticsearch
 import pytest_asyncio
 
 from .data.elasticsearch.schema import indices_data
 from .settings import settings
 from .utils.elasticsearch import ElasticsearchIndex
+
+
+@pytest_asyncio.fixture(scope='session')
+async def aiohttp_session() -> AsyncGenerator[aiohttp.ClientSession]:
+    async with aiohttp.ClientSession() as session:
+        yield session
 
 
 @pytest_asyncio.fixture(scope='session')
