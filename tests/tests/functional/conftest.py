@@ -10,6 +10,7 @@ import redis.asyncio as redis
 from .data.elasticsearch.schema import indices_data
 from .settings import settings
 from .utils.elasticsearch import ElasticsearchIndex
+from .utils.redis import RedisCache
 
 
 @pytest_asyncio.fixture(scope='session')
@@ -28,8 +29,10 @@ async def redis_client() -> AsyncGenerator[redis.Redis]:
 async def clear_redis_cache(
         redis_client: redis.Redis,
 ) -> AsyncGenerator[Callable[[], Awaitable[None]]]:
+    redis_cache = RedisCache(client=redis_client)
+
     async def _clear_redis_cache() -> None:
-        await redis_client.flushall()
+        await redis_cache.clear()
 
     await _clear_redis_cache()
     yield _clear_redis_cache
