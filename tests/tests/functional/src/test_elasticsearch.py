@@ -4,7 +4,7 @@ import uuid
 
 import pytest
 
-from ...utils.elasticsearch import ElasticsearchIndex
+from ..utils.elasticsearch import ElasticsearchIndex
 
 
 @pytest.mark.asyncio(loop_scope='session')
