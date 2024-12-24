@@ -1,4 +1,8 @@
 services:
+  tests:
+    volumes:
+      - ./tests/tests/functional/src:/opt/app/tests/functional/src
+
   redis:
     ports:
       - '6379:6379'
