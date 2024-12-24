@@ -14,6 +14,13 @@ from pydantic_settings import (
 load_dotenv()
 
 
+class RedisSettings(BaseSettings):
+    model_config = SettingsConfigDict(env_prefix='redis_')
+
+    host: str = Field(default='localhost')
+    port: int = Field(default=6379)
+
+
 class ElasticsearchSettings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix='elastic_')
 
@@ -27,6 +34,7 @@ class ElasticsearchSettings(BaseSettings):
 
 
 class Settings(BaseSettings):
+    redis: RedisSettings = RedisSettings()
     elasticsearch: ElasticsearchSettings = ElasticsearchSettings()
 
     movies_url: str = Field(default='http://localhost:8000')

@@ -5,6 +5,7 @@ from collections.abc import Callable, Awaitable, AsyncGenerator
 import aiohttp
 import elasticsearch
 import pytest_asyncio
+import redis.asyncio as redis
 
 from .data.elasticsearch.schema import indices_data
 from .settings import settings
@@ -15,6 +16,24 @@ from .utils.elasticsearch import ElasticsearchIndex
 async def aiohttp_session() -> AsyncGenerator[aiohttp.ClientSession]:
     async with aiohttp.ClientSession() as session:
         yield session
+
+
+@pytest_asyncio.fixture(scope='session')
+async def redis_client() -> AsyncGenerator[redis.Redis]:
+    async with redis.Redis(host=settings.redis.host, port=settings.redis.port) as redis_client:
+        yield redis_client
+
+
+@pytest_asyncio.fixture
+async def clear_redis_cache(
+        redis_client: redis.Redis,
+) -> AsyncGenerator[Callable[[], Awaitable[None]]]:
+    async def _clear_redis_cache() -> None:
+        await redis_client.flushall()
+
+    await _clear_redis_cache()
+    yield _clear_redis_cache
+    await _clear_redis_cache()
 
 
 @pytest_asyncio.fixture(scope='session')
