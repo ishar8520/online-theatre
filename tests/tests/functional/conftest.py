@@ -26,6 +26,16 @@ async def redis_client() -> AsyncGenerator[redis.Redis]:
 
 
 @pytest_asyncio.fixture
+async def redis_cache(
+        redis_client: redis.Redis,
+) -> AsyncGenerator[RedisCache]:
+    redis_cache = RedisCache(client=redis_client)
+    await redis_cache.clear()
+    yield redis_cache
+    await redis_cache.clear()
+
+
+@pytest_asyncio.fixture
 async def clear_redis_cache(
         redis_client: redis.Redis,
 ) -> AsyncGenerator[Callable[[], Awaitable[None]]]:

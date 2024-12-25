@@ -30,6 +30,7 @@ services:
       - PROJECT_NAME=$PROJECT_NAME
       - REDIS_HOST=redis
       - REDIS_PORT=6379
+      - REDIS_CACHE_EXPIRE_IN_SECONDS=3600
       - ELASTIC_HOST=elasticsearch
       - ELASTIC_PORT=9200
     healthcheck:
