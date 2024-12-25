@@ -15,6 +15,18 @@ services:
       - REDIS_PORT=6379
       - ELASTIC_HOST=elasticsearch
       - ELASTIC_PORT=9200
+    develop:
+      watch:
+        - action: sync
+          path: ./tests/tests
+          target: /opt/app/tests
+        - action: rebuild
+          path: ./tests/commands
+          target: /opt/app/commands
+        - action: rebuild
+          path: ./tests/pyproject.toml
+        - action: rebuild
+          path: ./tests/poetry.lock
 
   movies:
     build:
