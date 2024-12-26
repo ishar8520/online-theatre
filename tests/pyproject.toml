@@ -17,4 +17,7 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.pytest.ini_options]
+filterwarnings = [
+    'ignore:enable_cleanup_closed ignored:DeprecationWarning',
+]
 asyncio_default_fixture_loop_scope = "session"
