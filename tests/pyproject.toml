@@ -2,7 +2,7 @@
 package-mode = false
 
 [tool.poetry.dependencies]
-python = "^3.12"
+python = ">=3.12"
 
 aiohttp = { version = "^3.11.11", extras = ["speedups"] }
 elasticsearch = { version = "^8.17.0", extras = ["async"] }
