@@ -56,7 +56,7 @@ async def test_get_list_pagination(
 
     films = [
         Film(
-            id=str(uuid.uuid4()),
+            id=uuid.uuid4(),
             title=f'The star. Episode {i}',
             description=f'Description {i}',
             rating=random.uniform(1.0, 10.0),
@@ -64,7 +64,6 @@ async def test_get_list_pagination(
         for i in range(count)
     ]
 
-    await clear_redis_cache()
     elastic = await create_elasticsearch_index(index_name=INDEX_NAME_FILM)
     await elastic.load_data(documents=films)
 
@@ -102,20 +101,19 @@ async def test_get_list_sort(
 ):
     films = [
         Film(
-            id=str(uuid.uuid4()),
+            id=uuid.uuid4(),
             title='The star. Episode 1',
             description='Description',
             rating=10,
         ).model_dump(),
         Film(
-            id=str(uuid.uuid4()),
+            id=uuid.uuid4(),
             title='The star. Episode 2',
             description='Description',
             rating=2,
         ).model_dump()
     ]
 
-    await clear_redis_cache()
     elastic = await create_elasticsearch_index(index_name=INDEX_NAME_FILM)
     await elastic.load_data(documents=films)
 
@@ -171,20 +169,19 @@ async def test_get_list_genre(
             ]
         ).model_dump(),
         Film(
-            id=str(uuid.uuid4()),
+            id=uuid.uuid4(),
             title='The star. Episode 2',
             description='Description',
             rating=1,
             genres=[
                 Genre(
-                    id=str(uuid.uuid4()),
+                    id=uuid.uuid4(),
                     name='Action'
                 )
             ]
         ).model_dump()
     ]
 
-    await clear_redis_cache()
     elastic = await create_elasticsearch_index(index_name=INDEX_NAME_FILM)
     await elastic.load_data(documents=films)
 
@@ -222,7 +219,6 @@ async def test_get_by_id(
         rating=6.7
     )
 
-    clear_redis_cache()
     elastic = await create_elasticsearch_index(index_name=INDEX_NAME_FILM)
     await elastic.load_data(documents=[film.model_dump()])
 
@@ -256,7 +252,6 @@ async def test_get_by_id_from_redis(
         rating=6.7,
     )
 
-    clear_redis_cache()
     elastic = await create_elasticsearch_index(index_name=INDEX_NAME_FILM)
     await elastic.load_data(documents=[film.model_dump()])
 

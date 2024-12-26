@@ -32,13 +32,12 @@ async def test_search_film(
         expected
 ):
     film = Film(
-        id=str(uuid.uuid4()),
+        id=uuid.uuid4(),
         title='The Star',
         description='Description',
         rating=6.7,
     )
 
-    await clear_redis_cache()
     elastic = await create_elasticsearch_index(index_name=INDEX_NAME_FILM)
     await elastic.load_data(documents=[film.model_dump()])
 
@@ -82,16 +81,15 @@ async def test_search_person(
 ):
     persons = [
         Person(
-            id=input['person_uuid'],
+            id=uuid.UUID(input['person_uuid']),
             full_name=input['person_full_name']
         ).model_dump(),
         Person(
-            id=str(uuid.uuid4()),
+            id=uuid.uuid4(),
             full_name='Josse Sue'
         ).model_dump(),
     ]
 
-    await clear_redis_cache()
     elastic = await create_elasticsearch_index(index_name=INDEX_NAME_PERSON)
     await elastic.load_data(documents=persons)
 
@@ -129,11 +127,10 @@ async def test_search_person_with_redis(
         expected
 ):
     person = Person(
-        id=input['person_uuid'],
+        id=uuid.UUID(input['person_uuid']),
         full_name=input['person_full_name']
     )
 
-    await clear_redis_cache()
     elastic = await create_elasticsearch_index(index_name=INDEX_NAME_PERSON)
     await elastic.load_data(documents=[person.model_dump()])
 
