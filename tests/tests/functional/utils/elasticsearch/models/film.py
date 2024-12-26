@@ -1,52 +1,58 @@
-import uuid
+from __future__ import annotations
 
-from pydantic import BaseModel, computed_field
+from pydantic import computed_field
 
-
-class Person(BaseModel):
-    id: uuid.UUID
-    full_name: str
-
-
-class Actor(Person):
-    pass
+from .base import (
+    Document,
+    DocumentRelation,
+)
 
 
-class Director(Person):
-    pass
-
-
-class Writer(Person):
-    pass
-
-
-class Genre(BaseModel):
-    id: uuid.UUID
-    name: str
-
-
-class Film(BaseModel):
-    id: uuid.UUID
+class Film(Document):
     title: str
-    description: str
-    rating: float
-    actors: list[Actor] = []
-    genres: list[Genre] = []
-    directors: list[Director] = []
-    writers: list[Writer] = []
-
-    @computed_field
-    def actors_names(self) -> list[str]:
-        return [person.full_name for person in self.actors]
+    description: str | None
+    rating: float | None
+    # noinspection PyDataclass
+    genres: list[FilmGenre] = []
+    # noinspection PyDataclass
+    directors: list[FilmDirector] = []
+    # noinspection PyDataclass
+    actors: list[FilmActor] = []
+    # noinspection PyDataclass
+    writers: list[FilmWriter] = []
 
     @computed_field
     def genres_names(self) -> list[str]:
-        return [item.name for item in self.genres]
+        return [genre.name for genre in self.genres]
 
     @computed_field
     def directors_names(self) -> list[str]:
         return [person.full_name for person in self.directors]
 
     @computed_field
+    def actors_names(self) -> list[str]:
+        return [person.full_name for person in self.actors]
+
+    @computed_field
     def writers_names(self) -> list[str]:
         return [person.full_name for person in self.writers]
+
+
+class FilmGenre(DocumentRelation):
+    name: str
+
+
+class FilmPerson(DocumentRelation):
+    full_name: str
+
+
+class FilmDirector(FilmPerson):
+    pass
+
+
+class FilmActor(FilmPerson):
+    pass
+
+
+class FilmWriter(FilmPerson):
+    pass

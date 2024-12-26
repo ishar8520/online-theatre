@@ -1,10 +1,14 @@
 import random
-import pytest
 import uuid
+from urllib.parse import urljoin
+
+import pytest
 
 from ...settings import settings
-from urllib.parse import urljoin
-from ...utils.elasticsearch.models.film import Film, Genre
+from ...utils.elasticsearch.models import (
+    Film,
+    FilmGenre,
+)
 
 INDEX_NAME_FILM = 'films'
 
@@ -162,7 +166,7 @@ async def test_get_list_genre(
             description='Description',
             rating=10,
             genres=[
-                Genre(
+                FilmGenre(
                     id=input['genre_uuid'],
                     name='Action'
                 )
@@ -174,7 +178,7 @@ async def test_get_list_genre(
             description='Description',
             rating=1,
             genres=[
-                Genre(
+                FilmGenre(
                     id=uuid.uuid4(),
                     name='Action'
                 )

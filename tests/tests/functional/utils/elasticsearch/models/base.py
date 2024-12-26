@@ -10,3 +10,7 @@ from pydantic import (
 
 class Document(BaseModel):
     id: uuid.UUID = Field(default_factory=lambda: uuid.uuid4())
+
+
+class DocumentRelation(BaseModel):
+    id: uuid.UUID = Field(default_factory=lambda: uuid.uuid4())

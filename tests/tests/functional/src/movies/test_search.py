@@ -1,10 +1,13 @@
-import pytest
 import uuid
+from urllib.parse import urljoin
+
+import pytest
 
 from ...settings import settings
-from urllib.parse import urljoin
-from ...utils.elasticsearch.models.film import Film
-from ...utils.elasticsearch.models.person import Person
+from ...utils.elasticsearch.models import (
+    Film,
+    Person,
+)
 
 INDEX_NAME_FILM = 'films'
 INDEX_NAME_PERSON = 'persons'
