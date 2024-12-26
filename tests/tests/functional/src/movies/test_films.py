@@ -52,7 +52,6 @@ INDEX_NAME_FILM = 'films'
 async def test_get_list_pagination(
         create_elasticsearch_index,
         aiohttp_session,
-        clear_redis_cache,
         count: int,
         input,
         expected
@@ -99,7 +98,6 @@ async def test_get_list_pagination(
 async def test_get_list_sort(
         create_elasticsearch_index,
         aiohttp_session,
-        clear_redis_cache,
         input,
         expected
 ):
@@ -155,7 +153,6 @@ async def test_get_list_sort(
 async def test_get_list_genre(
         create_elasticsearch_index,
         aiohttp_session,
-        clear_redis_cache,
         input: dict,
         expected: dict
 ):
@@ -213,7 +210,6 @@ async def test_get_list_genre(
 async def test_get_by_id(
         create_elasticsearch_index,
         aiohttp_session,
-        clear_redis_cache,
         expected
 ):
     film = Film(
@@ -246,7 +242,6 @@ async def test_get_by_id(
 async def test_get_by_id_from_redis(
         create_elasticsearch_index,
         aiohttp_session,
-        clear_redis_cache,
         expected
 ):
     film = Film(

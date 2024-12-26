@@ -30,7 +30,6 @@ INDEX_NAME_PERSON = 'persons'
 async def test_search_film(
         create_elasticsearch_index,
         aiohttp_session,
-        clear_redis_cache,
         input,
         expected
 ):
@@ -78,7 +77,6 @@ async def test_search_film(
 async def test_search_person(
         create_elasticsearch_index,
         aiohttp_session,
-        clear_redis_cache,
         input,
         expected
 ):
@@ -125,7 +123,6 @@ async def test_search_person(
 async def test_search_person_with_redis(
         create_elasticsearch_index,
         aiohttp_session,
-        clear_redis_cache,
         input,
         expected
 ):
