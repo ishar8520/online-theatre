@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from urllib.parse import urljoin
 
-import aiohttp
 import pytest
 
 from ...settings import settings
@@ -16,10 +15,10 @@ async def test_openapi(aiohttp_session) -> None:
         assert response.status == 200
         response_data: dict = await response.json()
 
-        assert set(response_data) == {
-            'openapi',
-            'info',
-            'paths',
-            'components',
-        }
-        assert response_data['info']['title'] == 'movies'
+    assert set(response_data) == {
+        'openapi',
+        'info',
+        'paths',
+        'components',
+    }
+    assert response_data['info']['title'] == 'movies'

@@ -5,8 +5,10 @@ from collections.abc import Iterable
 import elasticsearch
 import elasticsearch.helpers
 
+from .models import Document
 
-class ElasticsearchIndex:
+
+class ElasticsearchIndex[TDocument: Document = Document]:
     client: elasticsearch.AsyncElasticsearch
     index_name: str
     index_data: dict
@@ -46,6 +48,9 @@ class ElasticsearchIndex:
                 pass
 
         self._index_created = False
+
+    async def load_documents(self, *, documents: Iterable[TDocument]) -> None:
+        await self.load_data(documents=(document.model_dump(mode='json') for document in documents))
 
     async def load_data(self, *, documents: Iterable[dict]) -> None:
         await self.create_index()

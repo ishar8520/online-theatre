@@ -2,7 +2,7 @@
 package-mode = false
 
 [tool.poetry.dependencies]
-python = "^3.12"
+python = ">=3.12"
 
 aiohttp = { version = "^3.11.11", extras = ["speedups"] }
 elasticsearch = { version = "^8.17.0", extras = ["async"] }
@@ -17,4 +17,7 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.pytest.ini_options]
+filterwarnings = [
+    'ignore:enable_cleanup_closed ignored:DeprecationWarning',
+]
 asyncio_default_fixture_loop_scope = "session"

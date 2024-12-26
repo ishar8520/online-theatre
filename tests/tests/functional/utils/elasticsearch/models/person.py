@@ -1,14 +1,17 @@
-import uuid
+from __future__ import annotations
 
-from pydantic import BaseModel
-
-
-class FilmPerson(BaseModel):
-    id: uuid.UUID
-    roles: list[str]
+from .base import (
+    Document,
+    DocumentRelation,
+)
 
 
-class Person(BaseModel):
-    id: uuid.UUID
+class Person(Document):
     full_name: str
-    films: list[FilmPerson] = []
+    # noinspection PyDataclass
+    films: list[PersonFilm] = []
+
+
+class PersonFilm(DocumentRelation):
+    # noinspection PyDataclass
+    roles: list[str] = []

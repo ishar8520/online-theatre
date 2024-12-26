@@ -19,7 +19,7 @@ async def test_elasticsearch_indices(create_elasticsearch_index) -> None:
         elasticsearch_indices[index_name] = await create_elasticsearch_index(
             index_name=index_name,
         )
-        await elasticsearch_indices['films'].load_data(documents=[
+        await elasticsearch_indices[index_name].load_data(documents=[
             {
                 'id': uuid.uuid4(),
             },
