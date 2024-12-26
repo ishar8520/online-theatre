@@ -34,14 +34,13 @@ async def test_search_film(
         expected
 ):
     film = Film(
-        id=uuid.uuid4(),
         title='The Star',
         description='Description',
         rating=6.7,
     )
 
     elastic = await create_elasticsearch_index(index_name=INDEX_NAME_FILM)
-    await elastic.load_data(documents=[film.model_dump()])
+    await elastic.load_documents(documents=[film])
 
     url = urljoin(settings.movies_api_v1_url, 'films/search/')
     async with aiohttp_session.get(url, params={'query': input['search']}) as response:
@@ -84,15 +83,14 @@ async def test_search_person(
         Person(
             id=uuid.UUID(input['person_uuid']),
             full_name=input['person_full_name']
-        ).model_dump(),
+        ),
         Person(
-            id=uuid.uuid4(),
             full_name='Josse Sue'
-        ).model_dump(),
+        ),
     ]
 
     elastic = await create_elasticsearch_index(index_name=INDEX_NAME_PERSON)
-    await elastic.load_data(documents=persons)
+    await elastic.load_documents(documents=persons)
 
     url = urljoin(settings.movies_api_v1_url, 'persons/search/')
     async with aiohttp_session.get(url, params={'query': input['search_full_name']}) as response:
@@ -132,7 +130,7 @@ async def test_search_person_with_redis(
     )
 
     elastic = await create_elasticsearch_index(index_name=INDEX_NAME_PERSON)
-    await elastic.load_data(documents=[person.model_dump()])
+    await elastic.load_documents(documents=[person])
 
     async def inner_test_search_person_with_redis(aiohttp_session, input, expected):
         url = urljoin(settings.movies_api_v1_url, 'persons/search/')
