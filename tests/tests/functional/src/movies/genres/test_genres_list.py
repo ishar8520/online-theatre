@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import uuid
 from collections.abc import Iterable
 from urllib.parse import urljoin
 
@@ -8,21 +7,15 @@ import aiohttp
 import pytest
 
 from ....settings import settings
+from ....utils.api import models as api_models
 from ....utils.elasticsearch import ElasticsearchIndex
+from ....utils.elasticsearch.models import Genre
 from ....utils.redis import RedisCache
-
-
-def create_genres(*, count: int = 1) -> Iterable[dict]:
-    for i in range(1, count + 1):
-        yield {
-            'id': uuid.uuid4(),
-            'name': f'Жанр {i}',
-        }
 
 
 class GenresListTestRunner:
     redis_cache: RedisCache
-    elasticsearch_index: ElasticsearchIndex
+    elasticsearch_index: ElasticsearchIndex[Genre]
     aiohttp_session: aiohttp.ClientSession
 
     genres_list_api_url: str
@@ -30,7 +23,7 @@ class GenresListTestRunner:
     def __init__(self,
                  *,
                  redis_cache: RedisCache,
-                 elasticsearch_index: ElasticsearchIndex,
+                 elasticsearch_index: ElasticsearchIndex[Genre],
                  aiohttp_session: aiohttp.ClientSession) -> None:
         self.elasticsearch_index = elasticsearch_index
         self.aiohttp_session = aiohttp_session
@@ -41,31 +34,38 @@ class GenresListTestRunner:
     async def run(self) -> None:
         raise NotImplementedError
 
+    def _create_genres(self, *, count: int = 1) -> Iterable[Genre]:
+        for i in range(1, count + 1):
+            yield Genre(name=f'Жанр {i}')
+
 
 class GenresListEmptyTestRunner(GenresListTestRunner):
     async def run(self) -> None:
         async with self.aiohttp_session.get(self.genres_list_api_url) as response:
             assert response.status == 200
-            results_list: list[dict] = await response.json()
+            api_genres: list[dict] = await response.json()
 
-        assert results_list == []
+        assert api_genres == []
 
 
 class GenresListSinglePageTestRunner(GenresListTestRunner):
     async def run(self) -> None:
-        genres = list(create_genres(count=10))
-        await self.elasticsearch_index.load_data(documents=genres)
+        genres = list(self._create_genres(count=10))
+        await self.elasticsearch_index.load_documents(documents=genres)
 
         async with self.aiohttp_session.get(self.genres_list_api_url) as response:
             assert response.status == 200
-            results_list: list[dict] = await response.json()
+            api_genres: list[dict] = await response.json()
 
-        results_dict = {genre_result['uuid']: genre_result for genre_result in results_list}
-        expected_results_dict = {str(genre_data['id']): {
-            'uuid': str(genre_data['id']),
-            'name': genre_data['name'],
-        } for genre_data in genres}
-        assert results_dict == expected_results_dict
+        api_genres_dict = {api_genre_data['uuid']: api_genre_data for api_genre_data in api_genres}
+
+        expected_api_genres_dict = {}
+        for genre in genres:
+            expected_api_genre = api_models.Genre(**genre.model_dump())
+            expected_api_genre_data = expected_api_genre.model_dump(mode='json', by_alias=True)
+            expected_api_genres_dict[expected_api_genre_data['uuid']] = expected_api_genre_data
+
+        assert api_genres_dict == expected_api_genres_dict
 
 
 @pytest.mark.asyncio(loop_scope='session')
