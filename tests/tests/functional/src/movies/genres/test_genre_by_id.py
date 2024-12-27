@@ -40,9 +40,7 @@ class BaseGenreByIdTestRunner:
 
         genre = self.get_genre(genres=genres)
         genre_result_data = await self.get_genre_result(genre_id=genre.id)
-
-        if genre_result_data is not None:
-            self.validate_genre_result(genre=genre, genre_result_data=genre_result_data)
+        self.validate_genre_result(genre=genre, genre_result_data=genre_result_data)
 
     async def create_genres(self) -> Iterable[Genre]:
         return self._generate_genres(count=self.genres_count)
@@ -54,7 +52,10 @@ class BaseGenreByIdTestRunner:
     async def save_genres_to_elasticsearch(self, *, genres: Iterable[Genre]) -> None:
         await self.elasticsearch_index.load_documents(documents=genres)
 
-    def get_genre(self, *, genres: list[Genre]) -> Genre:
+    def get_genre(self, *, genres: list[Genre]) -> Genre | None:
+        if not genres:
+            return None
+
         return genres[0]
 
     async def get_genre_result(self, *, genre_id: uuid.UUID) -> dict | None:
@@ -75,7 +76,10 @@ class BaseGenreByIdTestRunner:
 
         return response_data
 
-    def validate_genre_result(self, *, genre: Genre, genre_result_data: dict) -> None:
+    def validate_genre_result(self, *, genre: Genre | None, genre_result_data: dict | None) -> None:
+        if genre is None:
+            assert genre_result_data is None
+
         expected_genre_result = api_models.Genre(**genre.model_dump())
         expected_genre_result_data = expected_genre_result.model_dump(mode='json', by_alias=True)
 
