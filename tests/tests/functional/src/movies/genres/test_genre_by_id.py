@@ -38,8 +38,19 @@ class BaseGenreByIdTestRunner:
 
         genre = self.get_genre(genres=genres)
         genre_id = genre.id if genre is not None else None
+
         genre_result_data = await self.get_genre_result(genre_id=genre_id)
         self.validate_genre_result(genre=genre, genre_result_data=genre_result_data)
+
+        await self.elasticsearch_index.delete_index()
+
+        genre_result_data = await self.get_genre_result(genre_id=genre_id)
+        self.validate_genre_result(genre=genre, genre_result_data=genre_result_data)
+
+        await self.redis_cache.clear()
+
+        genre_result_data = await self.get_genre_result(genre_id=genre_id, expected_status=404)
+        assert genre_result_data is None
 
     def create_genres(self) -> Iterable[Genre]:
         return self._generate_genres(count=self.genres_count)
@@ -60,14 +71,22 @@ class BaseGenreByIdTestRunner:
 
         return genres[0]
 
-    async def get_genre_result(self, *, genre_id: uuid.UUID | None) -> dict | None:
+    async def get_genre_result(self, *, genre_id: uuid.UUID | None, expected_status: int = 200) -> dict | None:
         if genre_id is None:
             return None
 
-        return await self._download_genre(genre_id=genre_id)
+        return await self._download_genre(genre_id=genre_id, expected_status=expected_status)
 
-    async def _download_genre(self, *, genre_id: uuid.UUID) -> dict:
-        return await self._get_genre_response_data(genre_id=str(genre_id))
+    async def _download_genre(self, *, genre_id: uuid.UUID, expected_status: int = 200) -> dict | None:
+        response_data = await self._get_genre_response_data(
+            genre_id=str(genre_id),
+            expected_status=expected_status,
+        )
+
+        if expected_status == 404:
+            return None
+
+        return response_data
 
     async def _get_genre_response_data(self,
                                        *,
@@ -100,9 +119,9 @@ class GenreDoesNotExistTestRunner(BaseGenreByIdTestRunner):
     def get_genre(self, *, genres: list[Genre]) -> Genre | None:
         return None
 
-    async def get_genre_result(self, *, genre_id: uuid.UUID | None) -> dict | None:
-        await self._get_genre_response_data(
-            genre_id=str(uuid.uuid4()),
+    async def get_genre_result(self, *, genre_id: uuid.UUID | None, expected_status: int = 200) -> dict | None:
+        await self._download_genre(
+            genre_id=uuid.uuid4(),
             expected_status=404,
         )
         await self._get_genre_response_data(
