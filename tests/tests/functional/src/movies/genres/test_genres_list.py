@@ -42,6 +42,16 @@ class BaseGenresListTestRunner:
         genres_results = await self.get_genres_results()
         self.validate_genres_results(genres=genres, genres_results=genres_results)
 
+        await self.elasticsearch_index.delete_index()
+
+        genres_results = await self.get_genres_results()
+        self.validate_genres_results(genres=genres, genres_results=genres_results)
+
+        await self.redis_cache.clear()
+
+        genres_results = await self.get_genres_results()
+        assert genres_results == []
+
     async def create_genres(self) -> Iterable[Genre]:
         return self._generate_genres(count=self.genres_count)
 
@@ -121,11 +131,11 @@ class GenresListMultiplePagesTestRunner(BaseGenresListTestRunner):
                 page_number=page_number,
             )
 
-        genres_results_empty = await self._download_genres_list(
+        empty_page_genres_results = await self._download_genres_list(
             page_size=self.page_size,
             page_number=pages_count + 1,
         )
-        assert genres_results_empty == []
+        assert empty_page_genres_results == []
 
         return genres_results
 
