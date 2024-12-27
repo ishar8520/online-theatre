@@ -55,14 +55,30 @@ class BaseGenresListTestRunner:
     async def get_genres_results(self) -> Iterable[dict]:
         return await self._download_genres_list()
 
-    async def _download_genres_list(self, *, params: aiohttp.typedefs.Query | None = None) -> Iterable[dict]:
+    async def _download_genres_list(self,
+                                    *,
+                                    page_size: int | None = None,
+                                    page_number: int | None = None) -> Iterable[dict]:
+        params = {
+            'page_size': page_size,
+            'page_number': page_number,
+        }
+
+        return await self._get_genres_list_response_data(params={
+            key: value for key, value in params.items() if value is not None
+        })
+
+    async def _get_genres_list_response_data(self,
+                                             *,
+                                             params: aiohttp.typedefs.Query | None = None,
+                                             expected_status: int = 200) -> Any:
         genres_list_api_url = urljoin(settings.movies_api_url, 'v1/genres/')
 
         async with self.aiohttp_session.get(genres_list_api_url, params=params) as response:
-            assert response.status == 200
-            genres_results: list[dict] = await response.json()
+            assert response.status == expected_status
+            response_data = await response.json()
 
-        return genres_results
+        return response_data
 
     def validate_genres_results(self, *, genres: Iterable[Genre], genres_results: Iterable[dict]) -> None:
         genres_results_dict: dict[str, dict] = {
@@ -100,15 +116,15 @@ class GenresListMultiplePagesTestRunner(BaseGenresListTestRunner):
         genres_results: list[dict] = []
 
         for page_number in range(1, pages_count + 1):
-            genres_results += await self._download_genres_list(params={
-                'page_size': self.page_size,
-                'page_number': page_number,
-            })
+            genres_results += await self._download_genres_list(
+                page_size=self.page_size,
+                page_number=page_number,
+            )
 
-        genres_results_empty = await self._download_genres_list(params={
-            'page_size': self.page_size,
-            'page_number': pages_count + 1,
-        })
+        genres_results_empty = await self._download_genres_list(
+            page_size=self.page_size,
+            page_number=pages_count + 1,
+        )
         assert genres_results_empty == []
 
         return genres_results
