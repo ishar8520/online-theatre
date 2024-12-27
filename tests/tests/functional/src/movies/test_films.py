@@ -57,18 +57,16 @@ async def test_get_list_pagination(
         expected
 ):
 
-    films = [
-        Film(
-            id=uuid.uuid4(),
-            title=f'The star. Episode {i}',
-            description=f'Description {i}',
-            rating=random.uniform(1.0, 10.0),
-        ).model_dump()
-        for i in range(count)
-    ]
+    def films_generator():
+        for i in range(count):
+            yield Film(
+                title=f'The star. Episode {i}',
+                description=f'Description {i}',
+                rating=round(random.uniform(1.0, 10.0), 1),
+            )
 
     elastic = await create_elasticsearch_index(index_name=INDEX_NAME_FILM)
-    await elastic.load_data(documents=films)
+    await elastic.load_documents(documents=films_generator())
 
     url = urljoin(settings.movies_api_v1_url, 'films/')
     async with aiohttp_session.get(url, params=input) as response:
@@ -103,21 +101,19 @@ async def test_get_list_sort(
 ):
     films = [
         Film(
-            id=uuid.uuid4(),
             title='The star. Episode 1',
             description='Description',
             rating=10,
-        ).model_dump(),
+        ),
         Film(
-            id=uuid.uuid4(),
             title='The star. Episode 2',
             description='Description',
             rating=2,
-        ).model_dump()
+        )
     ]
 
     elastic = await create_elasticsearch_index(index_name=INDEX_NAME_FILM)
-    await elastic.load_data(documents=films)
+    await elastic.load_documents(documents=films)
 
     url = urljoin(settings.movies_api_v1_url, 'films/')
     async with aiohttp_session.get(url, params=input) as response:
@@ -168,23 +164,21 @@ async def test_get_list_genre(
                     name='Action'
                 )
             ]
-        ).model_dump(),
+        ),
         Film(
-            id=uuid.uuid4(),
             title='The star. Episode 2',
             description='Description',
             rating=1,
             genres=[
                 FilmGenre(
-                    id=uuid.uuid4(),
                     name='Action'
                 )
             ]
-        ).model_dump()
+        )
     ]
 
     elastic = await create_elasticsearch_index(index_name=INDEX_NAME_FILM)
-    await elastic.load_data(documents=films)
+    await elastic.load_documents(documents=films)
 
     url = urljoin(settings.movies_api_v1_url, 'films/')
     async with aiohttp_session.get(url, params={'genre': input['genre_search_uuid']}) as response:
@@ -220,7 +214,7 @@ async def test_get_by_id(
     )
 
     elastic = await create_elasticsearch_index(index_name=INDEX_NAME_FILM)
-    await elastic.load_data(documents=[film.model_dump()])
+    await elastic.load_documents(documents=[film])
 
     url = f'{settings.movies_api_v1_url}films/{expected['uuid']}/'
 
@@ -252,7 +246,7 @@ async def test_get_by_id_from_redis(
     )
 
     elastic = await create_elasticsearch_index(index_name=INDEX_NAME_FILM)
-    await elastic.load_data(documents=[film.model_dump()])
+    await elastic.load_documents(documents=[film])
 
     url = f'{settings.movies_api_v1_url}films/{expected['uuid']}/'
 
