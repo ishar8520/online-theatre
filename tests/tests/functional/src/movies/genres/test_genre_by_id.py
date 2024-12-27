@@ -39,7 +39,8 @@ class BaseGenreByIdTestRunner:
             await self.save_genres_to_elasticsearch(genres=genres)
 
         genre = self.get_genre(genres=genres)
-        genre_result_data = await self.get_genre_result(genre_id=genre.id)
+        genre_id = genre.id if genre is not None else None
+        genre_result_data = await self.get_genre_result(genre_id=genre_id)
         self.validate_genre_result(genre=genre, genre_result_data=genre_result_data)
 
     async def create_genres(self) -> Iterable[Genre]:
@@ -58,7 +59,10 @@ class BaseGenreByIdTestRunner:
 
         return genres[0]
 
-    async def get_genre_result(self, *, genre_id: uuid.UUID) -> dict | None:
+    async def get_genre_result(self, *, genre_id: uuid.UUID | None) -> dict | None:
+        if genre_id is None:
+            return None
+
         return await self._download_genre(genre_id=genre_id)
 
     async def _download_genre(self, *, genre_id: uuid.UUID) -> dict:
@@ -79,6 +83,7 @@ class BaseGenreByIdTestRunner:
     def validate_genre_result(self, *, genre: Genre | None, genre_result_data: dict | None) -> None:
         if genre is None:
             assert genre_result_data is None
+            return
 
         expected_genre_result = api_models.Genre(**genre.model_dump())
         expected_genre_result_data = expected_genre_result.model_dump(mode='json', by_alias=True)
@@ -90,6 +95,23 @@ class GenreByIdTestRunner(BaseGenreByIdTestRunner):
     pass
 
 
+class GenreDoesNotExistTestRunner(BaseGenreByIdTestRunner):
+    def get_genre(self, *, genres: list[Genre]) -> Genre | None:
+        return None
+
+    async def get_genre_result(self, *, genre_id: uuid.UUID | None) -> dict | None:
+        await self._get_genre_response_data(
+            genre_id=str(uuid.uuid4()),
+            expected_status=404,
+        )
+        await self._get_genre_response_data(
+            genre_id='invalid',
+            expected_status=422,
+        )
+
+        return None
+
+
 @pytest.mark.asyncio(loop_scope='session')
 async def test_genre_by_id(
         redis_cache,
@@ -99,6 +121,21 @@ async def test_genre_by_id(
     elasticsearch_index = await create_elasticsearch_index(index_name='genres')
 
     await GenreByIdTestRunner(
+        redis_cache=redis_cache,
+        elasticsearch_index=elasticsearch_index,
+        aiohttp_session=aiohttp_session,
+    ).run()
+
+
+@pytest.mark.asyncio(loop_scope='session')
+async def test_genre_does_not_exist(
+        redis_cache,
+        create_elasticsearch_index,
+        aiohttp_session,
+) -> None:
+    elasticsearch_index = await create_elasticsearch_index(index_name='genres')
+
+    await GenreDoesNotExistTestRunner(
         redis_cache=redis_cache,
         elasticsearch_index=elasticsearch_index,
         aiohttp_session=aiohttp_session,
