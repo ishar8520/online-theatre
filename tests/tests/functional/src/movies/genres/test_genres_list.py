@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
+from typing import Any
 from urllib.parse import urljoin
 
 import aiohttp
+import aiohttp.typedefs
+import math
 import pytest
 
 from ....settings import settings
@@ -13,50 +16,55 @@ from ....utils.elasticsearch.models import Genre
 from ....utils.redis import RedisCache
 
 
-class GenresListTestRunner:
+class BaseGenresListTestRunner:
     redis_cache: RedisCache
     elasticsearch_index: ElasticsearchIndex[Genre]
     aiohttp_session: aiohttp.ClientSession
-
-    genres_list_api_url: str
+    genres_count: int
 
     def __init__(self,
                  *,
                  redis_cache: RedisCache,
                  elasticsearch_index: ElasticsearchIndex[Genre],
-                 aiohttp_session: aiohttp.ClientSession) -> None:
+                 aiohttp_session: aiohttp.ClientSession,
+                 genres_count: int) -> None:
         self.elasticsearch_index = elasticsearch_index
         self.aiohttp_session = aiohttp_session
         self.redis_cache = redis_cache
-
-        self.genres_list_api_url = urljoin(settings.movies_api_url, 'v1/genres/')
+        self.genres_count = genres_count
 
     async def run(self) -> None:
-        raise NotImplementedError
+        genres = list(await self.create_genres())
+
+        if genres:
+            await self.save_genres_to_elasticsearch(genres=genres)
+
+        genres_results = await self.get_genres_results()
+        self.validate_genres_results(genres=genres, genres_results=genres_results)
+
+    async def create_genres(self) -> Iterable[Genre]:
+        return self._generate_genres(count=self.genres_count)
 
     def _generate_genres(self, *, count: int = 1) -> Iterable[Genre]:
         for i in range(1, count + 1):
             yield Genre(name=f'Жанр {i}')
 
-
-class GenresListEmptyTestRunner(GenresListTestRunner):
-    async def run(self) -> None:
-        async with self.aiohttp_session.get(self.genres_list_api_url) as response:
-            assert response.status == 200
-            genres_results: list[dict] = await response.json()
-
-        assert genres_results == []
-
-
-class GenresListSinglePageTestRunner(GenresListTestRunner):
-    async def run(self) -> None:
-        genres = list(self._generate_genres(count=10))
+    async def save_genres_to_elasticsearch(self, *, genres: Iterable[Genre]) -> None:
         await self.elasticsearch_index.load_documents(documents=genres)
 
-        async with self.aiohttp_session.get(self.genres_list_api_url) as response:
+    async def get_genres_results(self) -> Iterable[dict]:
+        return await self._download_genres_list()
+
+    async def _download_genres_list(self, *, params: aiohttp.typedefs.Query | None = None) -> Iterable[dict]:
+        genres_list_api_url = urljoin(settings.movies_api_url, 'v1/genres/')
+
+        async with self.aiohttp_session.get(genres_list_api_url, params=params) as response:
             assert response.status == 200
             genres_results: list[dict] = await response.json()
 
+        return genres_results
+
+    def validate_genres_results(self, *, genres: Iterable[Genre], genres_results: Iterable[dict]) -> None:
         genres_results_dict: dict[str, dict] = {
             genre_result_data['uuid']: genre_result_data for genre_result_data in genres_results
         }
@@ -70,36 +78,40 @@ class GenresListSinglePageTestRunner(GenresListTestRunner):
         assert genres_results_dict == expected_genres_results_dict
 
 
-class GenresListMultiplePagesTestRunner(GenresListTestRunner):
-    async def run(self) -> None:
-        genres_count = 25
-        page_size = 10
-        pages_count = genres_count // page_size + 1
+class GenresListEmptyTestRunner(BaseGenresListTestRunner):
+    def __init__(self, **kwargs: Any) -> None:
+        kwargs['genres_count'] = 0
+        super().__init__(**kwargs)
 
-        genres = list(self._generate_genres(count=25))
-        await self.elasticsearch_index.load_documents(documents=genres)
 
+class GenresListSinglePageTestRunner(BaseGenresListTestRunner):
+    pass
+
+
+class GenresListMultiplePagesTestRunner(BaseGenresListTestRunner):
+    page_size: int
+
+    def __init__(self, *, page_size: int, **kwargs: Any) -> None:
+        super().__init__(**kwargs)
+        self.page_size = page_size
+
+    async def get_genres_results(self) -> Iterable[dict]:
+        pages_count = math.ceil(self.genres_count / self.page_size)
         genres_results: list[dict] = []
 
         for page_number in range(1, pages_count + 1):
-            async with self.aiohttp_session.get(self.genres_list_api_url, params={
-                'page_size': page_size,
+            genres_results += await self._download_genres_list(params={
+                'page_size': self.page_size,
                 'page_number': page_number,
-            }) as response:
-                assert response.status == 200
-                genres_results += await response.json()
+            })
 
-        genres_results_dict: dict[str, dict] = {
-            genre_result_data['uuid']: genre_result_data for genre_result_data in genres_results
-        }
+        genres_results_empty = await self._download_genres_list(params={
+            'page_size': self.page_size,
+            'page_number': pages_count + 1,
+        })
+        assert genres_results_empty == []
 
-        expected_genres_results_dict: dict[str, dict] = {}
-        for genre in genres:
-            expected_genre_result = api_models.Genre(**genre.model_dump())
-            expected_genre_result_data = expected_genre_result.model_dump(mode='json', by_alias=True)
-            expected_genres_results_dict[expected_genre_result_data['uuid']] = expected_genre_result_data
-
-        assert genres_results_dict == expected_genres_results_dict
+        return genres_results
 
 
 @pytest.mark.asyncio(loop_scope='session')
@@ -129,6 +141,7 @@ async def test_genres_list_single_page(
         redis_cache=redis_cache,
         elasticsearch_index=elasticsearch_index,
         aiohttp_session=aiohttp_session,
+        genres_count=10,
     ).run()
 
 
@@ -144,4 +157,6 @@ async def test_genres_list_multiple_pages(
         redis_cache=redis_cache,
         elasticsearch_index=elasticsearch_index,
         aiohttp_session=aiohttp_session,
+        genres_count=25,
+        page_size=10,
     ).run()
