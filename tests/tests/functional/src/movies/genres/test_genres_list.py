@@ -137,6 +137,16 @@ class GenresListMultiplePagesTestRunner(BaseGenresListTestRunner):
         )
         assert empty_page_genres_results == []
 
+        for invalid_params in [
+            {
+                'page_size': 'invalid',
+            },
+            {
+                'page_number': 'invalid',
+            },
+        ]:
+            await self._get_genres_list_response_data(params=invalid_params, expected_status=422)
+
         return genres_results
 
 
