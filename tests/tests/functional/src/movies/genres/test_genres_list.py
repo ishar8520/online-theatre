@@ -34,10 +34,8 @@ class BaseGenresListTestRunner:
         self.genres_count = genres_count
 
     async def run(self) -> None:
-        genres = list(await self.create_genres())
-
-        if genres:
-            await self.save_genres_to_elasticsearch(genres=genres)
+        genres = list(self.create_genres())
+        await self.save_genres_to_elasticsearch(genres=genres)
 
         genres_results = await self.get_genres_results()
         self.validate_genres_results(genres=genres, genres_results=genres_results)
@@ -52,14 +50,17 @@ class BaseGenresListTestRunner:
         genres_results = await self.get_genres_results()
         assert genres_results == []
 
-    async def create_genres(self) -> Iterable[Genre]:
+    def create_genres(self) -> Iterable[Genre]:
         return self._generate_genres(count=self.genres_count)
 
     def _generate_genres(self, *, count: int = 1) -> Iterable[Genre]:
         for i in range(1, count + 1):
             yield Genre(name=f'Жанр {i}')
 
-    async def save_genres_to_elasticsearch(self, *, genres: Iterable[Genre]) -> None:
+    async def save_genres_to_elasticsearch(self, *, genres: list[Genre]) -> None:
+        if not genres:
+            return
+
         await self.elasticsearch_index.load_documents(documents=genres)
 
     async def get_genres_results(self) -> Iterable[dict]:

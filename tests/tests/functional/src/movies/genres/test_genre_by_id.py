@@ -33,24 +33,25 @@ class BaseGenreByIdTestRunner:
         self.genres_count = genres_count
 
     async def run(self) -> None:
-        genres = list(await self.create_genres())
-
-        if genres:
-            await self.save_genres_to_elasticsearch(genres=genres)
+        genres = list(self.create_genres())
+        await self.save_genres_to_elasticsearch(genres=genres)
 
         genre = self.get_genre(genres=genres)
         genre_id = genre.id if genre is not None else None
         genre_result_data = await self.get_genre_result(genre_id=genre_id)
         self.validate_genre_result(genre=genre, genre_result_data=genre_result_data)
 
-    async def create_genres(self) -> Iterable[Genre]:
+    def create_genres(self) -> Iterable[Genre]:
         return self._generate_genres(count=self.genres_count)
 
     def _generate_genres(self, *, count: int = 1) -> Iterable[Genre]:
         for i in range(1, count + 1):
             yield Genre(name=f'Жанр {i}')
 
-    async def save_genres_to_elasticsearch(self, *, genres: Iterable[Genre]) -> None:
+    async def save_genres_to_elasticsearch(self, *, genres: list[Genre]) -> None:
+        if not genres:
+            return
+
         await self.elasticsearch_index.load_documents(documents=genres)
 
     def get_genre(self, *, genres: list[Genre]) -> Genre | None:
