@@ -63,13 +63,13 @@ class BaseGenresListTestCase:
 
         await self.genres_index.load_documents(documents=genres)
 
-    async def get_genres_results(self) -> Iterable[dict]:
+    async def get_genres_results(self) -> list[dict]:
         return await self._download_genres_list()
 
     async def _download_genres_list(self,
                                     *,
                                     page_size: int | None = None,
-                                    page_number: int | None = None) -> Iterable[dict]:
+                                    page_number: int | None = None) -> list[dict]:
         params = {
             'page_size': page_size,
             'page_number': page_number,

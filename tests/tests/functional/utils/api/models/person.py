@@ -5,6 +5,8 @@ from .base import (
     DocumentRelation,
 )
 
+from pydantic import Field
+
 
 class Person(Document):
     full_name: str
@@ -13,3 +15,8 @@ class Person(Document):
 
 class PersonFilmRelation(DocumentRelation):
     roles: list[str]
+
+
+class PersonFilm(Document):
+    title: str
+    rating: float | None = Field(serialization_alias='imdb_rating')
