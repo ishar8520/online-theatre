@@ -42,16 +42,32 @@ class BasePersonFilmsTestCase:
     async def run(self) -> None:
         films = list(self.create_films())
         await self.save_films_to_elasticsearch(films=films)
+        await self._run_tests(films=films)
 
+        await self.films_index.delete_index()
+        await self._run_tests(films=films)
+
+        await self.redis_cache.clear()
+        await self._run_tests(films=films, empty_results=True)
+
+    async def _run_tests(self, *, films: Iterable[Film], empty_results: bool = False) -> None:
         for role in ['director', 'actor', 'writer']:
-            film_person = self.get_film_person(films=films, role=role)
-            person_id = film_person.id if film_person is not None else None
-            person_films = list(self.get_expected_person_films(films=films, person_id=person_id))
-            person_films_results = await self.get_person_films_results(person_id=person_id)
-            self.validate_person_films_results(
-                person_films=person_films,
-                person_films_results=person_films_results,
-            )
+            await self._run_tests_for_role(films=films, empty_results=empty_results, role=role)
+
+    async def _run_tests_for_role(self, *, films: Iterable[Film], empty_results: bool = False, role: str) -> None:
+        film_person = self.get_film_person(films=films, role=role)
+        person_id = film_person.id if film_person is not None else None
+        person_films_results = await self.get_person_films_results(person_id=person_id)
+
+        if empty_results:
+            assert person_films_results == []
+            return
+
+        person_films = list(self.get_expected_person_films(films=films, person_id=person_id))
+        self.validate_person_films_results(
+            person_films=person_films,
+            person_films_results=person_films_results,
+        )
 
     def create_films(self) -> Iterable[Film]:
         return self._generate_films(count=self.films_count)
