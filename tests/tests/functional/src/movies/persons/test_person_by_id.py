@@ -20,17 +20,17 @@ from ....utils.redis import RedisCache
 
 class BasePersonByIdTestCase:
     redis_cache: RedisCache
-    elasticsearch_index: ElasticsearchIndex[Person]
+    persons_index: ElasticsearchIndex[Person]
     aiohttp_session: aiohttp.ClientSession
     persons_count: int
 
     def __init__(self,
                  *,
                  redis_cache: RedisCache,
-                 elasticsearch_index: ElasticsearchIndex[Person],
+                 persons_index: ElasticsearchIndex[Person],
                  aiohttp_session: aiohttp.ClientSession,
                  persons_count: int = 3) -> None:
-        self.elasticsearch_index = elasticsearch_index
+        self.persons_index = persons_index
         self.aiohttp_session = aiohttp_session
         self.redis_cache = redis_cache
         self.persons_count = persons_count
@@ -45,7 +45,7 @@ class BasePersonByIdTestCase:
         person_result_data = await self.get_person_result(person_id=person_id)
         self.validate_person_result(person=person, person_result_data=person_result_data)
 
-        await self.elasticsearch_index.delete_index()
+        await self.persons_index.delete_index()
 
         person_result_data = await self.get_person_result(person_id=person_id)
         self.validate_person_result(person=person, person_result_data=person_result_data)
@@ -75,7 +75,7 @@ class BasePersonByIdTestCase:
         if not persons:
             return
 
-        await self.elasticsearch_index.load_documents(documents=persons)
+        await self.persons_index.load_documents(documents=persons)
 
     def get_person(self, *, persons: list[Person]) -> Person | None:
         if not persons:
@@ -150,11 +150,11 @@ async def test_person_by_id(
         create_elasticsearch_index,
         aiohttp_session,
 ) -> None:
-    elasticsearch_index = await create_elasticsearch_index(index_name='persons')
+    persons_index = await create_elasticsearch_index(index_name='persons')
 
     await PersonByIdTestCase(
         redis_cache=redis_cache,
-        elasticsearch_index=elasticsearch_index,
+        persons_index=persons_index,
         aiohttp_session=aiohttp_session,
     ).run()
 
@@ -165,10 +165,10 @@ async def test_person_does_not_exist(
         create_elasticsearch_index,
         aiohttp_session,
 ) -> None:
-    elasticsearch_index = await create_elasticsearch_index(index_name='persons')
+    persons_index = await create_elasticsearch_index(index_name='persons')
 
     await PersonDoesNotExistTestCase(
         redis_cache=redis_cache,
-        elasticsearch_index=elasticsearch_index,
+        persons_index=persons_index,
         aiohttp_session=aiohttp_session,
     ).run()
