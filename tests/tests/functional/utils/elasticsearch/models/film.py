@@ -10,8 +10,8 @@ from .base import (
 
 class Film(Document):
     title: str
-    description: str | None
-    rating: float | None
+    description: str | None = None
+    rating: float | None = None
     # noinspection PyDataclass
     genres: list[FilmGenre] = []
     # noinspection PyDataclass
@@ -22,18 +22,22 @@ class Film(Document):
     writers: list[FilmWriter] = []
 
     @computed_field
+    @property
     def genres_names(self) -> list[str]:
         return [genre.name for genre in self.genres]
 
     @computed_field
+    @property
     def directors_names(self) -> list[str]:
         return [person.full_name for person in self.directors]
 
     @computed_field
+    @property
     def actors_names(self) -> list[str]:
         return [person.full_name for person in self.actors]
 
     @computed_field
+    @property
     def writers_names(self) -> list[str]:
         return [person.full_name for person in self.writers]
 
