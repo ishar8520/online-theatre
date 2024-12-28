@@ -18,7 +18,7 @@ from ....utils.elasticsearch.models import (
 from ....utils.redis import RedisCache
 
 
-class BasePersonByIdTestRunner:
+class BasePersonByIdTestCase:
     redis_cache: RedisCache
     elasticsearch_index: ElasticsearchIndex[Person]
     aiohttp_session: aiohttp.ClientSession
@@ -123,11 +123,11 @@ class BasePersonByIdTestRunner:
         assert person_result_data == expected_person_result_data
 
 
-class PersonByIdTestRunner(BasePersonByIdTestRunner):
+class PersonByIdTestCase(BasePersonByIdTestCase):
     pass
 
 
-class PersonDoesNotExistTestRunner(BasePersonByIdTestRunner):
+class PersonDoesNotExistTestCase(BasePersonByIdTestCase):
     def get_person(self, *, persons: list[Person]) -> Person | None:
         return None
 
@@ -152,7 +152,7 @@ async def test_person_by_id(
 ) -> None:
     elasticsearch_index = await create_elasticsearch_index(index_name='persons')
 
-    await PersonByIdTestRunner(
+    await PersonByIdTestCase(
         redis_cache=redis_cache,
         elasticsearch_index=elasticsearch_index,
         aiohttp_session=aiohttp_session,
@@ -167,7 +167,7 @@ async def test_person_does_not_exist(
 ) -> None:
     elasticsearch_index = await create_elasticsearch_index(index_name='persons')
 
-    await PersonDoesNotExistTestRunner(
+    await PersonDoesNotExistTestCase(
         redis_cache=redis_cache,
         elasticsearch_index=elasticsearch_index,
         aiohttp_session=aiohttp_session,

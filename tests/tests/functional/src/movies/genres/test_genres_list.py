@@ -16,7 +16,7 @@ from ....utils.elasticsearch.models import Genre
 from ....utils.redis import RedisCache
 
 
-class BaseGenresListTestRunner:
+class BaseGenresListTestCase:
     redis_cache: RedisCache
     elasticsearch_index: ElasticsearchIndex[Genre]
     aiohttp_session: aiohttp.ClientSession
@@ -105,17 +105,17 @@ class BaseGenresListTestRunner:
         assert genres_results_dict == expected_genres_results_dict
 
 
-class GenresListEmptyTestRunner(BaseGenresListTestRunner):
+class GenresListEmptyTestCase(BaseGenresListTestCase):
     def __init__(self, **kwargs: Any) -> None:
         kwargs['genres_count'] = 0
         super().__init__(**kwargs)
 
 
-class GenresListSinglePageTestRunner(BaseGenresListTestRunner):
+class GenresListSinglePageTestCase(BaseGenresListTestCase):
     pass
 
 
-class GenresListMultiplePagesTestRunner(BaseGenresListTestRunner):
+class GenresListMultiplePagesTestCase(BaseGenresListTestCase):
     page_size: int
 
     def __init__(self, *, page_size: int, **kwargs: Any) -> None:
@@ -159,7 +159,7 @@ async def test_genres_list_empty(
 ) -> None:
     elasticsearch_index = await create_elasticsearch_index(index_name='genres')
 
-    await GenresListEmptyTestRunner(
+    await GenresListEmptyTestCase(
         redis_cache=redis_cache,
         elasticsearch_index=elasticsearch_index,
         aiohttp_session=aiohttp_session,
@@ -174,7 +174,7 @@ async def test_genres_list_single_page(
 ) -> None:
     elasticsearch_index = await create_elasticsearch_index(index_name='genres')
 
-    await GenresListSinglePageTestRunner(
+    await GenresListSinglePageTestCase(
         redis_cache=redis_cache,
         elasticsearch_index=elasticsearch_index,
         aiohttp_session=aiohttp_session,
@@ -190,7 +190,7 @@ async def test_genres_list_multiple_pages(
 ) -> None:
     elasticsearch_index = await create_elasticsearch_index(index_name='genres')
 
-    await GenresListMultiplePagesTestRunner(
+    await GenresListMultiplePagesTestCase(
         redis_cache=redis_cache,
         elasticsearch_index=elasticsearch_index,
         aiohttp_session=aiohttp_session,

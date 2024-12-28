@@ -15,7 +15,7 @@ from ....utils.elasticsearch.models import Genre
 from ....utils.redis import RedisCache
 
 
-class BaseGenreByIdTestRunner:
+class BaseGenreByIdTestCase:
     redis_cache: RedisCache
     elasticsearch_index: ElasticsearchIndex[Genre]
     aiohttp_session: aiohttp.ClientSession
@@ -111,11 +111,11 @@ class BaseGenreByIdTestRunner:
         assert genre_result_data == expected_genre_result_data
 
 
-class GenreByIdTestRunner(BaseGenreByIdTestRunner):
+class GenreByIdTestCase(BaseGenreByIdTestCase):
     pass
 
 
-class GenreDoesNotExistTestRunner(BaseGenreByIdTestRunner):
+class GenreDoesNotExistTestCase(BaseGenreByIdTestCase):
     def get_genre(self, *, genres: list[Genre]) -> Genre | None:
         return None
 
@@ -140,7 +140,7 @@ async def test_genre_by_id(
 ) -> None:
     elasticsearch_index = await create_elasticsearch_index(index_name='genres')
 
-    await GenreByIdTestRunner(
+    await GenreByIdTestCase(
         redis_cache=redis_cache,
         elasticsearch_index=elasticsearch_index,
         aiohttp_session=aiohttp_session,
@@ -155,7 +155,7 @@ async def test_genre_does_not_exist(
 ) -> None:
     elasticsearch_index = await create_elasticsearch_index(index_name='genres')
 
-    await GenreDoesNotExistTestRunner(
+    await GenreDoesNotExistTestCase(
         redis_cache=redis_cache,
         elasticsearch_index=elasticsearch_index,
         aiohttp_session=aiohttp_session,
