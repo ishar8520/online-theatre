@@ -8,7 +8,7 @@ import elasticsearch.helpers
 from .models import Document
 
 
-class ElasticsearchIndex[TDocument: Document = Document]:
+class ElasticsearchIndex[TDocument: Document]:
     client: elasticsearch.AsyncElasticsearch
     index_name: str
     index_data: dict

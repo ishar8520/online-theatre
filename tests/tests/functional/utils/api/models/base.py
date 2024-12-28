@@ -10,3 +10,7 @@ from pydantic import (
 
 class Document(BaseModel):
     id: uuid.UUID = Field(serialization_alias='uuid')
+
+
+class DocumentRelation(BaseModel):
+    id: uuid.UUID = Field(serialization_alias='uuid')

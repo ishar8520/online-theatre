@@ -16,19 +16,19 @@ from ....utils.elasticsearch.models import Genre
 from ....utils.redis import RedisCache
 
 
-class BaseGenresListTestRunner:
+class BaseGenresListTestCase:
     redis_cache: RedisCache
-    elasticsearch_index: ElasticsearchIndex[Genre]
+    genres_index: ElasticsearchIndex[Genre]
     aiohttp_session: aiohttp.ClientSession
     genres_count: int
 
     def __init__(self,
                  *,
                  redis_cache: RedisCache,
-                 elasticsearch_index: ElasticsearchIndex[Genre],
+                 genres_index: ElasticsearchIndex[Genre],
                  aiohttp_session: aiohttp.ClientSession,
                  genres_count: int) -> None:
-        self.elasticsearch_index = elasticsearch_index
+        self.genres_index = genres_index
         self.aiohttp_session = aiohttp_session
         self.redis_cache = redis_cache
         self.genres_count = genres_count
@@ -40,7 +40,7 @@ class BaseGenresListTestRunner:
         genres_results = await self.get_genres_results()
         self.validate_genres_results(genres=genres, genres_results=genres_results)
 
-        await self.elasticsearch_index.delete_index()
+        await self.genres_index.delete_index()
 
         genres_results = await self.get_genres_results()
         self.validate_genres_results(genres=genres, genres_results=genres_results)
@@ -61,7 +61,7 @@ class BaseGenresListTestRunner:
         if not genres:
             return
 
-        await self.elasticsearch_index.load_documents(documents=genres)
+        await self.genres_index.load_documents(documents=genres)
 
     async def get_genres_results(self) -> Iterable[dict]:
         return await self._download_genres_list()
@@ -105,17 +105,17 @@ class BaseGenresListTestRunner:
         assert genres_results_dict == expected_genres_results_dict
 
 
-class GenresListEmptyTestRunner(BaseGenresListTestRunner):
+class GenresListEmptyTestCase(BaseGenresListTestCase):
     def __init__(self, **kwargs: Any) -> None:
         kwargs['genres_count'] = 0
         super().__init__(**kwargs)
 
 
-class GenresListSinglePageTestRunner(BaseGenresListTestRunner):
+class GenresListSinglePageTestCase(BaseGenresListTestCase):
     pass
 
 
-class GenresListMultiplePagesTestRunner(BaseGenresListTestRunner):
+class GenresListMultiplePagesTestCase(BaseGenresListTestCase):
     page_size: int
 
     def __init__(self, *, page_size: int, **kwargs: Any) -> None:
@@ -157,11 +157,11 @@ async def test_genres_list_empty(
         create_elasticsearch_index,
         aiohttp_session,
 ) -> None:
-    elasticsearch_index = await create_elasticsearch_index(index_name='genres')
+    genres_index = await create_elasticsearch_index(index_name='genres')
 
-    await GenresListEmptyTestRunner(
+    await GenresListEmptyTestCase(
         redis_cache=redis_cache,
-        elasticsearch_index=elasticsearch_index,
+        genres_index=genres_index,
         aiohttp_session=aiohttp_session,
     ).run()
 
@@ -172,11 +172,11 @@ async def test_genres_list_single_page(
         create_elasticsearch_index,
         aiohttp_session,
 ) -> None:
-    elasticsearch_index = await create_elasticsearch_index(index_name='genres')
+    genres_index = await create_elasticsearch_index(index_name='genres')
 
-    await GenresListSinglePageTestRunner(
+    await GenresListSinglePageTestCase(
         redis_cache=redis_cache,
-        elasticsearch_index=elasticsearch_index,
+        genres_index=genres_index,
         aiohttp_session=aiohttp_session,
         genres_count=10,
     ).run()
@@ -188,11 +188,11 @@ async def test_genres_list_multiple_pages(
         create_elasticsearch_index,
         aiohttp_session,
 ) -> None:
-    elasticsearch_index = await create_elasticsearch_index(index_name='genres')
+    genres_index = await create_elasticsearch_index(index_name='genres')
 
-    await GenresListMultiplePagesTestRunner(
+    await GenresListMultiplePagesTestCase(
         redis_cache=redis_cache,
-        elasticsearch_index=elasticsearch_index,
+        genres_index=genres_index,
         aiohttp_session=aiohttp_session,
         genres_count=25,
         page_size=10,
