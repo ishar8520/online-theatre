@@ -23,7 +23,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title=settings.project.name,
-    description='Backend service that returns films, persons (actos, writers, directors) and genres of films by uuid',
+    description='Backend service that returns films, persons (actors, writers, directors) and genres of films by uuid',
     docs_url='/api/openapi',
     openapi_url='/api/openapi.json',
     default_response_class=JSONResponse,
