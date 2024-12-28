@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import backoff
 import hashlib
 import json
 from typing import Any
 
+import redis.exceptions as redis_exceptions
 import elasticsearch
 import redis.asyncio as redis
 
@@ -21,6 +23,13 @@ class SearchService:
         self.elasticsearch_client = elasticsearch_client
         self.search_cache = SearchCache(redis_client=redis_client)
 
+    @backoff.on_exception(
+        backoff.expo,
+        (
+            elasticsearch.exceptions.ConnectionError,
+            elasticsearch.exceptions.ConnectionTimeout
+        )
+    )
     async def get(self, *, index: str, id: str) -> dict | None:
         search_params = {
             'id': id,
@@ -40,6 +49,13 @@ class SearchService:
 
         return result
 
+    @backoff.on_exception(
+        backoff.expo,
+        (
+            elasticsearch.exceptions.ConnectionError,
+            elasticsearch.exceptions.ConnectionTimeout
+        )
+    )
     async def search(self, *, index: str, body: dict) -> list[dict] | None:
         search_params = {
             'body': body,
@@ -75,6 +91,13 @@ class SearchCache:
         self.redis_client = redis_client
         self.key_version = key_version or '1.0'
 
+    @backoff.on_exception(
+        backoff.expo,
+        (
+            redis_exceptions.ConnectionError,
+            redis_exceptions.TimeoutError
+        )
+    )
     async def get(self, *, index: str, command: str, params: dict) -> Any | None:
         cache_key = self._create_cache_key(index=index, command=command, params=params)
         value_json: str | None = await self.redis_client.get(cache_key)
@@ -84,6 +107,13 @@ class SearchCache:
 
         return json.loads(value_json)
 
+    @backoff.on_exception(
+        backoff.expo,
+        (
+            redis_exceptions.ConnectionError,
+            redis_exceptions.TimeoutError
+        )
+    )
     async def set(self, *, index: str, command: str, params: dict, value: Any) -> None:
         cache_key = self._create_cache_key(index=index, command=command, params=params)
         value_json = json.dumps(value)
