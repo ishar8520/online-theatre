@@ -8,10 +8,8 @@ from .base import (
 
 class Person(Document):
     full_name: str
-    # noinspection PyDataclass
-    films: list[PersonFilmRelation] = []
+    films: list[PersonFilmRelation]
 
 
 class PersonFilmRelation(DocumentRelation):
-    # noinspection PyDataclass
-    roles: list[str] = []
+    roles: list[str]

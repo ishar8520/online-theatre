@@ -10,5 +10,5 @@ from .film import (
 from .genre import Genre
 from .person import (
     Person,
-    PersonFilm,
+    PersonFilmRelation,
 )
