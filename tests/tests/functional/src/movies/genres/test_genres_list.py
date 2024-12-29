@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import http
 from collections.abc import Iterable
 from typing import Any
 from urllib.parse import urljoin
@@ -82,7 +83,7 @@ class BaseGenresListTestCase:
     async def _get_genres_list_response_data(self,
                                              *,
                                              params: aiohttp.typedefs.Query | None = None,
-                                             expected_status: int = 200) -> Any:
+                                             expected_status: int = http.HTTPStatus.OK) -> Any:
         genres_list_api_url = urljoin(settings.movies_api_url, 'v1/genres/')
 
         async with self.aiohttp_session.get(genres_list_api_url, params=params) as response:
@@ -146,7 +147,7 @@ class GenresListMultiplePagesTestCase(BaseGenresListTestCase):
                 'page_number': 'invalid',
             },
         ]:
-            await self._get_genres_list_response_data(params=invalid_params, expected_status=422)
+            await self._get_genres_list_response_data(params=invalid_params, expected_status=http.HTTPStatus.UNPROCESSABLE_ENTITY)
 
         return genres_results
 

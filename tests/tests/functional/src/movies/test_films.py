@@ -1,6 +1,7 @@
 import random
 import uuid
 from urllib.parse import urljoin
+import http
 
 import pytest
 
@@ -19,32 +20,32 @@ INDEX_NAME_FILM = 'films'
         (
             10,
             {},
-            {'status': 200, 'length': 10}
+            {'status': http.HTTPStatus.OK, 'length': 10}
         ),
         (
             100,
             {'page_size': 100},
-            {'status': 200, 'length': 50}
+            {'status': http.HTTPStatus.OK, 'length': 50}
         ),
         (
             10,
             {'page_number': -1},
-            {'status': 200, 'length': 10}
+            {'status': http.HTTPStatus.OK, 'length': 10}
         ),
         (
             10,
             {'page_number': 5},
-            {'status': 200, 'length': 0}
+            {'status': http.HTTPStatus.OK, 'length': 0}
         ),
         (
             10,
             {'page_number': 'string'},
-            {'status': 422, 'length': None}
+            {'status': http.HTTPStatus.UNPROCESSABLE_ENTITY, 'length': None}
         ),
         (
             10,
             {'page_size': 'string'},
-            {'status': 422, 'length': None}
+            {'status': http.HTTPStatus.UNPROCESSABLE_ENTITY, 'length': None}
         )
     ]
 )
@@ -84,11 +85,11 @@ async def test_get_list_pagination(
     [
         (
             {'sort': '-imdb_rating'},
-            {'status': 200, 'rating': 10}
+            {'status': http.HTTPStatus.OK, 'rating': 10}
         ),
         (
             {'sort': 'imdb_rating'},
-            {'status': 200, 'rating': 2}
+            {'status': http.HTTPStatus.OK, 'rating': 2}
         )
     ]
 )
@@ -133,7 +134,7 @@ async def test_get_list_sort(
                 'film_uuid': '721c9206-2e99-4247-aab2-d19463e4561c',
                 'genre_search_uuid': 'e9c1dfa4-cfbf-40b8-b636-9075c2fd8429'
             },
-            {'status': 200, 'length': 1, 'film_uuid': '721c9206-2e99-4247-aab2-d19463e4561c'}
+            {'status': http.HTTPStatus.OK, 'length': 1, 'film_uuid': '721c9206-2e99-4247-aab2-d19463e4561c'}
         ),
         (
             {
@@ -141,7 +142,7 @@ async def test_get_list_sort(
                 'film_uuid': '721c9206-2e99-4247-aab2-d19463e4561c',
                 'genre_search_uuid': 'e9c1dfa4-cfbf-40b8-b636-9075c2fd8544'
             },
-            {'status': 200, 'length': 0}
+            {'status': http.HTTPStatus.OK, 'length': 0}
         )
     ]
 )

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import http
 import uuid
 from collections.abc import Iterable
 from typing import Any
@@ -128,7 +129,7 @@ class BasePersonFilmsTestCase:
     async def _get_person_films_response_data(self,
                                               *,
                                               person_id: str,
-                                              expected_status: int = 200) -> Any:
+                                              expected_status: int = http.HTTPStatus.OK) -> Any:
         person_films_api_url = urljoin(settings.movies_api_url, f'v1/persons/{person_id}/film/')
 
         async with self.aiohttp_session.get(person_films_api_url) as response:
@@ -183,7 +184,7 @@ class PersonFilmsTestCase(BasePersonFilmsTestCase):
 class PersonFilmsNotFoundTestCase(BasePersonFilmsTestCase):
     async def get_person_films_results(self, *, person_id: uuid.UUID | None) -> list[dict]:
         assert await self._download_person_films(person_id=uuid.uuid4()) == []
-        await self._get_person_films_response_data(person_id='invalid', expected_status=422)
+        await self._get_person_films_response_data(person_id='invalid', expected_status=http.HTTPStatus.UNPROCESSABLE_ENTITY)
 
         return []
 

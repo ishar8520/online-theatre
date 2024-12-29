@@ -1,5 +1,6 @@
 import uuid
 from urllib.parse import urljoin
+import http
 
 import pytest
 
@@ -18,11 +19,11 @@ INDEX_NAME_PERSON = 'persons'
     [
         (
             {'search': 'Star'},
-            {'status': 200, 'length': 1}
+            {'status': http.HTTPStatus.OK, 'length': 1}
         ),
         (
             {'search': 'Mashed potato'},
-            {'status': 200, 'length': 0}
+            {'status': http.HTTPStatus.OK, 'length': 0}
         )
     ]
 )
@@ -60,7 +61,7 @@ async def test_search_film(
                 'person_full_name': 'Jeffry Jones',
                 'search_full_name': 'jones'
             },
-            {'status': 200, 'length': 1, 'person_uuid': 'e9c1dfa4-cfbf-40b8-b636-9075c2fd8429'}
+            {'status': http.HTTPStatus.OK, 'length': 1, 'person_uuid': 'e9c1dfa4-cfbf-40b8-b636-9075c2fd8429'}
         ),
         (
             {
@@ -68,7 +69,7 @@ async def test_search_film(
                 'person_full_name': 'Jeffry Jones',
                 'search_full_name': 'Julie Pi'
             },
-            {'status': 200, 'length': 0}
+            {'status': http.HTTPStatus.OK, 'length': 0}
         )
     ]
 )
@@ -113,7 +114,7 @@ async def test_search_person(
                 'person_full_name': 'Jeffry Jones',
                 'search_full_name': 'jones'
             },
-            {'status': 200, 'length': 1, 'person_uuid': 'e9c1dfa4-cfbf-40b8-b636-9075c2fd8429'}
+            {'status': http.HTTPStatus.OK, 'length': 1, 'person_uuid': 'e9c1dfa4-cfbf-40b8-b636-9075c2fd8429'}
         )
     ]
 )

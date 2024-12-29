@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from urllib.parse import urljoin
 
+import http
 import pytest
 
 from ...settings import settings
@@ -12,7 +13,7 @@ async def test_openapi(aiohttp_session) -> None:
     openapi_url = urljoin(settings.movies_api_url, 'openapi.json')
 
     async with aiohttp_session.get(openapi_url) as response:
-        assert response.status == 200
+        assert response.status == http.HTTPStatus.OK
         response_data: dict = await response.json()
 
     assert set(response_data) == {

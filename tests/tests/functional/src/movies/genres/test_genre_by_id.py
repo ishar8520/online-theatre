@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import http
 import uuid
 from collections.abc import Iterable
 from typing import Any
@@ -49,7 +50,7 @@ class BaseGenreByIdTestCase:
 
         await self.redis_cache.clear()
 
-        genre_result_data = await self.get_genre_result(genre_id=genre_id, expected_status=404)
+        genre_result_data = await self.get_genre_result(genre_id=genre_id, expected_status=http.HTTPStatus.NOT_FOUND)
         assert genre_result_data is None
 
     def create_genres(self) -> Iterable[Genre]:
@@ -71,19 +72,19 @@ class BaseGenreByIdTestCase:
 
         return genres[0]
 
-    async def get_genre_result(self, *, genre_id: uuid.UUID | None, expected_status: int = 200) -> dict | None:
+    async def get_genre_result(self, *, genre_id: uuid.UUID | None, expected_status: int = http.HTTPStatus.OK) -> dict | None:
         if genre_id is None:
             return None
 
         return await self._download_genre(genre_id=genre_id, expected_status=expected_status)
 
-    async def _download_genre(self, *, genre_id: uuid.UUID, expected_status: int = 200) -> dict | None:
+    async def _download_genre(self, *, genre_id: uuid.UUID, expected_status: int = http.HTTPStatus.OK) -> dict | None:
         response_data = await self._get_genre_response_data(
             genre_id=str(genre_id),
             expected_status=expected_status,
         )
 
-        if expected_status == 404:
+        if expected_status == http.HTTPStatus.NOT_FOUND:
             return None
 
         return response_data
@@ -91,7 +92,7 @@ class BaseGenreByIdTestCase:
     async def _get_genre_response_data(self,
                                        *,
                                        genre_id: str,
-                                       expected_status: int = 200) -> Any:
+                                       expected_status: int = http.HTTPStatus.OK) -> Any:
         genre_by_id_api_url = urljoin(settings.movies_api_url, f'v1/genres/{genre_id}')
 
         async with self.aiohttp_session.get(genre_by_id_api_url) as response:
@@ -119,14 +120,14 @@ class GenreDoesNotExistTestCase(BaseGenreByIdTestCase):
     def get_genre(self, *, genres: list[Genre]) -> Genre | None:
         return None
 
-    async def get_genre_result(self, *, genre_id: uuid.UUID | None, expected_status: int = 200) -> dict | None:
+    async def get_genre_result(self, *, genre_id: uuid.UUID | None, expected_status: int = http.HTTPStatus.OK) -> dict | None:
         await self._download_genre(
             genre_id=uuid.uuid4(),
-            expected_status=404,
+            expected_status=http.HTTPStatus.NOT_FOUND,
         )
         await self._get_genre_response_data(
             genre_id='invalid',
-            expected_status=422,
+            expected_status=http.HTTPStatus.UNPROCESSABLE_ENTITY,
         )
 
         return None

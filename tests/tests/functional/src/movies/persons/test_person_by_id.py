@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import http
 import uuid
 from collections.abc import Iterable
 from typing import Any
@@ -52,7 +53,7 @@ class BasePersonByIdTestCase:
 
         await self.redis_cache.clear()
 
-        person_result_data = await self.get_person_result(person_id=person_id, expected_status=404)
+        person_result_data = await self.get_person_result(person_id=person_id, expected_status=http.HTTPStatus.NOT_FOUND)
         assert person_result_data is None
 
     def create_persons(self) -> Iterable[Person]:
@@ -83,19 +84,19 @@ class BasePersonByIdTestCase:
 
         return persons[0]
 
-    async def get_person_result(self, *, person_id: uuid.UUID | None, expected_status: int = 200) -> dict | None:
+    async def get_person_result(self, *, person_id: uuid.UUID | None, expected_status: int = http.HTTPStatus.OK) -> dict | None:
         if person_id is None:
             return None
 
         return await self._download_person(person_id=person_id, expected_status=expected_status)
 
-    async def _download_person(self, *, person_id: uuid.UUID, expected_status: int = 200) -> dict | None:
+    async def _download_person(self, *, person_id: uuid.UUID, expected_status: int = http.HTTPStatus.OK) -> dict | None:
         response_data = await self._get_person_response_data(
             person_id=str(person_id),
             expected_status=expected_status,
         )
 
-        if expected_status == 404:
+        if expected_status == http.HTTPStatus.NOT_FOUND:
             return None
 
         return response_data
@@ -103,7 +104,7 @@ class BasePersonByIdTestCase:
     async def _get_person_response_data(self,
                                         *,
                                         person_id: str,
-                                        expected_status: int = 200) -> Any:
+                                        expected_status: int = http.HTTPStatus.OK) -> Any:
         person_by_id_api_url = urljoin(settings.movies_api_url, f'v1/persons/{person_id}')
 
         async with self.aiohttp_session.get(person_by_id_api_url) as response:
@@ -131,14 +132,14 @@ class PersonDoesNotExistTestCase(BasePersonByIdTestCase):
     def get_person(self, *, persons: list[Person]) -> Person | None:
         return None
 
-    async def get_person_result(self, *, person_id: uuid.UUID | None, expected_status: int = 200) -> dict | None:
+    async def get_person_result(self, *, person_id: uuid.UUID | None, expected_status: int = http.HTTPStatus.OK) -> dict | None:
         await self._download_person(
             person_id=uuid.uuid4(),
-            expected_status=404,
+            expected_status=http.HTTPStatus.NOT_FOUND,
         )
         await self._get_person_response_data(
             person_id='invalid',
-            expected_status=422,
+            expected_status=http.HTTPStatus.UNPROCESSABLE_ENTITY,
         )
 
         return None
