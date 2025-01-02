@@ -1,9 +1,13 @@
 from __future__ import annotations
 
-from redis.asyncio import Redis
+from typing import Annotated
 
-redis: Redis | None = None
+import redis.asyncio as redis
+from fastapi import Request, Depends
 
 
-async def get_redis() -> Redis:
-    return redis
+async def get_redis_client(request: Request) -> redis.Redis:
+    return request.state.redis_client
+
+
+RedisClientDep = Annotated[redis.Redis, Depends(get_redis_client)]

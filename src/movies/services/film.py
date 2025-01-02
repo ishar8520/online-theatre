@@ -1,17 +1,15 @@
 from __future__ import annotations
 
 import uuid
-from functools import lru_cache
+from typing import Annotated
 
-from elasticsearch import AsyncElasticsearch
 from fastapi import Depends
-from redis.asyncio import Redis
 
 from .abstract import AbstractService
 from ..core.config import settings
 from ..db import (
-    get_elastic,
-    get_redis,
+    ElasticsearchClientDep,
+    RedisClientDep,
 )
 from ..models import Film
 
@@ -143,9 +141,9 @@ class FilmService(AbstractService):
         return Film(**data)
 
 
-@lru_cache()
-def get_film_service(
-        redis: Redis = Depends(get_redis),
-        elastic: AsyncElasticsearch = Depends(get_elastic),
-) -> FilmService:
-    return FilmService(redis, elastic)
+def get_film_service(redis_client: RedisClientDep,
+                     elasticsearch_client: ElasticsearchClientDep) -> FilmService:
+    return FilmService(redis_client=redis_client, elasticsearch_client=elasticsearch_client)
+
+
+FilmServiceDep = Annotated[FilmService, Depends(get_film_service)]

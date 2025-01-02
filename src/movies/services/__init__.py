@@ -1,4 +1,12 @@
 from .film import (
     FilmService,
-    get_film_service,
+    FilmServiceDep,
+)
+from .genre import (
+    GenreService,
+    GenreServiceDep,
+)
+from .person import (
+    PersonService,
+    PersonServiceDep,
 )

@@ -1,17 +1,15 @@
 from __future__ import annotations
 
 import uuid
-from functools import lru_cache
+from typing import Annotated
 
-from elasticsearch import AsyncElasticsearch
 from fastapi import Depends
-from redis.asyncio import Redis
 
 from .abstract import AbstractService
 from ..core.config import settings
 from ..db import (
-    get_elastic,
-    get_redis,
+    ElasticsearchClientDep,
+    RedisClientDep,
 )
 from ..models import Person
 
@@ -54,9 +52,9 @@ class PersonService(AbstractService):
         return Person(**data)
 
 
-@lru_cache()
-def get_person_service(
-        redis: Redis = Depends(get_redis),
-        elastic: AsyncElasticsearch = Depends(get_elastic),
-) -> PersonService:
-    return PersonService(redis, elastic)
+def get_person_service(redis_client: RedisClientDep,
+                       elasticsearch_client: ElasticsearchClientDep) -> PersonService:
+    return PersonService(redis_client=redis_client, elasticsearch_client=elasticsearch_client)
+
+
+PersonServiceDep = Annotated[PersonService, Depends(get_person_service)]

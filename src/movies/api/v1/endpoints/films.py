@@ -4,11 +4,11 @@ import uuid
 from enum import Enum
 from http import HTTPStatus
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, HTTPException
 
-from movies.services.film import FilmService, get_film_service
+from ..dependencies import PageDep
 from ..models.films import FilmInfo, Film
-from ..dependencies.page import Page
+from ....services import FilmServiceDep
 
 router = APIRouter()
 
@@ -25,12 +25,12 @@ class SortOrderEnum(str, Enum):
     description='Get list of films with sorting, pagination and filter by concrete genre. The maximum count of films on one page are 150.'
 )
 async def get_list(
+        *,
         sort: str = '',
         genre: uuid.UUID | None = None,
-        page: Page = Depends(Page),
-        film_service: FilmService = Depends(get_film_service),
+        page: PageDep,
+        film_service: FilmServiceDep,
 ) -> list[Film]:
-
     sort_by = {}
     if sort:
         is_first_dash = sort[0] == '-'
@@ -62,10 +62,7 @@ async def get_list(
     summary='Get film by uuid',
     description='Get concrete film by uuid.'
 )
-async def get_by_id(
-        uuid: uuid.UUID,
-        film_service: FilmService = Depends(get_film_service)
-) -> FilmInfo:
+async def get_by_id(*, uuid: uuid.UUID, film_service: FilmServiceDep) -> FilmInfo:
     film = await film_service.get_by_id(uuid)
     if not film:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail='Film not found')
@@ -79,11 +76,7 @@ async def get_by_id(
     summary='Search film by query',
     description='Search film by title with pagination. The maximum count of films on one page are 150.'
 )
-async def search(
-        query: str = '',
-        page: Page = Depends(Page),
-        film_service: FilmService = Depends(get_film_service),
-) -> list[Film]:
+async def search(*, query: str = '', page: PageDep, film_service: FilmServiceDep) -> list[Film]:
     if not query:
         return []
 

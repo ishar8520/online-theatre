@@ -1,17 +1,15 @@
 from __future__ import annotations
 
 import uuid
-from functools import lru_cache
+from typing import Annotated
 
-from elasticsearch import AsyncElasticsearch
 from fastapi import Depends
-from redis.asyncio import Redis
 
 from .abstract import AbstractService
 from ..core.config import settings
 from ..db import (
-    get_elastic,
-    get_redis,
+    ElasticsearchClientDep,
+    RedisClientDep,
 )
 from ..models import Genre
 
@@ -49,9 +47,9 @@ class GenreService(AbstractService):
         return Genre(**data)
 
 
-@lru_cache()
-def get_genre_service(
-        redis: Redis = Depends(get_redis),
-        elastic: AsyncElasticsearch = Depends(get_elastic),
-) -> GenreService:
-    return GenreService(redis, elastic)
+def get_genre_service(redis_client: RedisClientDep,
+                      elasticsearch_client: ElasticsearchClientDep) -> GenreService:
+    return GenreService(redis_client=redis_client, elasticsearch_client=elasticsearch_client)
+
+
+GenreServiceDep = Annotated[GenreService, Depends(get_genre_service)]
