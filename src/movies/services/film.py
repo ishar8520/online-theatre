@@ -5,16 +5,19 @@ from typing import Annotated
 
 from fastapi import Depends
 
-from .abstract import AbstractService
-from ..core.config import settings
-from ..db import (
-    ElasticsearchClientDep,
-    RedisClientDep,
+from .search import (
+    SearchService,
+    SearchServiceDep,
 )
+from ..core.config import settings
 from ..models import Film
 
 
-class FilmService(AbstractService):
+class FilmService:
+    search_service: SearchService
+
+    def __init__(self, *, search_service: SearchService) -> None:
+        self.search_service = search_service
 
     async def get_list_by_person(
             self,
@@ -141,9 +144,8 @@ class FilmService(AbstractService):
         return Film(**data)
 
 
-def get_film_service(redis_client: RedisClientDep,
-                     elasticsearch_client: ElasticsearchClientDep) -> FilmService:
-    return FilmService(redis_client=redis_client, elasticsearch_client=elasticsearch_client)
+async def get_film_service(search_service: SearchServiceDep) -> FilmService:
+    return FilmService(search_service=search_service)
 
 
 FilmServiceDep = Annotated[FilmService, Depends(get_film_service)]

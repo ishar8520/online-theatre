@@ -5,16 +5,19 @@ from typing import Annotated
 
 from fastapi import Depends
 
-from .abstract import AbstractService
-from ..core.config import settings
-from ..db import (
-    ElasticsearchClientDep,
-    RedisClientDep,
+from .search import (
+    SearchService,
+    SearchServiceDep,
 )
+from ..core.config import settings
 from ..models import Genre
 
 
-class GenreService(AbstractService):
+class GenreService:
+    search_service: SearchService
+
+    def __init__(self, *, search_service: SearchService) -> None:
+        self.search_service = search_service
 
     async def get_list(
             self,
@@ -47,9 +50,8 @@ class GenreService(AbstractService):
         return Genre(**data)
 
 
-def get_genre_service(redis_client: RedisClientDep,
-                      elasticsearch_client: ElasticsearchClientDep) -> GenreService:
-    return GenreService(redis_client=redis_client, elasticsearch_client=elasticsearch_client)
+async def get_genre_service(search_service: SearchServiceDep) -> GenreService:
+    return GenreService(search_service=search_service)
 
 
 GenreServiceDep = Annotated[GenreService, Depends(get_genre_service)]

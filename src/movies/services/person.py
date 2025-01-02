@@ -5,16 +5,19 @@ from typing import Annotated
 
 from fastapi import Depends
 
-from .abstract import AbstractService
-from ..core.config import settings
-from ..db import (
-    ElasticsearchClientDep,
-    RedisClientDep,
+from .search import (
+    SearchService,
+    SearchServiceDep,
 )
+from ..core.config import settings
 from ..models import Person
 
 
-class PersonService(AbstractService):
+class PersonService:
+    search_service: SearchService
+
+    def __init__(self, *, search_service: SearchService) -> None:
+        self.search_service = search_service
 
     async def search(
             self,
@@ -52,9 +55,8 @@ class PersonService(AbstractService):
         return Person(**data)
 
 
-def get_person_service(redis_client: RedisClientDep,
-                       elasticsearch_client: ElasticsearchClientDep) -> PersonService:
-    return PersonService(redis_client=redis_client, elasticsearch_client=elasticsearch_client)
+async def get_person_service(search_service: SearchServiceDep) -> PersonService:
+    return PersonService(search_service=search_service)
 
 
 PersonServiceDep = Annotated[PersonService, Depends(get_person_service)]
