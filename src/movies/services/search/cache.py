@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import abc
 import hashlib
 import json
 from typing import Any
@@ -7,14 +8,22 @@ from typing import Any
 from ..cache import AbstractCache
 
 
-class SearchCache:
+class Parameterizable(abc.ABC):
+    @abc.abstractmethod
+    def get_cache_prefix(self) -> str: ...
+
+    @abc.abstractmethod
+    def get_cache_params(self) -> dict: ...
+
+
+class ParameterizedCache:
     cache: AbstractCache
 
     def __init__(self, *, cache: AbstractCache) -> None:
         self.cache = cache
 
-    async def get(self, *, index: str, command: str, params: dict) -> Any | None:
-        cache_key = self._create_cache_key(index=index, command=command, params=params)
+    async def get(self, *, params: Parameterizable) -> Any | None:
+        cache_key = self._create_cache_key(params=params)
         value_json: str | None = await self.cache.get(cache_key)
 
         if value_json is None:
@@ -22,19 +31,20 @@ class SearchCache:
 
         return json.loads(value_json)
 
-    async def set(self, *, index: str, command: str, params: dict, value: Any) -> None:
-        cache_key = self._create_cache_key(index=index, command=command, params=params)
+    async def set(self, *, params: Parameterizable, value: Any) -> None:
+        cache_key = self._create_cache_key(params=params)
         value_json = json.dumps(value)
 
         await self.cache.set(cache_key, value_json)
 
-    def _create_cache_key(self, *, index: str, command: str, params: dict) -> str:
+    def _create_cache_key(self, *, params: Parameterizable) -> str:
+        cache_prefix = params.get_cache_prefix()
+        cache_params = params.get_cache_params()
+
         key_dict = {
-            'index': index,
-            'command': command,
-            'params': params,
+            'params': cache_params,
         }
         key_json = json.dumps(key_dict, sort_keys=True)
         key_hash = hashlib.sha256(key_json.encode()).hexdigest()
 
-        return f'{index}-{command}-{key_hash}'
+        return f'{cache_prefix}-{key_hash}'

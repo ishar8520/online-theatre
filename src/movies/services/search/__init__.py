@@ -1,4 +1,4 @@
 from .service import (
-    SearchService,
+    AbstractSearchService,
     SearchServiceDep,
 )

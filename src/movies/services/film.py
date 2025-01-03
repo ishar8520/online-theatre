@@ -6,137 +6,74 @@ from typing import Annotated
 from fastapi import Depends
 
 from .search import (
-    SearchService,
+    AbstractSearchService,
     SearchServiceDep,
 )
-from ..core.config import settings
 from ..models import Film
 
 
 class FilmService:
-    search_service: SearchService
+    search_service: AbstractSearchService
 
-    def __init__(self, *, search_service: SearchService) -> None:
+    def __init__(self, *, search_service: AbstractSearchService) -> None:
         self.search_service = search_service
 
     async def get_list_by_person(
             self,
             person_uuid: uuid.UUID = None,
     ) -> list[Film]:
-
-        body = {
-            "query": {
-                "bool": {
-                    "should": [
-                        {
-                            "nested": {
-                                "path": "actors",
-                                "query": {
-                                    "term": {
-                                        "actors.id": str(person_uuid)
-                                    }
-                                }
-                            }
-                        },
-                        {
-                            "nested": {
-                                "path": "directors",
-                                "query": {
-                                    "term": {
-                                        "directors.id": str(person_uuid)
-                                    }
-                                }
-                            }
-                        },
-                        {
-                            "nested": {
-                                "path": "writers",
-                                "query": {
-                                    "term": {
-                                        "writers.id": str(person_uuid)
-                                    }
-                                }
-                            }
-                        },
-                    ],
-                    "minimum_should_match": 1
-                }
-            }
-        }
-
-        result = await self.search_service.search(index=settings.elasticsearch.index_name_films, body=body)
+        search_query = self.search_service.create_query().films_by_person(person_id=person_uuid)
+        result = await self.search_service.search(query=search_query)
 
         if result is None:
             return []
 
-        return [Film(**source_item['_source']) for source_item in result]
+        return [Film(**data) for data in result]
 
     async def get_list(
             self,
             sort: dict[str, str],
             page_number: int,
             page_size: int,
-            genre_uuid: uuid.UUID = None,
+            genre_uuid: uuid.UUID | None = None,
     ) -> list[Film]:
-
-        body = {
-            "sort": {
-                sort['field']: {
-                    "order": sort['order']
-                }
-            },
-            "size": page_size,
-            "from": (page_number - 1) * page_size,
-        }
-
-        if genre_uuid:
-            body["query"] = {
-                "nested": {
-                    "path": "genres",
-                    "query": {
-                        "term": {
-                            "genres.id": str(genre_uuid)
-                        }
-                    }
-                }
-            }
-
-        result = await self.search_service.search(index=settings.elasticsearch.index_name_films, body=body)
+        search_query = self.search_service.create_query().films_list(
+            sort=sort,
+            page_number=page_number,
+            page_size=page_size,
+            genre_id=genre_uuid,
+        )
+        result = await self.search_service.search(query=search_query)
 
         if result is None:
             return []
 
-        return [Film(**source_item['_source']) for source_item in result]
+        return [Film(**data) for data in result]
 
     async def search(
             self,
             query: str,
             page_number: int,
-            page_size: int
+            page_size: int,
     ) -> list[Film] | None:
-
-        body = {
-            "query": {
-                "match": {
-                    "title": query
-                }
-            },
-            "size": page_size,
-            "from": (page_number - 1) * page_size,
-        }
-
-        result = await self.search_service.search(index=settings.elasticsearch.index_name_films, body=body)
+        search_query = self.search_service.create_query().search_films(
+            query=query,
+            page_number=page_number,
+            page_size=page_size,
+        )
+        result = await self.search_service.search(query=search_query)
 
         if result is None:
             return []
 
-        return [Film(**item['_source']) for item in result]
+        return [Film(**data) for data in result]
 
     async def get_by_id(
             self,
-            id: uuid.UUID
+            id: uuid.UUID,
     ) -> Film | None:
-        data = await self.search_service.get(index=settings.elasticsearch.index_name_films, id=str(id))
+        get_query = self.search_service.create_query().get_film(film_id=id)
+        data = await self.search_service.get(query=get_query)
 
         if not data:
             return None

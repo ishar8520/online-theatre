@@ -1,88 +1,91 @@
 from __future__ import annotations
 
+import abc
 from typing import Annotated
 
-import backoff
-import elasticsearch
 from fastapi import Depends
 
-from .cache import SearchCache
+from .backend import (
+    AbstractSearchBackend,
+    SearchBackendDep,
+)
+from .cache import ParameterizedCache
+from .query import (
+    AbstractGetQuery,
+    AbstractSearchQuery,
+    AbstractQueryFactory,
+)
 from ..cache import (
     AbstractCacheService,
     CacheServiceDep,
 )
-from ...db import ElasticsearchClientDep
 
 
-class SearchService:
-    elasticsearch_client: elasticsearch.AsyncElasticsearch
-    search_cache: SearchCache
+class AbstractSearchService(abc.ABC):
+    @abc.abstractmethod
+    async def get(self, *, query: AbstractGetQuery) -> dict | None: ...
+
+    @abc.abstractmethod
+    async def search(self, *, query: AbstractSearchQuery) -> list[dict] | None: ...
+
+    @abc.abstractmethod
+    def create_query(self) -> AbstractQueryFactory: ...
+
+
+class SearchService(AbstractSearchService):
+    search_backend: AbstractSearchBackend
+    search_cache: ParameterizedCache
 
     def __init__(self,
                  *,
-                 elasticsearch_client: elasticsearch.AsyncElasticsearch,
+                 search_backend: AbstractSearchBackend,
                  cache_service: AbstractCacheService) -> None:
-        self.elasticsearch_client = elasticsearch_client
+        self.search_backend = search_backend
         cache = cache_service.get_cache(key_prefix='search')
-        self.search_cache = SearchCache(cache=cache)
+        self.search_cache = ParameterizedCache(cache=cache)
 
-    @backoff.on_exception(backoff.expo, (
-            elasticsearch.exceptions.ConnectionError,
-            elasticsearch.exceptions.ConnectionTimeout,
-    ))
-    async def get(self, *, index: str, id: str) -> dict | None:
-        search_params = {
-            'id': id,
-        }
-        result = await self.search_cache.get(index=index, command='get', params=search_params)
+    async def get(self, *, query: AbstractGetQuery) -> dict | None:
+        compiled_query = query.compile()
+        result = await self.search_cache.get(params=compiled_query)
 
         if result is not None:
             return result
 
-        try:
-            response = await self.elasticsearch_client.get(index=index, id=id)
-        except elasticsearch.NotFoundError:
+        result = await self.search_backend.get(query=compiled_query)
+
+        if result is None:
             return None
 
-        result = response['_source']
-        await self.search_cache.set(index=index, command='get', params=search_params, value=result)
+        await self.search_cache.set(params=compiled_query, value=result)
 
         return result
 
-    @backoff.on_exception(backoff.expo, (
-            elasticsearch.exceptions.ConnectionError,
-            elasticsearch.exceptions.ConnectionTimeout,
-    ))
-    async def search(self, *, index: str, body: dict) -> list[dict] | None:
-        search_params = {
-            'body': body,
-        }
-        result = await self.search_cache.get(index=index, command='search', params=search_params)
+    async def search(self, *, query: AbstractSearchQuery) -> list[dict] | None:
+        compiled_query = query.compile()
+        result = await self.search_cache.get(params=compiled_query)
 
         if result is not None:
             return result
 
-        try:
-            response = await self.elasticsearch_client.search(index=index, body=body)
-        except elasticsearch.NotFoundError:
+        result = await self.search_backend.search(query=compiled_query)
+
+        if result is None:
             return None
 
-        result = response['hits']['hits']
-
-        if not result:
-            return None
-
-        await self.search_cache.set(index=index, command='search', params=search_params, value=result)
+        await self.search_cache.set(params=compiled_query, value=result)
 
         return result
 
+    def create_query(self) -> AbstractQueryFactory:
+        return self.search_backend.create_query()
 
-async def get_search_service(elasticsearch_client: ElasticsearchClientDep,
-                             cache_service: CacheServiceDep) -> SearchService:
+
+async def get_search_service(search_backend: SearchBackendDep,
+                             cache_service: CacheServiceDep) -> AbstractSearchService:
     return SearchService(
-        elasticsearch_client=elasticsearch_client,
+        search_backend=search_backend,
         cache_service=cache_service,
     )
 
 
-SearchServiceDep = Annotated[SearchService, Depends(get_search_service)]
+SearchServiceDep = Annotated[AbstractSearchService, Depends(get_search_service)]

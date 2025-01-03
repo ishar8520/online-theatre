@@ -6,17 +6,16 @@ from typing import Annotated
 from fastapi import Depends
 
 from .search import (
-    SearchService,
+    AbstractSearchService,
     SearchServiceDep,
 )
-from ..core.config import settings
 from ..models import Genre
 
 
 class GenreService:
-    search_service: SearchService
+    search_service: AbstractSearchService
 
-    def __init__(self, *, search_service: SearchService) -> None:
+    def __init__(self, *, search_service: AbstractSearchService) -> None:
         self.search_service = search_service
 
     async def get_list(
@@ -24,25 +23,23 @@ class GenreService:
             page_number: int,
             page_size: int,
     ) -> list[Genre]:
-
-        body = {
-            "size": page_size,
-            "from": (page_number - 1) * page_size,
-        }
-
-        result = await self.search_service.search(index=settings.elasticsearch.index_name_genres, body=body)
+        search_query = self.search_service.create_query().genres_list(
+            page_number=page_number,
+            page_size=page_size,
+        )
+        result = await self.search_service.search(query=search_query)
 
         if result is None:
             return []
 
-        return [Genre(**source_item['_source']) for source_item in result]
+        return [Genre(**data) for data in result]
 
     async def get_by_id(
             self,
-            id: uuid.UUID
+            id: uuid.UUID,
     ) -> Genre | None:
-
-        data = await self.search_service.get(index=settings.elasticsearch.index_name_genres, id=str(id))
+        get_query = self.search_service.create_query().get_genre(genre_id=id)
+        data = await self.search_service.get(query=get_query)
 
         if not data:
             return None
