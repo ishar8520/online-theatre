@@ -1,5 +1,5 @@
-from .cache import AbstractCache
-from .service import (
+from .backends import (
+    AbstractCache,
     AbstractCacheService,
     CacheServiceDep,
 )

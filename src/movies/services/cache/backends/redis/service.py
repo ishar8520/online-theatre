@@ -1,24 +1,13 @@
 from __future__ import annotations
 
-import abc
 from typing import Annotated
 
 import redis.asyncio as redis
 from fastapi import Depends
 
-from .cache import (
-    AbstractCache,
-    RedisCache,
-)
-from ...db import RedisClientDep
-
-
-class AbstractCacheService(abc.ABC):
-    @abc.abstractmethod
-    def get_cache(self,
-                  *,
-                  key_prefix: str | None = None,
-                  key_version: str | None = None) -> AbstractCache: ...
+from .cache import RedisCache
+from ..base import AbstractCacheService
+from .....db import RedisClientDep
 
 
 class RedisCacheService(AbstractCacheService):
@@ -38,8 +27,8 @@ class RedisCacheService(AbstractCacheService):
         )
 
 
-async def get_cache_service(redis_client: RedisClientDep) -> AbstractCacheService:
+async def get_cache_service(redis_client: RedisClientDep) -> RedisCacheService:
     return RedisCacheService(redis_client=redis_client)
 
 
-CacheServiceDep = Annotated[AbstractCacheService, Depends(get_cache_service)]
+RedisCacheServiceDep = Annotated[RedisCacheService, Depends(get_cache_service)]

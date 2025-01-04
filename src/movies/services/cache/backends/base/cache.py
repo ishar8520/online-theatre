@@ -1,13 +1,6 @@
 from __future__ import annotations
 
 import abc
-from typing import Any
-
-import backoff
-import redis.asyncio as redis
-import redis.exceptions
-
-from ...core.config import settings
 
 
 class AbstractCache(abc.ABC):
@@ -45,25 +38,3 @@ class BaseCache(AbstractCache):
 
     def _create_cache_key(self, key: str) -> str:
         return f'{self.key_prefix}:{self.key_version}:{key}'
-
-
-class RedisCache(BaseCache):
-    redis_client: redis.Redis
-
-    def __init__(self, *, redis_client: redis.Redis, **kwargs: Any) -> None:
-        super().__init__(**kwargs)
-        self.redis_client = redis_client
-
-    @backoff.on_exception(backoff.expo, (
-            redis.exceptions.ConnectionError,
-            redis.exceptions.TimeoutError,
-    ))
-    async def _get_value(self, key: str) -> str | None:
-        return await self.redis_client.get(key)
-
-    @backoff.on_exception(backoff.expo, (
-            redis.exceptions.ConnectionError,
-            redis.exceptions.TimeoutError,
-    ))
-    async def _set_value(self, key: str, value: str) -> None:
-        await self.redis_client.set(key, value, ex=settings.redis.cache_expire_in_seconds)
