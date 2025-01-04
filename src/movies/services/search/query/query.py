@@ -3,7 +3,7 @@ from __future__ import annotations
 import abc
 import dataclasses
 
-from ..cache import Parameterizable
+from ...cache import Parameterizable
 
 
 class AbstractGetQuery(abc.ABC):

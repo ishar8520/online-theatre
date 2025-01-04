@@ -5,7 +5,7 @@ import hashlib
 import json
 from typing import Any
 
-from ..cache import AbstractCache
+from .backends import AbstractCache
 
 
 class Parameterizable(abc.ABC):

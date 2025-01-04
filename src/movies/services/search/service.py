@@ -9,7 +9,6 @@ from .backend import (
     AbstractSearchBackend,
     SearchBackendDep,
 )
-from .cache import ParameterizedCache
 from .query import (
     AbstractGetQuery,
     AbstractSearchQuery,
@@ -18,6 +17,7 @@ from .query import (
 from ..cache import (
     AbstractCacheService,
     CacheServiceDep,
+    ParameterizedCache,
 )
 
 

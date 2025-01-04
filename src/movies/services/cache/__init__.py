@@ -3,3 +3,7 @@ from .backends import (
     AbstractCacheService,
     CacheServiceDep,
 )
+from .parameterized import (
+    Parameterizable,
+    ParameterizedCache,
+)
