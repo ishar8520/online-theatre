@@ -3,11 +3,11 @@ from __future__ import annotations
 import abc
 import uuid
 
-from .query import (
+from ..query import (
     ElasticsearchGetQuery,
     ElasticsearchSearchQuery,
 )
-from ....core.config import settings
+from .......core.config import settings
 
 
 class GetPersonQuery(ElasticsearchGetQuery):

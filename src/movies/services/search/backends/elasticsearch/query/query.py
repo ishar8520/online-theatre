@@ -3,16 +3,12 @@ from __future__ import annotations
 import abc
 import dataclasses
 
-from ...cache import Parameterizable
-
-
-class AbstractGetQuery(abc.ABC):
-    @abc.abstractmethod
-    def compile(self) -> AbstractCompiledGetQuery: ...
-
-
-class AbstractCompiledGetQuery(Parameterizable, abc.ABC):
-    pass
+from ...base import (
+    AbstractGetQuery,
+    AbstractCompiledGetQuery,
+    AbstractSearchQuery,
+    AbstractCompiledSearchQuery,
+)
 
 
 class ElasticsearchGetQuery(AbstractGetQuery):
@@ -43,15 +39,6 @@ class CompiledElasticsearchGetQuery(AbstractCompiledGetQuery):
             'index': self.index,
             'id': self.id,
         }
-
-
-class AbstractSearchQuery(abc.ABC):
-    @abc.abstractmethod
-    def compile(self) -> AbstractCompiledSearchQuery: ...
-
-
-class AbstractCompiledSearchQuery(Parameterizable, abc.ABC):
-    pass
 
 
 class ElasticsearchSearchQuery(AbstractSearchQuery):

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import abc
 from typing import Annotated
 
 import backoff
@@ -8,25 +7,12 @@ import elasticsearch
 from fastapi import Depends
 
 from .query import (
-    AbstractCompiledGetQuery,
     CompiledElasticsearchGetQuery,
-    AbstractCompiledSearchQuery,
     CompiledElasticsearchSearchQuery,
-    AbstractQueryFactory,
     ElasticsearchQueryFactory,
 )
-from ...db import ElasticsearchClientDep
-
-
-class AbstractSearchBackend(abc.ABC):
-    @abc.abstractmethod
-    async def get(self, *, query: AbstractCompiledGetQuery) -> dict | None: ...
-
-    @abc.abstractmethod
-    async def search(self, *, query: AbstractCompiledSearchQuery) -> list[dict] | None: ...
-
-    @abc.abstractmethod
-    def create_query(self) -> AbstractQueryFactory: ...
+from ..base import AbstractSearchBackend
+from .....db import ElasticsearchClientDep
 
 
 class ElasticsearchSearchBackend(AbstractSearchBackend):
@@ -70,8 +56,8 @@ class ElasticsearchSearchBackend(AbstractSearchBackend):
         return self.query_factory
 
 
-async def get_search_backend(elasticsearch_client: ElasticsearchClientDep) -> AbstractSearchBackend:
+async def get_search_backend(elasticsearch_client: ElasticsearchClientDep) -> ElasticsearchSearchBackend:
     return ElasticsearchSearchBackend(elasticsearch_client=elasticsearch_client)
 
 
-SearchBackendDep = Annotated[AbstractSearchBackend, Depends(get_search_backend)]
+ElasticsearchSearchBackendDep = Annotated[ElasticsearchSearchBackend, Depends(get_search_backend)]

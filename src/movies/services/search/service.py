@@ -5,11 +5,9 @@ from typing import Annotated
 
 from fastapi import Depends
 
-from .backend import (
+from .backends import (
     AbstractSearchBackend,
     SearchBackendDep,
-)
-from .query import (
     AbstractGetQuery,
     AbstractSearchQuery,
     AbstractQueryFactory,
