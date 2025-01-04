@@ -1,6 +1,7 @@
 from .base import (
     AbstractSearchBackend,
     AbstractQuery,
+    AbstractCompiledQuery,
     AbstractGetQuery,
     AbstractSearchQuery,
     AbstractQueryFactory,

@@ -3,7 +3,6 @@ from __future__ import annotations
 import abc
 import hashlib
 import json
-from typing import Any
 
 from .backends import AbstractCache
 
@@ -16,13 +15,13 @@ class Parameterizable(abc.ABC):
     def get_cache_params(self) -> dict: ...
 
 
-class ParameterizedCache:
+class ParameterizedCache[TParams: Parameterizable, TValue]:
     cache: AbstractCache
 
     def __init__(self, *, cache: AbstractCache) -> None:
         self.cache = cache
 
-    async def get(self, *, params: Parameterizable) -> Any | None:
+    async def get(self, *, params: TParams) -> TValue | None:
         cache_key = self._create_cache_key(params=params)
         value_json: str | None = await self.cache.get(cache_key)
 
@@ -31,13 +30,13 @@ class ParameterizedCache:
 
         return json.loads(value_json)
 
-    async def set(self, *, params: Parameterizable, value: Any) -> None:
+    async def set(self, *, params: TParams, value: TValue) -> None:
         cache_key = self._create_cache_key(params=params)
         value_json = json.dumps(value)
 
         await self.cache.set(cache_key, value_json)
 
-    def _create_cache_key(self, *, params: Parameterizable) -> str:
+    def _create_cache_key(self, *, params: TParams) -> str:
         cache_prefix = params.get_cache_prefix()
         cache_params = params.get_cache_params()
 

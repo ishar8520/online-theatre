@@ -9,11 +9,13 @@ from .backends import (
     AbstractSearchBackend,
     SearchBackendDep,
     AbstractQuery,
+    AbstractCompiledQuery,
     AbstractGetQuery,
     AbstractSearchQuery,
     AbstractQueryFactory,
 )
 from ..cache import (
+    AbstractCache,
     AbstractCacheService,
     CacheServiceDep,
     ParameterizedCache,
@@ -33,12 +35,11 @@ class AbstractSearchService(abc.ABC):
 
 class SearchService(AbstractSearchService):
     backend: AbstractSearchBackend
-    cache: ParameterizedCache
+    cache: AbstractCache
 
     def __init__(self, *, backend: AbstractSearchBackend, cache_service: AbstractCacheService) -> None:
         self.backend = backend
-        cache = cache_service.get_cache(key_prefix='search')
-        self.cache = ParameterizedCache(cache=cache)
+        self.cache = cache_service.get_cache(key_prefix='search')
 
     async def get(self, *, query: AbstractGetQuery) -> dict | None:
         return await self._execute_query(query=query)
@@ -47,8 +48,9 @@ class SearchService(AbstractSearchService):
         return await self._execute_query(query=query)
 
     async def _execute_query[TResult](self, *, query: AbstractQuery[TResult]) -> TResult:
+        cache = ParameterizedCache[AbstractCompiledQuery[TResult], TResult](cache=self.cache)
         compiled_query = query.compile()
-        result = await self.cache.get(params=compiled_query)
+        result = await cache.get(params=compiled_query)
 
         if result is not None:
             return result
@@ -58,7 +60,7 @@ class SearchService(AbstractSearchService):
         if result is None:
             return None
 
-        await self.cache.set(params=compiled_query, value=result)
+        await cache.set(params=compiled_query, value=result)
 
         return result
 
