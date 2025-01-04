@@ -8,6 +8,7 @@ from fastapi import Depends
 from .backends import (
     AbstractSearchBackend,
     SearchBackendDep,
+    AbstractQuery,
     AbstractGetQuery,
     AbstractSearchQuery,
     AbstractQueryFactory,
@@ -31,59 +32,42 @@ class AbstractSearchService(abc.ABC):
 
 
 class SearchService(AbstractSearchService):
-    search_backend: AbstractSearchBackend
-    search_cache: ParameterizedCache
+    backend: AbstractSearchBackend
+    cache: ParameterizedCache
 
-    def __init__(self,
-                 *,
-                 search_backend: AbstractSearchBackend,
-                 cache_service: AbstractCacheService) -> None:
-        self.search_backend = search_backend
+    def __init__(self, *, backend: AbstractSearchBackend, cache_service: AbstractCacheService) -> None:
+        self.backend = backend
         cache = cache_service.get_cache(key_prefix='search')
-        self.search_cache = ParameterizedCache(cache=cache)
+        self.cache = ParameterizedCache(cache=cache)
 
     async def get(self, *, query: AbstractGetQuery) -> dict | None:
-        compiled_query = query.compile()
-        result = await self.search_cache.get(params=compiled_query)
-
-        if result is not None:
-            return result
-
-        result = await self.search_backend.get(query=compiled_query)
-
-        if result is None:
-            return None
-
-        await self.search_cache.set(params=compiled_query, value=result)
-
-        return result
+        return await self._execute_query(query=query)
 
     async def search(self, *, query: AbstractSearchQuery) -> list[dict] | None:
+        return await self._execute_query(query=query)
+
+    async def _execute_query[TResult](self, *, query: AbstractQuery[TResult]) -> TResult:
         compiled_query = query.compile()
-        result = await self.search_cache.get(params=compiled_query)
+        result = await self.cache.get(params=compiled_query)
 
         if result is not None:
             return result
 
-        result = await self.search_backend.search(query=compiled_query)
+        result = await compiled_query.execute(backend=self.backend)
 
         if result is None:
             return None
 
-        await self.search_cache.set(params=compiled_query, value=result)
+        await self.cache.set(params=compiled_query, value=result)
 
         return result
 
     def create_query(self) -> AbstractQueryFactory:
-        return self.search_backend.create_query()
+        return self.backend.create_query()
 
 
-async def get_search_service(search_backend: SearchBackendDep,
-                             cache_service: CacheServiceDep) -> AbstractSearchService:
-    return SearchService(
-        search_backend=search_backend,
-        cache_service=cache_service,
-    )
+async def get_search_service(backend: SearchBackendDep, cache_service: CacheServiceDep) -> AbstractSearchService:
+    return SearchService(backend=backend, cache_service=cache_service)
 
 
 SearchServiceDep = Annotated[AbstractSearchService, Depends(get_search_service)]
