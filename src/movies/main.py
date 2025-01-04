@@ -1,24 +1,28 @@
+from __future__ import annotations
+
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
-from elasticsearch import AsyncElasticsearch
+import elasticsearch
+import redis.asyncio as redis
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
-from redis.asyncio import Redis
 
 from .api.v1.endpoints import films, genres, persons
 from .core.config import settings
-from .db import elastic, redis
 
 
+# noinspection PyUnusedLocal,PyShadowingNames
 @asynccontextmanager
-async def lifespan(app: FastAPI):
-    redis.redis = Redis(host=settings.redis.host, port=settings.redis.port)
-    elastic.es = AsyncElasticsearch(hosts=[f'http://{settings.elasticsearch.host}:{settings.elasticsearch.port}'])
-    try:
-        yield
-    finally:
-        await redis.redis.close()
-        await elastic.es.close()
+async def lifespan(app: FastAPI) -> AsyncGenerator[dict]:
+    async with (
+        redis.Redis(host=settings.redis.host, port=settings.redis.port) as redis_client,
+        elasticsearch.AsyncElasticsearch(settings.elasticsearch.url) as elasticsearch_client,
+    ):
+        yield {
+            'redis_client': redis_client,
+            'elasticsearch_client': elasticsearch_client,
+        }
 
 
 app = FastAPI(
@@ -29,7 +33,6 @@ app = FastAPI(
     default_response_class=JSONResponse,
     lifespan=lifespan
 )
-
 
 app.include_router(films.router, prefix='/api/v1/films', tags=['films'])
 app.include_router(genres.router, prefix='/api/v1/genres', tags=['genres'])

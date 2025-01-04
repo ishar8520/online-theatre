@@ -1,9 +1,13 @@
 from __future__ import annotations
 
-from elasticsearch import AsyncElasticsearch
+from typing import Annotated
 
-es: AsyncElasticsearch | None = None
+import elasticsearch
+from fastapi import Request, Depends
 
 
-async def get_elastic() -> AsyncElasticsearch:
-    return es
+async def get_elasticsearch_client(request: Request) -> elasticsearch.AsyncElasticsearch:
+    return request.state.elasticsearch_client
+
+
+ElasticsearchClientDep = Annotated[elasticsearch.AsyncElasticsearch, Depends(get_elasticsearch_client)]

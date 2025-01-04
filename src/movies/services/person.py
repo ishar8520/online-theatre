@@ -1,52 +1,47 @@
 from __future__ import annotations
 
 import uuid
-from functools import lru_cache
+from typing import Annotated
 
-from elasticsearch import AsyncElasticsearch
 from fastapi import Depends
-from redis.asyncio import Redis
 
-from .abstract import AbstractService
-from ..core.config import settings
-from ..db import (
-    get_elastic,
-    get_redis,
+from .search import (
+    AbstractSearchService,
+    SearchServiceDep,
 )
 from ..models import Person
 
 
-class PersonService(AbstractService):
+class PersonService:
+    search_service: AbstractSearchService
+
+    def __init__(self, *, search_service: AbstractSearchService) -> None:
+        self.search_service = search_service
 
     async def search(
             self,
             query: str,
             page_number: int,
-            page_size: int
+            page_size: int,
     ) -> list[Person] | None:
-
-        body = {
-            "query": {
-                "match": {
-                    "full_name": query
-                }
-            },
-            "size": page_size,
-            "from": (page_number - 1) * page_size,
-        }
-
-        result = await self.search_service.search(index=settings.elasticsearch.index_name_persons, body=body)
+        search_query = self.search_service.create_query().search_persons(
+            query=query,
+            page_number=page_number,
+            page_size=page_size,
+        )
+        result = await self.search_service.search(query=search_query)
 
         if result is None:
             return []
 
-        return [Person(**item['_source']) for item in result]
+        return [Person(**data) for data in result]
 
     async def get_by_id(
             self,
-            id: uuid.UUID
+            id: uuid.UUID,
     ) -> Person | None:
-        data = await self.search_service.get(index=settings.elasticsearch.index_name_persons, id=str(id))
+        get_query = self.search_service.create_query().get_person(person_id=id)
+        data = await self.search_service.get(query=get_query)
 
         if not data:
             return None
@@ -54,9 +49,8 @@ class PersonService(AbstractService):
         return Person(**data)
 
 
-@lru_cache()
-def get_person_service(
-        redis: Redis = Depends(get_redis),
-        elastic: AsyncElasticsearch = Depends(get_elastic),
-) -> PersonService:
-    return PersonService(redis, elastic)
+async def get_person_service(search_service: SearchServiceDep) -> PersonService:
+    return PersonService(search_service=search_service)
+
+
+PersonServiceDep = Annotated[PersonService, Depends(get_person_service)]

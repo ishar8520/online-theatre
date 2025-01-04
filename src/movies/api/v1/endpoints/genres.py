@@ -3,11 +3,11 @@ from __future__ import annotations
 import uuid
 from http import HTTPStatus
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, HTTPException
 
-from movies.services.genre import GenreService, get_genre_service
+from ..dependencies import PageDep
 from ..models.genres import Genre
-from ..dependencies.page import Page
+from ....services import GenreServiceDep
 
 router = APIRouter()
 
@@ -18,12 +18,8 @@ router = APIRouter()
     summary='Get list of genres',
     description='Get list of genres with pagination. The maximum count of genres on one page are 150.'
 )
-async def get_list(
-        page: Page = Depends(Page),
-        get_genre_service: GenreService = Depends(get_genre_service),
-) -> list[Genre]:
-
-    genre_list = await get_genre_service.get_list(
+async def get_list(*, page: PageDep, genre_service: GenreServiceDep) -> list[Genre]:
+    genre_list = await genre_service.get_list(
         page_number=page.number,
         page_size=page.size
     )
@@ -39,11 +35,8 @@ async def get_list(
     summary='Get genre by uuid',
     description='Get concrete genre by uuid.'
 )
-async def get_by_id(
-        uuid: uuid.UUID,
-        get_genre_service: GenreService = Depends(get_genre_service)
-) -> Genre:
-    genre = await get_genre_service.get_by_id(uuid)
+async def get_by_id(*, uuid: uuid.UUID, genre_service: GenreServiceDep) -> Genre:
+    genre = await genre_service.get_by_id(uuid)
     if not genre:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail='Genre not found')
 
