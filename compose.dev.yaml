@@ -1,4 +1,16 @@
 services:
+  nginx:
+    image: 'bitnami/nginx:1.27.3-debian-12-r5'
+    depends_on:
+      movies:
+        condition: service_healthy
+    ports:
+      - '8000:8080'
+    networks:
+      - movies-network
+    volumes:
+      - './compose/nginx/movies.conf:/opt/bitnami/nginx/conf/server_blocks/movies.conf:ro'
+
   movies:
     build:
       context: ./src
@@ -7,8 +19,8 @@ services:
         condition: service_healthy
       elasticsearch:
         condition: service_healthy
-    ports:
-      - '8000:8000'
+      auth-service:
+        condition: service_healthy
     networks:
       - movies-network
     environment:
@@ -35,7 +47,7 @@ services:
           path: ./src/requirements.txt
 
   redis:
-    image: 'bitnami/redis:7.4.1-debian-12-r2'
+    image: 'bitnami/redis:7.4.2-debian-12-r0'
     networks:
       - movies-network
     volumes:
@@ -99,7 +111,7 @@ services:
           path: ./compose/etl/poetry.lock
 
   postgresql:
-    image: 'bitnami/postgresql:17.2.0-debian-12-r2'
+    image: 'bitnami/postgresql:17.2.0-debian-12-r5'
     networks:
       - movies-network
     volumes:
@@ -117,6 +129,71 @@ services:
       retries: 5
       start_period: 30s
 
+  auth-service:
+    build:
+      context: ./compose/auth
+    depends_on:
+      auth-postgresql:
+        condition: service_healthy
+      auth-redis:
+        condition: service_healthy
+    networks:
+      - movies-network
+    command: [ '/opt/app/commands/fastapi.sh', 'dev' ]
+    restart: unless-stopped
+    healthcheck:
+      test: [ 'CMD-SHELL', 'curl -s http://localhost:8000/auth/api/openapi.json' ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+    develop:
+      watch:
+        - action: sync
+          path: ./compose/auth/auth
+          target: /opt/app/auth
+        - action: rebuild
+          path: ./compose/auth/commands
+        - action: rebuild
+          path: ./compose/auth/pyproject.toml
+        - action: rebuild
+          path: ./compose/auth/poetry.lock
+
+  auth-postgresql:
+    image: 'bitnami/postgresql:17.2.0-debian-12-r5'
+    networks:
+      - movies-network
+    volumes:
+      - 'auth-postgresql-data:/bitnami/postgresql'
+    environment:
+      - POSTGRESQL_DATABASE=$AUTH_POSTGRESQL_DATABASE
+      - POSTGRESQL_USERNAME=$AUTH_POSTGRESQL_USERNAME
+      - POSTGRESQL_PASSWORD=$AUTH_POSTGRESQL_PASSWORD
+    restart: unless-stopped
+    healthcheck:
+      test: [ 'CMD-SHELL', 'pg_isready --username=$AUTH_POSTGRESQL_USERNAME --dbname=$AUTH_POSTGRESQL_DATABASE' ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  auth-redis:
+    image: 'bitnami/redis:7.4.2-debian-12-r0'
+    networks:
+      - movies-network
+    volumes:
+      - 'auth-redis-data:/bitnami/redis/data'
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+    restart: unless-stopped
+    command: [ '/opt/bitnami/scripts/redis/run.sh', '--maxmemory', '${AUTH_REDIS_MAXMEMORY:-200mb}' ]
+    healthcheck:
+      test: [ 'CMD', '/bin/bash', '-c', '[[ $(redis-cli ping) == "PONG" ]]' ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+
 networks:
   movies-network:
 
@@ -126,3 +203,5 @@ volumes:
   etl-data:
   etl-logs:
   postgresql-data:
+  auth-postgresql-data:
+  auth-redis-data:
