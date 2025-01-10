@@ -1,6 +1,6 @@
 services:
   nginx:
-    image: 'bitnami/nginx:1.27.3-debian-12-r0'
+    image: 'bitnami/nginx:1.27.3-debian-12-r5'
     depends_on:
       movies:
         condition: service_healthy
