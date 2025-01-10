@@ -25,7 +25,7 @@ services:
       - movies-network
     environment:
       - PROJECT_NAME=$PROJECT_NAME
-      - GUNICORN_WORKERS
+      - GUNICORN_WORKERS=${GUNICORN_WORKERS:-}
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - ELASTIC_HOST=elasticsearch
@@ -122,6 +122,8 @@ services:
         condition: service_healthy
     networks:
       - movies-network
+    environment:
+      - GUNICORN_WORKERS=${AUTH_GUNICORN_WORKERS:-}
     command: [ '/opt/app/commands/gunicorn.sh' ]
     restart: unless-stopped
     healthcheck:

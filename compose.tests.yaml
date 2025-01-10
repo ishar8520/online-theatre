@@ -41,6 +41,7 @@ services:
       - movies-network
     environment:
       - PROJECT_NAME=$PROJECT_NAME
+      - FASTAPI_WORKERS=${FASTAPI_WORKERS:-}
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - REDIS_CACHE_EXPIRE_IN_SECONDS=3600
@@ -103,6 +104,8 @@ services:
         condition: service_healthy
     networks:
       - movies-network
+    environment:
+      - FASTAPI_WORKERS=${AUTH_FASTAPI_WORKERS:-}
     healthcheck:
       test: [ 'CMD-SHELL', 'curl -s http://localhost:8000/auth/api/openapi.json' ]
       interval: 10s
