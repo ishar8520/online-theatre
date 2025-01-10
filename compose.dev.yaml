@@ -7,6 +7,8 @@ services:
         condition: service_healthy
       elasticsearch:
         condition: service_healthy
+      auth-service:
+        condition: service_healthy
     ports:
       - '8000:8000'
     networks:
@@ -125,14 +127,26 @@ services:
         condition: service_healthy
       auth-redis:
         condition: service_healthy
+    ports:
+      - '8001:8000'
     networks:
       - movies-network
+    command: [ '/opt/app/commands/fastapi.sh', 'dev' ]
     restart: unless-stopped
+    healthcheck:
+      test: [ 'CMD-SHELL', 'curl -s http://localhost:8000/auth/api/openapi.json' ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+
     develop:
       watch:
         - action: sync
           path: ./compose/auth/auth
           target: /opt/app/auth
+        - action: rebuild
+          path: ./compose/auth/commands
         - action: rebuild
           path: ./compose/auth/pyproject.toml
         - action: rebuild
