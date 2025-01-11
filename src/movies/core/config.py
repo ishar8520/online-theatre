@@ -1,12 +1,6 @@
 from __future__ import annotations
 
-from logging import config as logging_config
-
 from pydantic_settings import BaseSettings, SettingsConfigDict
-
-from .logger import LOGGING
-
-logging_config.dictConfig(LOGGING)
 
 
 class ProjectConfig(BaseSettings):
