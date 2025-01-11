@@ -106,6 +106,13 @@ services:
       - movies-network
     environment:
       - FASTAPI_WORKERS=${AUTH_FASTAPI_WORKERS:-}
+      - POSTGRESQL_HOST=auth-postgresql
+      - POSTGRESQL_PORT=5432
+      - POSTGRESQL_DATABASE=$AUTH_POSTGRESQL_DATABASE
+      - POSTGRESQL_USERNAME=$AUTH_POSTGRESQL_USERNAME
+      - POSTGRESQL_PASSWORD=$AUTH_POSTGRESQL_PASSWORD
+      - REDIS_HOST=auth-redis
+      - REDIS_PORT=6379
     healthcheck:
       test: [ 'CMD-SHELL', 'curl -s http://localhost:8000/auth/api/openapi.json' ]
       interval: 10s
