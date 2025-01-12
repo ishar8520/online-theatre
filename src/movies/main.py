@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging.config
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
@@ -9,7 +10,9 @@ from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 
 from .api.v1.endpoints import films, genres, persons
-from .core.config import settings
+from .core import settings, LOGGING
+
+logging.config.dictConfig(LOGGING)
 
 
 # noinspection PyUnusedLocal,PyShadowingNames

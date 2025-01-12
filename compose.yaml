@@ -124,6 +124,13 @@ services:
       - movies-network
     environment:
       - GUNICORN_WORKERS=${AUTH_GUNICORN_WORKERS:-}
+      - POSTGRESQL_HOST=auth-postgresql
+      - POSTGRESQL_PORT=5432
+      - POSTGRESQL_DATABASE=$AUTH_POSTGRESQL_DATABASE
+      - POSTGRESQL_USERNAME=$AUTH_POSTGRESQL_USERNAME
+      - POSTGRESQL_PASSWORD=$AUTH_POSTGRESQL_PASSWORD
+      - REDIS_HOST=auth-redis
+      - REDIS_PORT=6379
     command: [ '/opt/app/commands/gunicorn.sh' ]
     restart: unless-stopped
     healthcheck:
@@ -159,8 +166,8 @@ services:
       - 'auth-redis-data:/bitnami/redis/data'
     environment:
       - ALLOW_EMPTY_PASSWORD=yes
-    restart: unless-stopped
     command: [ '/opt/bitnami/scripts/redis/run.sh', '--maxmemory', '${AUTH_REDIS_MAXMEMORY:-200mb}' ]
+    restart: unless-stopped
     healthcheck:
       test: [ 'CMD', '/bin/bash', '-c', '[[ $(redis-cli ping) == "PONG" ]]' ]
       interval: 10s
