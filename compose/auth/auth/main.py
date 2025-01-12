@@ -1,7 +1,12 @@
 from __future__ import annotations
 
+import logging.config
+
 from fastapi import FastAPI
 
+from .core import LOGGING
+
+logging.config.dictConfig(LOGGING)
 
 app = FastAPI(
     title='Auth service',
