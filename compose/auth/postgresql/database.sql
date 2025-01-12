@@ -3,8 +3,8 @@ CREATE SCHEMA IF NOT EXISTS auth;
 CREATE TABLE IF NOT EXISTS auth.users (
     id uuid PRIMARY KEY,
     login text NOT NULL,
-    password text,
-    first_name text,
+    password text NOT NULL,
+    first_name text NOT NULL,
     last_name text,
     created timestamp without time zone,
     modified timestamp without time zone
