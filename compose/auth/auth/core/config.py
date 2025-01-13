@@ -7,14 +7,25 @@ from pydantic_settings import (
 )
 
 
+class AuthConfig(BaseSettings):
+    model_config = SettingsConfigDict(env_prefix='auth_')
+
+    secret_key: str = 'SECRET'
+    jwt_lifetime: int = 3600
+
+
 class PostgreSQLConfig(BaseSettings):
     model_config = SettingsConfigDict(env_prefix='postgresql_')
 
-    host: str | None = 'localhost'
-    port: int | None = 5432
+    host: str = 'localhost'
+    port: int = 5432
     database: str = Field()
-    username: str | None = None
-    password: str | None = None
+    username: str = Field()
+    password: str = Field()
+
+    @property
+    def engine_url(self) -> str:
+        return f'postgresql+asyncpg://{self.username}:{self.password}@{self.host}:{self.port}/{self.database}'
 
 
 class RedisConfig(BaseSettings):
@@ -26,6 +37,7 @@ class RedisConfig(BaseSettings):
 
 
 class Settings(BaseSettings):
+    auth: AuthConfig = AuthConfig()
     postgresql: PostgreSQLConfig = PostgreSQLConfig()
     redis: RedisConfig = RedisConfig()
 
