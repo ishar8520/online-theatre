@@ -30,11 +30,14 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[dict]:
 
 app = FastAPI(
     title=settings.project.name,
-    description='Backend service that returns films, persons (actors, writers, directors) and genres of films by uuid',
+    description=(
+        'Backend service that returns films, persons (actors, writers, directors) '
+        'and genres of films by uuid.'
+    ),
     docs_url='/api/openapi',
     openapi_url='/api/openapi.json',
     default_response_class=JSONResponse,
-    lifespan=lifespan
+    lifespan=lifespan,
 )
 
 app.include_router(films.router, prefix='/api/v1/films', tags=['films'])
