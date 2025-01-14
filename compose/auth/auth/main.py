@@ -6,9 +6,9 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
+from .api.v1.endpoints import users
 from .core import LOGGING
 from .db.sqlalchemy import create_db_tables
-from .services.users import routers as users_routers
 
 logging.config.dictConfig(LOGGING)
 
@@ -20,37 +20,38 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     yield
 
 
-auth_api_prefix = '/auth/api'
+base_api_prefix = '/auth/api'
 app = FastAPI(
     title='Auth service',
     description='Authentication & authorization service.',
-    docs_url=f'{auth_api_prefix}/openapi',
-    openapi_url=f'{auth_api_prefix}/openapi.json',
+    docs_url=f'{base_api_prefix}/openapi',
+    openapi_url=f'{base_api_prefix}/openapi.json',
     lifespan=lifespan,
 )
 
+auth_api_prefix = f'{base_api_prefix}/v1'
 app.include_router(
-    users_routers.auth_router,
+    users.users_routers.auth,
     prefix=f'{auth_api_prefix}/jwt',
     tags=['auth'],
 )
 app.include_router(
-    users_routers.register_router,
+    users.users_routers.register,
     prefix=auth_api_prefix,
     tags=['auth'],
 )
 app.include_router(
-    users_routers.reset_password_router,
+    users.users_routers.reset_password,
     prefix=auth_api_prefix,
     tags=['auth'],
 )
 app.include_router(
-    users_routers.verify_router,
+    users.users_routers.verify,
     prefix=auth_api_prefix,
     tags=['auth'],
 )
 app.include_router(
-    users_routers.users_router,
+    users.users_routers.users,
     prefix=f'{auth_api_prefix}/users',
     tags=['users'],
 )
