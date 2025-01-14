@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+import dataclasses
+
+from fastapi import APIRouter
+
 from .schemas import (
     UserRead,
     UserCreate,
@@ -24,4 +28,22 @@ verify_router = fast_api_users.get_verify_router(
 users_router = fast_api_users.get_users_router(
     user_schema=UserRead,
     user_update_schema=UserUpdate,
+)
+
+
+@dataclasses.dataclass(kw_only=True)
+class UsersRouters:
+    auth: APIRouter
+    register: APIRouter
+    reset_password: APIRouter
+    verify: APIRouter
+    users: APIRouter
+
+
+users_routers = UsersRouters(
+    auth=auth_router,
+    register=register_router,
+    reset_password=reset_password_router,
+    verify=verify_router,
+    users=users_router,
 )
