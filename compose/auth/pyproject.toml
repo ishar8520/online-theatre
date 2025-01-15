@@ -6,9 +6,11 @@ python = ">=3.12"
 
 asyncpg = "0.30.0"
 fastapi = { version = "0.115.6", extras = ["standard"] }
-fastapi-users = { version = "14.0.1", extras = ["sqlalchemy"] }
-pydantic = "2.10.5"
+makefun = "1.15.6"
+pwdlib = { version = "0.2.1", extras = ["argon2", "bcrypt"] }
+pydantic = { version = "2.10.5", extras = ["email"] }
 pydantic-settings = "2.7.1"
+PyJWT = { version = "2.10.1", extras = ["crypto"] }
 SQLAlchemy = { version = "2.0.37", extras = ["asyncio"] }
 uvicorn-worker = "0.2.0"
 
