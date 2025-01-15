@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import uuid
 
-from fastapi_users import schemas
+from .fastapi_users import schemas
 
 
 class UserRead(schemas.BaseUser[uuid.UUID]):

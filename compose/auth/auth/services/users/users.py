@@ -3,21 +3,20 @@ from __future__ import annotations
 import uuid
 from collections.abc import AsyncGenerator
 
-from fastapi_users import (
+from .db import (
+    User,
+    UserDatabaseDep,
+)
+from .fastapi_users import (
     BaseUserManager,
     FastAPIUsers,
     UUIDIDMixin,
     models,
 )
-from fastapi_users.authentication import (
+from .fastapi_users.authentication import (
     AuthenticationBackend,
     BearerTransport,
     JWTStrategy,
-)
-
-from .db import (
-    User,
-    UserDatabaseDep,
 )
 from ...core import settings
 
