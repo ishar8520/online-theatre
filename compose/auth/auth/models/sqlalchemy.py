@@ -26,7 +26,7 @@ class User(AuthBase):
         primary_key=True,
         default=uuid.uuid4,
     )
-    email: Mapped[str] = mapped_column(TEXT, unique=True)
+    login: Mapped[str] = mapped_column(TEXT, unique=True)
     password: Mapped[str] = mapped_column(TEXT)
     is_superuser: Mapped[bool] = mapped_column(Boolean, default=False)
     created: Mapped[datetime.datetime] = mapped_column(

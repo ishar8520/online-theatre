@@ -9,7 +9,7 @@ class UserProtocol(Protocol[ID]):
     """User protocol that ORM model should follow."""
 
     id: ID
-    email: str
+    login: str
     password: str
     is_superuser: bool
 

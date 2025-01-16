@@ -13,8 +13,8 @@ class BaseUserDatabase(Generic[UP, ID]):
         """Get a single user by id."""
         raise NotImplementedError()
 
-    async def get_by_email(self, email: str) -> Optional[UP]:
-        """Get a single user by email."""
+    async def get_by_login(self, login: str) -> Optional[UP]:
+        """Get a single user by login."""
         raise NotImplementedError()
 
     async def create(self, create_dict: dict[str, Any]) -> UP:
