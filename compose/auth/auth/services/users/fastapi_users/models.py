@@ -10,7 +10,7 @@ class UserProtocol(Protocol[ID]):
 
     id: ID
     email: str
-    hashed_password: str
+    password: str
     is_superuser: bool
 
 
