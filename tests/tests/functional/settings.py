@@ -46,6 +46,10 @@ class Settings(BaseSettings):
     @property
     def movies_api_v1_url(self) -> str:
         return urljoin(self.movies_url, '/api/v1/')
+    
+    @property
+    def auth_api_url(self) -> str:
+        return urljoin(self.movies_url, '/auth/')
 
 
 settings = Settings()
