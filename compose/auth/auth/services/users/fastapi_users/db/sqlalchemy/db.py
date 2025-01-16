@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Generic, Optional
 
-from sqlalchemy import func, select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql import Select
 
@@ -33,10 +33,8 @@ class SQLAlchemyUserDatabase(Generic[UP, ID], BaseUserDatabase[UP, ID]):
         statement = select(self.user_table).where(self.user_table.id == id)
         return await self._get_user(statement)
 
-    async def get_by_email(self, email: str) -> Optional[UP]:
-        statement = select(self.user_table).where(
-            func.lower(self.user_table.email) == func.lower(email)
-        )
+    async def get_by_login(self, login: str) -> Optional[UP]:
+        statement = select(self.user_table).where(self.user_table.login == login)
         return await self._get_user(statement)
 
     async def create(self, create_dict: dict[str, Any]) -> UP:

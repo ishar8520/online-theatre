@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Generic, Optional, TypeVar
 
-from pydantic import BaseModel, ConfigDict, EmailStr
+from pydantic import BaseModel, ConfigDict
 
 from .models import ID
 
@@ -27,21 +27,21 @@ class BaseUser(CreateUpdateDictModel, Generic[ID]):
     """Base User model."""
 
     id: ID
-    email: EmailStr
+    login: str
     is_superuser: bool = False
 
     model_config = ConfigDict(from_attributes=True)  # type: ignore
 
 
 class BaseUserCreate(CreateUpdateDictModel):
-    email: EmailStr
+    login: str
     password: str
     is_superuser: Optional[bool] = False
 
 
 class BaseUserUpdate(CreateUpdateDictModel):
     password: Optional[str] = None
-    email: Optional[EmailStr] = None
+    login: Optional[str] = None
     is_superuser: Optional[bool] = None
 
 

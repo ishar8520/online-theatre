@@ -3,12 +3,10 @@ from __future__ import annotations
 import uuid
 from typing import Any, Generic, Optional
 
-import jwt
 from fastapi.security import OAuth2PasswordRequestForm
 
 from . import exceptions
 from .db import BaseUserDatabase
-from .jwt import decode_jwt
 from .models import UP, ID
 from .password import PasswordHelper, PasswordHelperProtocol
 from .schemas import UC, UU
@@ -59,15 +57,15 @@ class BaseUserManager(Generic[UP, ID]):
 
         return user
 
-    async def get_by_email(self, user_email: str) -> UP:
+    async def get_by_login(self, user_login: str) -> UP:
         """
-        Get a user by e-mail.
+        Get a user by login.
 
-        :param user_email: E-mail of the user to retrieve.
+        :param user_login: Login of the user to retrieve.
         :raises UserNotExists: The user does not exist.
         :return: A user.
         """
-        user = await self.user_db.get_by_email(user_email)
+        user = await self.user_db.get_by_login(user_login)
 
         if user is None:
             raise exceptions.UserNotExists()
@@ -85,10 +83,10 @@ class BaseUserManager(Generic[UP, ID]):
         :param user_create: The UserCreate model to create.
         :param safe: If True, sensitive values like is_superuser
         will be ignored during the creation, defaults to False.
-        :raises UserAlreadyExists: A user already exists with the same e-mail.
+        :raises UserAlreadyExists: A user already exists with the same login.
         :return: A new user.
         """
-        existing_user = await self.user_db.get_by_email(user_create.email)
+        existing_user = await self.user_db.get_by_login(user_create.login)
         if existing_user is not None:
             raise exceptions.UserAlreadyExists()
 
@@ -133,14 +131,14 @@ class BaseUserManager(Generic[UP, ID]):
             self, credentials: OAuth2PasswordRequestForm
     ) -> Optional[UP]:
         """
-        Authenticate and return a user following an email and a password.
+        Authenticate and return a user following a login and a password.
 
         Will automatically upgrade password hash if necessary.
 
         :param credentials: The user credentials.
         """
         try:
-            user = await self.get_by_email(credentials.username)
+            user = await self.get_by_login(credentials.username)
         except exceptions.UserNotExists:
             # Run the hasher to mitigate timing attack
             # Inspired from Django: https://code.djangoproject.com/ticket/20760
@@ -160,19 +158,19 @@ class BaseUserManager(Generic[UP, ID]):
 
     async def _update(self, user: UP, update_dict: dict[str, Any]) -> UP:
         validated_update_dict = {}
+
         for field, value in update_dict.items():
-            if field == "email" and value != user.email:
+            if field == "login" and value != user.login:
                 try:
-                    await self.get_by_email(value)
+                    await self.get_by_login(value)
                     raise exceptions.UserAlreadyExists()
                 except exceptions.UserNotExists:
-                    validated_update_dict["email"] = value
+                    validated_update_dict["login"] = value
             elif field == "password" and value is not None:
-                validated_update_dict["password"] = self.password_helper.hash(
-                    value
-                )
+                validated_update_dict["password"] = self.password_helper.hash(value)
             else:
                 validated_update_dict[field] = value
+
         return await self.user_db.update(user, validated_update_dict)
 
 
