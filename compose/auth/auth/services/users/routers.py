@@ -21,10 +21,6 @@ register_router = fast_api_users.get_register_router(
     user_schema=UserRead,
     user_create_schema=UserCreate,
 )
-reset_password_router = fast_api_users.get_reset_password_router()
-verify_router = fast_api_users.get_verify_router(
-    user_schema=UserRead,
-)
 users_router = fast_api_users.get_users_router(
     user_schema=UserRead,
     user_update_schema=UserUpdate,
@@ -35,15 +31,11 @@ users_router = fast_api_users.get_users_router(
 class UsersRouters:
     auth: APIRouter
     register: APIRouter
-    reset_password: APIRouter
-    verify: APIRouter
     users: APIRouter
 
 
 users_routers = UsersRouters(
     auth=auth_router,
     register=register_router,
-    reset_password=reset_password_router,
-    verify=verify_router,
     users=users_router,
 )

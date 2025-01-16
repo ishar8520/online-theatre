@@ -26,11 +26,9 @@ class User(AuthBase):
         primary_key=True,
         default=uuid.uuid4,
     )
-    email: Mapped[str] = mapped_column(TEXT, unique=True)
-    hashed_password: Mapped[str] = mapped_column(TEXT)
-    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    login: Mapped[str] = mapped_column(TEXT, unique=True)
+    password: Mapped[str] = mapped_column(TEXT)
     is_superuser: Mapped[bool] = mapped_column(Boolean, default=False)
-    is_verified: Mapped[bool] = mapped_column(Boolean, default=False)
     created: Mapped[datetime.datetime] = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.datetime.now(datetime.UTC),

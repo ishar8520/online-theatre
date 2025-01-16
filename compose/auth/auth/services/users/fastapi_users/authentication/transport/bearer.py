@@ -10,7 +10,6 @@ from .base import (
     TransportLogoutNotSupportedError,
 )
 from ...openapi import OpenAPIResponseType
-from ...schemas import model_dump
 
 
 class BearerResponse(BaseModel):
@@ -26,7 +25,7 @@ class BearerTransport(Transport):
 
     async def get_login_response(self, token: str) -> Response:
         bearer_response = BearerResponse(access_token=token, token_type="bearer")
-        return JSONResponse(model_dump(bearer_response))
+        return JSONResponse(bearer_response.model_dump())
 
     async def get_logout_response(self) -> Response:
         raise TransportLogoutNotSupportedError()
@@ -40,10 +39,10 @@ class BearerTransport(Transport):
                     "application/json": {
                         "example": {
                             "access_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1"
-                            "c2VyX2lkIjoiOTIyMWZmYzktNjQwZi00MzcyLTg2Z"
-                            "DMtY2U2NDJjYmE1NjAzIiwiYXVkIjoiZmFzdGFwaS"
-                            "11c2VyczphdXRoIiwiZXhwIjoxNTcxNTA0MTkzfQ."
-                            "M10bjOe45I5Ncu_uXvOmVV8QxnL-nZfcH96U90JaocI",
+                                            "c2VyX2lkIjoiOTIyMWZmYzktNjQwZi00MzcyLTg2Z"
+                                            "DMtY2U2NDJjYmE1NjAzIiwiYXVkIjoiZmFzdGFwaS"
+                                            "11c2VyczphdXRoIiwiZXhwIjoxNTcxNTA0MTkzfQ."
+                                            "M10bjOe45I5Ncu_uXvOmVV8QxnL-nZfcH96U90JaocI",
                             "token_type": "bearer",
                         }
                     }
