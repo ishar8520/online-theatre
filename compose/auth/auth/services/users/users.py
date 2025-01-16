@@ -21,7 +21,7 @@ from ...core import settings
 
 
 class UserManager(BaseUserManager[User, uuid.UUID]):
-    reset_password_token_secret = settings.auth.secret_key
+    pass
 
 
 async def get_user_manager(user_db: UserDatabaseDep) -> AsyncGenerator[UserManager]:

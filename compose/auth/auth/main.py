@@ -41,11 +41,6 @@ app.include_router(
     tags=['auth'],
 )
 app.include_router(
-    users.users_routers.reset_password,
-    prefix=auth_api_prefix,
-    tags=['auth'],
-)
-app.include_router(
     users.users_routers.users,
     prefix=f'{auth_api_prefix}/users',
     tags=['users'],

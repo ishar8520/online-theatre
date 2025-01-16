@@ -32,16 +32,6 @@ def get_register_router(
                                     "detail": ErrorCode.REGISTER_USER_ALREADY_EXISTS
                                 },
                             },
-                            ErrorCode.REGISTER_INVALID_PASSWORD: {
-                                "summary": "Password validation failed.",
-                                "value": {
-                                    "detail": {
-                                        "code": ErrorCode.REGISTER_INVALID_PASSWORD,
-                                        "reason": "Password should be"
-                                                  "at least 3 characters",
-                                    }
-                                },
-                            },
                         }
                     }
                 },
@@ -60,14 +50,6 @@ def get_register_router(
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=ErrorCode.REGISTER_USER_ALREADY_EXISTS,
-            )
-        except exceptions.InvalidPasswordException as e:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail={
-                    "code": ErrorCode.REGISTER_INVALID_PASSWORD,
-                    "reason": e.reason,
-                },
             )
 
         return user_schema.model_validate(created_user)

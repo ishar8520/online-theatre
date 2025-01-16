@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import Any
-
 
 class FastAPIUsersException(Exception):
     pass
@@ -17,12 +15,3 @@ class UserAlreadyExists(FastAPIUsersException):
 
 class UserNotExists(FastAPIUsersException):
     pass
-
-
-class InvalidResetPasswordToken(FastAPIUsersException):
-    pass
-
-
-class InvalidPasswordException(FastAPIUsersException):
-    def __init__(self, reason: Any) -> None:
-        self.reason = reason

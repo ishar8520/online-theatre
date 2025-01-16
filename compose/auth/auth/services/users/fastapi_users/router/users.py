@@ -54,16 +54,6 @@ def get_users_router(
                                     "detail": ErrorCode.UPDATE_USER_EMAIL_ALREADY_EXISTS
                                 },
                             },
-                            ErrorCode.UPDATE_USER_INVALID_PASSWORD: {
-                                "summary": "Password validation failed.",
-                                "value": {
-                                    "detail": {
-                                        "code": ErrorCode.UPDATE_USER_INVALID_PASSWORD,
-                                        "reason": "Password should be"
-                                                  "at least 3 characters",
-                                    }
-                                },
-                            },
                         }
                     }
                 },
@@ -81,14 +71,6 @@ def get_users_router(
                 user_update, user, safe=True,
             )
             return user_schema.model_validate(user)
-        except exceptions.InvalidPasswordException as e:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail={
-                    "code": ErrorCode.UPDATE_USER_INVALID_PASSWORD,
-                    "reason": e.reason,
-                },
-            )
         except exceptions.UserAlreadyExists:
             raise HTTPException(
                 status.HTTP_400_BAD_REQUEST,
