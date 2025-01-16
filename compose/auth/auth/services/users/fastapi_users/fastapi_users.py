@@ -11,7 +11,6 @@ from .models import UP, ID
 from .router import (
     get_auth_router,
     get_register_router,
-    get_reset_password_router,
     get_users_router,
 )
 from .schemas import U, UC, UU
@@ -52,10 +51,6 @@ class FastAPIUsers(Generic[UP, ID]):
         return get_register_router(
             self.get_user_manager, user_schema, user_create_schema
         )
-
-    def get_reset_password_router(self) -> APIRouter:
-        """Return a reset password process router."""
-        return get_reset_password_router(self.get_user_manager)
 
     def get_auth_router(
             self,
