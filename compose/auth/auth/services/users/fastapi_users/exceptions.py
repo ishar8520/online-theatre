@@ -19,18 +19,6 @@ class UserNotExists(FastAPIUsersException):
     pass
 
 
-class UserInactive(FastAPIUsersException):
-    pass
-
-
-class UserAlreadyVerified(FastAPIUsersException):
-    pass
-
-
-class InvalidVerifyToken(FastAPIUsersException):
-    pass
-
-
 class InvalidResetPasswordToken(FastAPIUsersException):
     pass
 

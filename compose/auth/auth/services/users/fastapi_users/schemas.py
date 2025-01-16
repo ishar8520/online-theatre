@@ -16,9 +16,6 @@ class CreateUpdateDictModel(BaseModel):
             exclude={
                 "id",
                 "is_superuser",
-                "is_active",
-                "is_verified",
-                "oauth_accounts",
             },
         )
 
@@ -31,9 +28,7 @@ class BaseUser(CreateUpdateDictModel, Generic[ID]):
 
     id: ID
     email: EmailStr
-    is_active: bool = True
     is_superuser: bool = False
-    is_verified: bool = False
 
     model_config = ConfigDict(from_attributes=True)  # type: ignore
 
@@ -41,17 +36,13 @@ class BaseUser(CreateUpdateDictModel, Generic[ID]):
 class BaseUserCreate(CreateUpdateDictModel):
     email: EmailStr
     password: str
-    is_active: Optional[bool] = True
     is_superuser: Optional[bool] = False
-    is_verified: Optional[bool] = False
 
 
 class BaseUserUpdate(CreateUpdateDictModel):
     password: Optional[str] = None
     email: Optional[EmailStr] = None
-    is_active: Optional[bool] = None
     is_superuser: Optional[bool] = None
-    is_verified: Optional[bool] = None
 
 
 U = TypeVar("U", bound=BaseUser)

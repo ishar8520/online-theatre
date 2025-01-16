@@ -1,5 +1,4 @@
 from fastapi import APIRouter, Body, Depends, HTTPException, Request, status
-from pydantic import EmailStr
 
 from .common import ErrorCode, ErrorModel
 from .. import exceptions
@@ -40,28 +39,6 @@ def get_reset_password_router(
     router = APIRouter()
 
     @router.post(
-        "/forgot-password",
-        status_code=status.HTTP_202_ACCEPTED,
-        name="reset:forgot_password",
-    )
-    async def forgot_password(
-            request: Request,
-            email: EmailStr = Body(..., embed=True),
-            user_manager: BaseUserManager[UP, ID] = Depends(get_user_manager),
-    ):
-        try:
-            user = await user_manager.get_by_email(email)
-        except exceptions.UserNotExists:
-            return None
-
-        try:
-            await user_manager.forgot_password(user, request)
-        except exceptions.UserInactive:
-            pass
-
-        return None
-
-    @router.post(
         "/reset-password",
         name="reset:reset_password",
         responses=RESET_PASSWORD_RESPONSES,
@@ -73,11 +50,10 @@ def get_reset_password_router(
             user_manager: BaseUserManager[UP, ID] = Depends(get_user_manager),
     ):
         try:
-            await user_manager.reset_password(token, password, request)
+            await user_manager.reset_password(token, password)
         except (
                 exceptions.InvalidResetPasswordToken,
                 exceptions.UserNotExists,
-                exceptions.UserInactive,
         ):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,

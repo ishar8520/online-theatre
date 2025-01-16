@@ -13,7 +13,6 @@ from .router import (
     get_register_router,
     get_reset_password_router,
     get_users_router,
-    get_verify_router,
 )
 from .schemas import U, UC, UU
 
@@ -54,14 +53,6 @@ class FastAPIUsers(Generic[UP, ID]):
             self.get_user_manager, user_schema, user_create_schema
         )
 
-    def get_verify_router(self, user_schema: type[U]) -> APIRouter:
-        """
-        Return a router with e-mail verification routes.
-
-        :param user_schema: Pydantic schema of a public user.
-        """
-        return get_verify_router(self.get_user_manager, user_schema)
-
     def get_reset_password_router(self) -> APIRouter:
         """Return a reset password process router."""
         return get_reset_password_router(self.get_user_manager)
@@ -69,34 +60,28 @@ class FastAPIUsers(Generic[UP, ID]):
     def get_auth_router(
             self,
             backend: AuthenticationBackend[UP, ID],
-            requires_verification: bool = False,
     ) -> APIRouter:
         """
         Return an auth router for a given authentication backend.
 
         :param backend: The authentication backend instance.
-        :param requires_verification: Whether the authentication
-        require the user to be verified or not. Defaults to False.
         """
         return get_auth_router(
             backend,
             self.get_user_manager,
             self.authenticator,
-            requires_verification,
         )
 
     def get_users_router(
             self,
             user_schema: type[U],
             user_update_schema: type[UU],
-            requires_verification: bool = False,
     ) -> APIRouter:
         """
         Return a router with routes to manage users.
 
         :param user_schema: Pydantic schema of a public user.
         :param user_update_schema: Pydantic schema for updating a user.
-        :param requires_verification: Whether the endpoints
         require the users to be verified or not. Defaults to False.
         """
         return get_users_router(
@@ -104,5 +89,4 @@ class FastAPIUsers(Generic[UP, ID]):
             user_schema,
             user_update_schema,
             self.authenticator,
-            requires_verification,
         )

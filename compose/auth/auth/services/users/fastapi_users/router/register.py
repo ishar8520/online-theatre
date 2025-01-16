@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, status
 
 from .common import ErrorCode, ErrorModel
 from .. import exceptions
@@ -49,13 +49,12 @@ def get_register_router(
         },
     )
     async def register(
-            request: Request,
             user_create: user_create_schema,  # type: ignore
             user_manager: BaseUserManager[UP, ID] = Depends(get_user_manager),
     ):
         try:
             created_user = await user_manager.create(
-                user_create, safe=True, request=request
+                user_create, safe=True,
             )
         except exceptions.UserAlreadyExists:
             raise HTTPException(

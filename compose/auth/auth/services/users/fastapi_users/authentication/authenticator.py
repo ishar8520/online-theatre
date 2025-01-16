@@ -64,8 +64,6 @@ class Authenticator(Generic[UP, ID]):
     def current_user_token(
             self,
             optional: bool = False,
-            active: bool = False,
-            verified: bool = False,
             superuser: bool = False,
             get_enabled_backends: Optional[
                 EnabledBackendsDependency[UP, ID]
@@ -78,10 +76,6 @@ class Authenticator(Generic[UP, ID]):
         or if it doesn't pass the other requirements.
         Otherwise, throw `401 Unauthorized`. Defaults to `False`.
         Otherwise, an exception is raised. Defaults to `False`.
-        :param active: If `True`, throw `401 Unauthorized` if
-        the authenticated user is inactive. Defaults to `False`.
-        :param verified: If `True`, throw `401 Unauthorized` if
-        the authenticated user is not verified. Defaults to `False`.
         :param superuser: If `True`, throw `403 Forbidden` if
         the authenticated user is not a superuser. Defaults to `False`.
         :param get_enabled_backends: Optional dependency callable returning
@@ -99,8 +93,6 @@ class Authenticator(Generic[UP, ID]):
             return await self._authenticate(
                 *args,
                 optional=optional,
-                active=active,
-                verified=verified,
                 superuser=superuser,
                 **kwargs,
             )
@@ -110,8 +102,6 @@ class Authenticator(Generic[UP, ID]):
     def current_user(
             self,
             optional: bool = False,
-            active: bool = False,
-            verified: bool = False,
             superuser: bool = False,
             get_enabled_backends: Optional[
                 EnabledBackendsDependency[UP, ID]
@@ -124,10 +114,6 @@ class Authenticator(Generic[UP, ID]):
         or if it doesn't pass the other requirements.
         Otherwise, throw `401 Unauthorized`. Defaults to `False`.
         Otherwise, an exception is raised. Defaults to `False`.
-        :param active: If `True`, throw `401 Unauthorized` if
-        the authenticated user is inactive. Defaults to `False`.
-        :param verified: If `True`, throw `401 Unauthorized` if
-        the authenticated user is not verified. Defaults to `False`.
         :param superuser: If `True`, throw `403 Forbidden` if
         the authenticated user is not a superuser. Defaults to `False`.
         :param get_enabled_backends: Optional dependency callable returning
@@ -145,8 +131,6 @@ class Authenticator(Generic[UP, ID]):
             user, _ = await self._authenticate(
                 *args,
                 optional=optional,
-                active=active,
-                verified=verified,
                 superuser=superuser,
                 **kwargs,
             )
@@ -159,8 +143,6 @@ class Authenticator(Generic[UP, ID]):
             *args,
             user_manager: BaseUserManager[UP, ID],
             optional: bool = False,
-            active: bool = False,
-            verified: bool = False,
             superuser: bool = False,
             **kwargs,
     ) -> tuple[Optional[UP], Optional[str]]:
@@ -169,6 +151,7 @@ class Authenticator(Generic[UP, ID]):
         enabled_backends: Sequence[AuthenticationBackend[UP, ID]] = (
             kwargs.get("enabled_backends", self.backends)
         )
+
         for backend in self.backends:
             if backend in enabled_backends:
                 token = kwargs[name_to_variable_name(backend.name)]
@@ -181,17 +164,16 @@ class Authenticator(Generic[UP, ID]):
                         break
 
         status_code = status.HTTP_401_UNAUTHORIZED
+
         if user:
             status_code = status.HTTP_403_FORBIDDEN
-            if active and not user.is_active:
-                status_code = status.HTTP_401_UNAUTHORIZED
+
+            if superuser and not user.is_superuser:
                 user = None
-            elif (
-                    verified and not user.is_verified or superuser and not user.is_superuser
-            ):
-                user = None
+
         if not user and not optional:
             raise HTTPException(status_code=status_code)
+
         return user, token
 
     def _get_dependency_signature(
