@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Generic, Optional
 
-from ..models import ID, OAP, UOAP, UP
+from ..models import ID, UP
 from ..types import DependencyCallable
 
 
@@ -31,21 +31,6 @@ class BaseUserDatabase(Generic[UP, ID]):
 
     async def delete(self, user: UP) -> None:
         """Delete a user."""
-        raise NotImplementedError()
-
-    async def add_oauth_account(
-        self: "BaseUserDatabase[UOAP, ID]", user: UOAP, create_dict: dict[str, Any]
-    ) -> UOAP:
-        """Create an OAuth account and add it to the user."""
-        raise NotImplementedError()
-
-    async def update_oauth_account(
-        self: "BaseUserDatabase[UOAP, ID]",
-        user: UOAP,
-        oauth_account: OAP,
-        update_dict: dict[str, Any],
-    ) -> UOAP:
-        """Update an OAuth account on a user."""
         raise NotImplementedError()
 
 

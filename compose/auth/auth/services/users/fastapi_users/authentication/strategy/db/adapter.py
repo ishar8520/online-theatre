@@ -1,16 +1,16 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any, Generic, Optional, Protocol
+from typing import Any, Optional, Protocol
 
 from .models import AP
 
 
-class AccessTokenDatabase(Protocol, Generic[AP]):
+class AccessTokenDatabase(Protocol[AP]):
     """Protocol for retrieving, creating and updating access tokens from a database."""
 
     async def get_by_token(
-        self, token: str, max_age: Optional[datetime] = None
+            self, token: str, max_age: Optional[datetime] = None
     ) -> Optional[AP]:
         """Get a single access token by token."""
         ...  # pragma: no cover

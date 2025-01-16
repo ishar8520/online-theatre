@@ -7,22 +7,21 @@ from typing import Any, Generic, Optional
 from .adapter import AccessTokenDatabase
 from .models import AP
 from ..base import Strategy
-from .... import exceptions, models
+from .... import exceptions
 from ....manager import BaseUserManager
+from ....models import UP, ID
 
 
-class DatabaseStrategy(
-    Strategy[models.UP, models.ID], Generic[models.UP, models.ID, AP]
-):
+class DatabaseStrategy(Strategy[UP, ID], Generic[UP, ID, AP]):
     def __init__(
-        self, database: AccessTokenDatabase[AP], lifetime_seconds: Optional[int] = None
+            self, database: AccessTokenDatabase[AP], lifetime_seconds: Optional[int] = None
     ):
         self.database = database
         self.lifetime_seconds = lifetime_seconds
 
     async def read_token(
-        self, token: Optional[str], user_manager: BaseUserManager[models.UP, models.ID]
-    ) -> Optional[models.UP]:
+            self, token: Optional[str], user_manager: BaseUserManager[UP, ID]
+    ) -> Optional[UP]:
         if token is None:
             return None
 
@@ -42,16 +41,16 @@ class DatabaseStrategy(
         except (exceptions.UserNotExists, exceptions.InvalidID):
             return None
 
-    async def write_token(self, user: models.UP) -> str:
+    async def write_token(self, user: UP) -> str:
         access_token_dict = self._create_access_token_dict(user)
         access_token = await self.database.create(access_token_dict)
         return access_token.token
 
-    async def destroy_token(self, token: str, user: models.UP) -> None:
+    async def destroy_token(self, token: str, user: UP) -> None:
         access_token = await self.database.get_by_token(token)
         if access_token is not None:
             await self.database.delete(access_token)
 
-    def _create_access_token_dict(self, user: models.UP) -> dict[str, Any]:
+    def _create_access_token_dict(self, user: UP) -> dict[str, Any]:
         token = secrets.token_urlsafe()
         return {"token": token, "user_id": user.id}

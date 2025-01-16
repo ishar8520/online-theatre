@@ -2,13 +2,15 @@ from fastapi import APIRouter, Body, Depends, HTTPException, Request, status
 from pydantic import EmailStr
 
 from .common import ErrorCode, ErrorModel
-from .. import exceptions, models, schemas
+from .. import exceptions
 from ..manager import BaseUserManager, UserManagerDependency
+from ..models import UP, ID
+from ..schemas import U
 
 
 def get_verify_router(
-    get_user_manager: UserManagerDependency[models.UP, models.ID],
-    user_schema: type[schemas.U],
+    get_user_manager: UserManagerDependency[UP, ID],
+    user_schema: type[U],
 ):
     router = APIRouter()
 
@@ -20,7 +22,7 @@ def get_verify_router(
     async def request_verify_token(
         request: Request,
         email: EmailStr = Body(..., embed=True),
-        user_manager: BaseUserManager[models.UP, models.ID] = Depends(get_user_manager),
+        user_manager: BaseUserManager[UP, ID] = Depends(get_user_manager),
     ):
         try:
             user = await user_manager.get_by_email(email)
@@ -64,11 +66,11 @@ def get_verify_router(
     async def verify(
         request: Request,
         token: str = Body(..., embed=True),
-        user_manager: BaseUserManager[models.UP, models.ID] = Depends(get_user_manager),
+        user_manager: BaseUserManager[UP, ID] = Depends(get_user_manager),
     ):
         try:
             user = await user_manager.verify(token, request)
-            return schemas.model_validate(user_schema, user)
+            return user_schema.model_validate(user)
         except (exceptions.InvalidVerifyToken, exceptions.UserNotExists):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,

@@ -4,13 +4,14 @@ from typing import Generic, Optional
 
 import jwt
 
-from ... import exceptions, models
 from .base import (
     Strategy,
     StrategyDestroyNotSupportedError,
 )
+from ... import exceptions
 from ...jwt import SecretType, decode_jwt, generate_jwt
 from ...manager import BaseUserManager
+from ...models import UP, ID
 
 
 class JWTStrategyDestroyNotSupportedError(StrategyDestroyNotSupportedError):
@@ -19,17 +20,21 @@ class JWTStrategyDestroyNotSupportedError(StrategyDestroyNotSupportedError):
         super().__init__(message)
 
 
-class JWTStrategy(Strategy[models.UP, models.ID], Generic[models.UP, models.ID]):
+class JWTStrategy(Strategy[UP, ID], Generic[UP, ID]):
     def __init__(
-        self,
-        secret: SecretType,
-        lifetime_seconds: Optional[int],
-        token_audience: list[str] = ["fastapi-users:auth"],
-        algorithm: str = "HS256",
-        public_key: Optional[SecretType] = None,
+            self,
+            secret: SecretType,
+            lifetime_seconds: Optional[int],
+            token_audience: list[str] | None = None,
+            algorithm: str = "HS256",
+            public_key: Optional[SecretType] = None,
     ):
         self.secret = secret
         self.lifetime_seconds = lifetime_seconds
+
+        if token_audience is None:
+            token_audience = ['fastapi-users:auth']
+
         self.token_audience = token_audience
         self.algorithm = algorithm
         self.public_key = public_key
@@ -43,8 +48,8 @@ class JWTStrategy(Strategy[models.UP, models.ID], Generic[models.UP, models.ID])
         return self.public_key or self.secret
 
     async def read_token(
-        self, token: Optional[str], user_manager: BaseUserManager[models.UP, models.ID]
-    ) -> Optional[models.UP]:
+            self, token: Optional[str], user_manager: BaseUserManager[UP, ID]
+    ) -> Optional[UP]:
         if token is None:
             return None
 
@@ -64,11 +69,11 @@ class JWTStrategy(Strategy[models.UP, models.ID], Generic[models.UP, models.ID])
         except (exceptions.UserNotExists, exceptions.InvalidID):
             return None
 
-    async def write_token(self, user: models.UP) -> str:
+    async def write_token(self, user: UP) -> str:
         data = {"sub": str(user.id), "aud": self.token_audience}
         return generate_jwt(
             data, self.encode_key, self.lifetime_seconds, algorithm=self.algorithm
         )
 
-    async def destroy_token(self, token: str, user: models.UP) -> None:
+    async def destroy_token(self, token: str, user: UP) -> None:
         raise JWTStrategyDestroyNotSupportedError()

@@ -33,8 +33,11 @@ def decode_jwt(
     encoded_jwt: str,
     secret: SecretType,
     audience: list[str],
-    algorithms: list[str] = [JWT_ALGORITHM],
+    algorithms: list[str] | None = None,
 ) -> dict[str, Any]:
+    if algorithms is None:
+        algorithms = [JWT_ALGORITHM]
+
     return jwt.decode(
         encoded_jwt,
         _get_secret_value(secret),

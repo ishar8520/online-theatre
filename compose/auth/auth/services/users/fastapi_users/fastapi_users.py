@@ -5,9 +5,9 @@ from typing import Generic
 
 from fastapi import APIRouter
 
-from . import models, schemas
 from .authentication import AuthenticationBackend, Authenticator
 from .manager import UserManagerDependency
+from .models import UP, ID
 from .router import (
     get_auth_router,
     get_register_router,
@@ -15,9 +15,10 @@ from .router import (
     get_users_router,
     get_verify_router,
 )
+from .schemas import U, UC, UU
 
 
-class FastAPIUsers(Generic[models.UP, models.ID]):
+class FastAPIUsers(Generic[UP, ID]):
     """
     Main object that ties together the component for users authentication.
 
@@ -29,19 +30,19 @@ class FastAPIUsers(Generic[models.UP, models.ID]):
     with a specific set of parameters.
     """
 
-    authenticator: Authenticator[models.UP, models.ID]
+    authenticator: Authenticator[UP, ID]
 
     def __init__(
-        self,
-        get_user_manager: UserManagerDependency[models.UP, models.ID],
-        auth_backends: Sequence[AuthenticationBackend[models.UP, models.ID]],
+            self,
+            get_user_manager: UserManagerDependency[UP, ID],
+            auth_backends: Sequence[AuthenticationBackend[UP, ID]],
     ):
         self.authenticator = Authenticator(auth_backends, get_user_manager)
         self.get_user_manager = get_user_manager
         self.current_user = self.authenticator.current_user
 
     def get_register_router(
-        self, user_schema: type[schemas.U], user_create_schema: type[schemas.UC]
+            self, user_schema: type[U], user_create_schema: type[UC]
     ) -> APIRouter:
         """
         Return a router with a register route.
@@ -53,7 +54,7 @@ class FastAPIUsers(Generic[models.UP, models.ID]):
             self.get_user_manager, user_schema, user_create_schema
         )
 
-    def get_verify_router(self, user_schema: type[schemas.U]) -> APIRouter:
+    def get_verify_router(self, user_schema: type[U]) -> APIRouter:
         """
         Return a router with e-mail verification routes.
 
@@ -66,9 +67,9 @@ class FastAPIUsers(Generic[models.UP, models.ID]):
         return get_reset_password_router(self.get_user_manager)
 
     def get_auth_router(
-        self,
-        backend: AuthenticationBackend[models.UP, models.ID],
-        requires_verification: bool = False,
+            self,
+            backend: AuthenticationBackend[UP, ID],
+            requires_verification: bool = False,
     ) -> APIRouter:
         """
         Return an auth router for a given authentication backend.
@@ -85,10 +86,10 @@ class FastAPIUsers(Generic[models.UP, models.ID]):
         )
 
     def get_users_router(
-        self,
-        user_schema: type[schemas.U],
-        user_update_schema: type[schemas.UU],
-        requires_verification: bool = False,
+            self,
+            user_schema: type[U],
+            user_update_schema: type[UU],
+            requires_verification: bool = False,
     ) -> APIRouter:
         """
         Return a router with routes to manage users.
