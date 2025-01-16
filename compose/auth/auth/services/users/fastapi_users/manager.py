@@ -108,7 +108,7 @@ class BaseUserManager(Generic[UP, ID]):
             else user_create.create_update_dict_superuser()
         )
         password = user_dict.pop("password")
-        user_dict["hashed_password"] = self.password_helper.hash(password)
+        user_dict["password"] = self.password_helper.hash(password)
 
         created_user = await self.user_db.create(user_dict)
 
@@ -151,7 +151,7 @@ class BaseUserManager(Generic[UP, ID]):
         user = await self.get(parsed_id)
 
         valid_password_fingerprint, _ = self.password_helper.verify_and_update(
-            user.hashed_password, password_fingerprint
+            user.password, password_fingerprint
         )
         if not valid_password_fingerprint:
             raise exceptions.InvalidResetPasswordToken()
@@ -204,13 +204,13 @@ class BaseUserManager(Generic[UP, ID]):
             return None
 
         verified, updated_password_hash = self.password_helper.verify_and_update(
-            credentials.password, user.hashed_password
+            credentials.password, user.password
         )
         if not verified:
             return None
         # Update password hash to a more robust one if needed
         if updated_password_hash is not None:
-            await self.user_db.update(user, {"hashed_password": updated_password_hash})
+            await self.user_db.update(user, {"password": updated_password_hash})
 
         return user
 
@@ -224,7 +224,7 @@ class BaseUserManager(Generic[UP, ID]):
                 except exceptions.UserNotExists:
                     validated_update_dict["email"] = value
             elif field == "password" and value is not None:
-                validated_update_dict["hashed_password"] = self.password_helper.hash(
+                validated_update_dict["password"] = self.password_helper.hash(
                     value
                 )
             else:
