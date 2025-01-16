@@ -3,4 +3,3 @@ from .base import (
     TransportLogoutNotSupportedError,
 )
 from .bearer import BearerTransport
-from .cookie import CookieTransport
