@@ -17,10 +17,10 @@ def _get_secret_value(secret: SecretType) -> str:
 
 
 def generate_jwt(
-    data: dict,
-    secret: SecretType,
-    lifetime_seconds: Optional[int] = None,
-    algorithm: str = JWT_ALGORITHM,
+        data: dict,
+        secret: SecretType,
+        lifetime_seconds: Optional[int] = None,
+        algorithm: str = JWT_ALGORITHM,
 ) -> str:
     payload = data.copy()
     if lifetime_seconds:
@@ -30,10 +30,10 @@ def generate_jwt(
 
 
 def decode_jwt(
-    encoded_jwt: str,
-    secret: SecretType,
-    audience: list[str],
-    algorithms: list[str] | None = None,
+        encoded_jwt: str,
+        secret: SecretType,
+        audience: list[str],
+        algorithms: list[str] | None = None,
 ) -> dict[str, Any]:
     if algorithms is None:
         algorithms = [JWT_ALGORITHM]

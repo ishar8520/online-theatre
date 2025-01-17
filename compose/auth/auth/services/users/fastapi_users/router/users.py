@@ -1,80 +1,73 @@
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from __future__ import annotations
+
+from fastapi import APIRouter, Depends, HTTPException, status
 
 from .common import ErrorCode, ErrorModel
 from .. import exceptions
-from ..authentication import Authenticator
-from ..manager import BaseUserManager, UserManagerDependency
-from ..models import UP, ID
-from ..schemas import U, UU
+from ..authentication import get_current_user
+from ..manager import UserManagerDep
+from ..schemas import (
+    UserRead,
+    UserUpdate,
+)
+from .....models.sqlalchemy import User
+
+router = APIRouter()
 
 
-def get_users_router(
-        get_user_manager: UserManagerDependency[UP, ID],
-        user_schema: type[U],
-        user_update_schema: type[UU],
-        authenticator: Authenticator[UP, ID],
-) -> APIRouter:
-    """Generate a router with the authentication routes."""
-    router = APIRouter()
-
-    get_current_user = authenticator.current_user()
-
-    @router.get(
-        "/me",
-        response_model=user_schema,
-        name="users:current_user",
-        responses={
-            status.HTTP_401_UNAUTHORIZED: {
-                "description": "Missing token.",
-            },
+@router.get(
+    "/me",
+    response_model=UserRead,
+    name='users:current_user',
+    responses={
+        status.HTTP_401_UNAUTHORIZED: {
+            "description": "Missing token.",
         },
-    )
-    async def me(
-            user: UP = Depends(get_current_user),
-    ):
-        return user_schema.model_validate(user)
+    },
+)
+async def me(user: User = Depends(get_current_user)):
+    return UserRead.model_validate(user)
 
-    @router.patch(
-        "/me",
-        response_model=user_schema,
-        dependencies=[Depends(get_current_user)],
-        name="users:patch_current_user",
-        responses={
-            status.HTTP_401_UNAUTHORIZED: {
-                "description": "Missing token.",
-            },
-            status.HTTP_400_BAD_REQUEST: {
-                "model": ErrorModel,
-                "content": {
-                    "application/json": {
-                        "examples": {
-                            ErrorCode.UPDATE_USER_LOGIN_ALREADY_EXISTS: {
-                                "summary": "A user with this login already exists.",
-                                "value": {
-                                    "detail": ErrorCode.UPDATE_USER_LOGIN_ALREADY_EXISTS
-                                },
+
+@router.patch(
+    "/me",
+    response_model=UserRead,
+    dependencies=[Depends(get_current_user)],
+    name='users:patch_current_user',
+    responses={
+        status.HTTP_401_UNAUTHORIZED: {
+            "description": "Missing token.",
+        },
+        status.HTTP_400_BAD_REQUEST: {
+            "model": ErrorModel,
+            "content": {
+                "application/json": {
+                    "examples": {
+                        ErrorCode.UPDATE_USER_LOGIN_ALREADY_EXISTS: {
+                            "summary": "A user with this login already exists.",
+                            "value": {
+                                "detail": ErrorCode.UPDATE_USER_LOGIN_ALREADY_EXISTS
                             },
-                        }
+                        },
                     }
-                },
+                }
             },
         },
-    )
-    async def update_me(
-            request: Request,
-            user_update: user_update_schema,  # type: ignore
-            user: UP = Depends(get_current_user),
-            user_manager: BaseUserManager[UP, ID] = Depends(get_user_manager),
-    ):
-        try:
-            user = await user_manager.update(
-                user_update, user, safe=True,
-            )
-            return user_schema.model_validate(user)
-        except exceptions.UserAlreadyExists:
-            raise HTTPException(
-                status.HTTP_400_BAD_REQUEST,
-                detail=ErrorCode.UPDATE_USER_LOGIN_ALREADY_EXISTS,
-            )
-
-    return router
+    },
+)
+async def update_me(
+        *,
+        user_update: UserUpdate,
+        user: User = Depends(get_current_user),
+        user_manager: UserManagerDep,
+):
+    try:
+        user = await user_manager.update(
+            user_update, user, safe=True,
+        )
+        return UserRead.model_validate(user)
+    except exceptions.UserAlreadyExists:
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST,
+            detail=ErrorCode.UPDATE_USER_LOGIN_ALREADY_EXISTS,
+        )

@@ -2,4 +2,7 @@ from .base import (
     Transport,
     TransportLogoutNotSupportedError,
 )
-from .bearer import BearerTransport
+from .dependencies import (
+    TokenDep,
+    TransportDep,
+)

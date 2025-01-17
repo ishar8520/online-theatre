@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Generic, Optional
+from typing import Optional
 
 import jwt
 
@@ -8,10 +8,10 @@ from .base import (
     Strategy,
     StrategyDestroyNotSupportedError,
 )
-from ... import exceptions
-from ...jwt import SecretType, decode_jwt, generate_jwt
-from ...manager import BaseUserManager
-from ...models import UP, ID
+from .... import exceptions
+from ....jwt import SecretType, decode_jwt, generate_jwt
+from ....manager import UserManager
+from .......models.sqlalchemy import User
 
 
 class JWTStrategyDestroyNotSupportedError(StrategyDestroyNotSupportedError):
@@ -20,7 +20,7 @@ class JWTStrategyDestroyNotSupportedError(StrategyDestroyNotSupportedError):
         super().__init__(message)
 
 
-class JWTStrategy(Strategy[UP, ID], Generic[UP, ID]):
+class JWTStrategy(Strategy):
     def __init__(
             self,
             secret: SecretType,
@@ -48,8 +48,8 @@ class JWTStrategy(Strategy[UP, ID], Generic[UP, ID]):
         return self.public_key or self.secret
 
     async def read_token(
-            self, token: Optional[str], user_manager: BaseUserManager[UP, ID]
-    ) -> Optional[UP]:
+            self, token: Optional[str], user_manager: UserManager
+    ) -> User | None:
         if token is None:
             return None
 
@@ -69,11 +69,11 @@ class JWTStrategy(Strategy[UP, ID], Generic[UP, ID]):
         except (exceptions.UserNotExists, exceptions.InvalidID):
             return None
 
-    async def write_token(self, user: UP) -> str:
+    async def write_token(self, user: User) -> str:
         data = {"sub": str(user.id), "aud": self.token_audience}
         return generate_jwt(
             data, self.encode_key, self.lifetime_seconds, algorithm=self.algorithm
         )
 
-    async def destroy_token(self, token: str, user: UP) -> None:
+    async def destroy_token(self, token: str, user: User) -> None:
         raise JWTStrategyDestroyNotSupportedError()

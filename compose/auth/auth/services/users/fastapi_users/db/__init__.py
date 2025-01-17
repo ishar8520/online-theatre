@@ -1,4 +1,2 @@
-from .base import BaseUserDatabase, UserDatabaseDependency
-from .sqlalchemy import (
-    SQLAlchemyUserDatabase,
-)
+from .base import BaseUserDatabase
+from .dependencies import UserDatabaseDep

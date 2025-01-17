@@ -1,31 +1,34 @@
 from __future__ import annotations
 
 import uuid
-from typing import Any, Generic, Optional
+from typing import Any, Optional, Annotated
 
+from fastapi import Depends
 from fastapi.security import OAuth2PasswordRequestForm
 
 from . import exceptions
-from .db import BaseUserDatabase
-from .models import UP, ID
+from .db import (
+    BaseUserDatabase,
+    UserDatabaseDep,
+)
 from .password import PasswordHelper, PasswordHelperProtocol
-from .schemas import UC, UU
-from .types import DependencyCallable
+from .schemas import UserCreate, UserUpdate
+from ....models.sqlalchemy import User
 
 
-class BaseUserManager(Generic[UP, ID]):
+class UserManager:
     """
     User management logic.
 
     :param user_db: Database adapter instance.
     """
 
-    user_db: BaseUserDatabase[UP, ID]
+    user_db: BaseUserDatabase
     password_helper: PasswordHelperProtocol
 
     def __init__(
             self,
-            user_db: BaseUserDatabase[UP, ID],
+            user_db: BaseUserDatabase,
             password_helper: Optional[PasswordHelperProtocol] = None,
     ):
         self.user_db = user_db
@@ -42,7 +45,7 @@ class BaseUserManager(Generic[UP, ID]):
         except ValueError as e:
             raise exceptions.InvalidID() from e
 
-    async def get(self, id: ID) -> UP:
+    async def get(self, id: uuid.UUID) -> User:
         """
         Get a user by id.
 
@@ -57,7 +60,7 @@ class BaseUserManager(Generic[UP, ID]):
 
         return user
 
-    async def get_by_login(self, user_login: str) -> UP:
+    async def get_by_login(self, user_login: str) -> User:
         """
         Get a user by login.
 
@@ -74,9 +77,9 @@ class BaseUserManager(Generic[UP, ID]):
 
     async def create(
             self,
-            user_create: UC,
+            user_create: UserCreate,
             safe: bool = False,
-    ) -> UP:
+    ) -> User:
         """
         Create a user in database.
 
@@ -104,10 +107,10 @@ class BaseUserManager(Generic[UP, ID]):
 
     async def update(
             self,
-            user_update: UU,
-            user: UP,
+            user_update: UserUpdate,
+            user: User,
             safe: bool = False,
-    ) -> UP:
+    ) -> User:
         """
         Update a user.
 
@@ -129,7 +132,7 @@ class BaseUserManager(Generic[UP, ID]):
 
     async def authenticate(
             self, credentials: OAuth2PasswordRequestForm
-    ) -> Optional[UP]:
+    ) -> User | None:
         """
         Authenticate and return a user following a login and a password.
 
@@ -156,7 +159,7 @@ class BaseUserManager(Generic[UP, ID]):
 
         return user
 
-    async def _update(self, user: UP, update_dict: dict[str, Any]) -> UP:
+    async def _update(self, user: User, update_dict: dict[str, Any]) -> User:
         validated_update_dict = {}
 
         for field, value in update_dict.items():
@@ -174,4 +177,8 @@ class BaseUserManager(Generic[UP, ID]):
         return await self.user_db.update(user, validated_update_dict)
 
 
-UserManagerDependency = DependencyCallable[BaseUserManager[UP, ID]]
+async def get_user_manager(user_db: UserDatabaseDep) -> UserManager:
+    return UserManager(user_db=user_db)
+
+
+UserManagerDep = Annotated[UserManager, Depends(get_user_manager)]

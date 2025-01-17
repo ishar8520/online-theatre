@@ -10,7 +10,7 @@ from pwdlib.hashers.bcrypt import BcryptHasher
 
 class PasswordHelperProtocol(Protocol):
     def verify_and_update(
-        self, plain_password: str, hashed_password: str
+            self, plain_password: str, hashed_password: str
     ) -> tuple[bool, Union[str, None]]: ...  # pragma: no cover
 
     def hash(self, password: str) -> str: ...  # pragma: no cover
@@ -31,7 +31,7 @@ class PasswordHelper(PasswordHelperProtocol):
             self.password_hash = password_hash  # pragma: no cover
 
     def verify_and_update(
-        self, plain_password: str, hashed_password: str
+            self, plain_password: str, hashed_password: str
     ) -> tuple[bool, Union[str, None]]:
         return self.password_hash.verify_and_update(plain_password, hashed_password)
 
