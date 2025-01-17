@@ -4,6 +4,12 @@ import uuid
 from http import HTTPStatus
 
 from fastapi import APIRouter, HTTPException
+
+from ....services.roles.exceptions import (
+    UpdateError,
+    DuplicateRoleTypeError,
+    AddError, DeleteError
+)
 from ....services.roles.models import (
     RoleInDB,
     RoleCreateDto,
@@ -26,9 +32,12 @@ async def add(
     role: RoleCreateDto,
     role_service: RoleServiceDep
 ) -> RoleInDB:
-    created_role = await role_service.add(role)
-    if created_role is None:
-        raise HTTPException(status_code=HTTPStatus.CONFLICT, detail='Role exists')
+    try:
+        created_role = await role_service.add(role)
+    except DuplicateRoleTypeError:
+        raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail='Duplicate role type')
+    except AddError:
+        raise HTTPException(status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail='Add error')
 
     return created_role
 
@@ -44,8 +53,14 @@ async def update(
     id: uuid.UUID,
     role_update: RoleUpdateDto,
     role_service: RoleServiceDep
-):
-    update_role = await role_service.update(id, role_update)
+) -> RoleInDB | None:
+    try:
+        update_role = await role_service.update(id, role_update)
+    except DuplicateRoleTypeError:
+        raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail='Duplicate role type')
+    except UpdateError:
+        raise HTTPException(status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail='Update error')
+
     if update_role is None:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail='Role not found')
 
@@ -63,7 +78,11 @@ async def delete(
     id: uuid.UUID,
     role_service: RoleServiceDep
 ) -> RoleDelete:
-    role = await role_service.delete(id)
+    try:
+        role = await role_service.delete(id)
+    except DeleteError:
+        raise HTTPException(status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail='Delete error')
+
     if role is None:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail='Role not found')
 

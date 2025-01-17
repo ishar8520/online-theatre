@@ -5,13 +5,18 @@ from typing import Annotated, TypeVar
 
 from fastapi import Depends
 from fastapi.encoders import jsonable_encoder
+from sqlalchemy.exc import SQLAlchemyError
 
+from .exceptions import (
+    UpdateError,
+    AddError,
+    DeleteError
+)
 from ...db.sqlalchemy import AsyncSessionDep, AsyncSession, AuthBase
 from .models import RoleCreateDto, RoleInDB, RoleUpdateDto
 from ...models.sqlalchemy import Role
 from sqlalchemy import select, delete, update
 
-ModelType = TypeVar('ModelType', bound=AuthBase)
 
 class RoleRepository:
     _db: AsyncSession
@@ -24,8 +29,12 @@ class RoleRepository:
         role = Role(**role_dto)
         self._db.add(role)
 
-        await self._db.commit()
-        await self._db.refresh(role)
+        try:
+            await self._db.commit()
+            await self._db.refresh(role)
+        except SQLAlchemyError:
+            await self._db.rollback()
+            raise AddError
 
         return role
 
@@ -33,8 +42,12 @@ class RoleRepository:
         fields = role_update.model_dump(exclude_unset=True)
         statement = update(Role).where(Role.id == id).values(fields)
 
-        await self._db.execute(statement)
-        await self._db.commit()
+        try:
+            await self._db.execute(statement)
+            await self._db.commit()
+        except SQLAlchemyError:
+            await self._db.rollback()
+            raise UpdateError
 
     async def findByCode(self, code: str) -> RoleInDB | None:
         statement = select(Role).where(Role.code == code)
@@ -54,8 +67,12 @@ class RoleRepository:
     async def delete(self, id: uuid.UUID):
         query = delete(Role).where(Role.id == id)
 
-        await self._db.execute(query)
-        await self._db.commit()
+        try:
+            await self._db.execute(query)
+            await self._db.commit()
+        except SQLAlchemyError:
+            await self._db.rollback()
+            raise DeleteError
 
 
 async def get_role_repository(db: AsyncSessionDep):
