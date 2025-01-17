@@ -9,6 +9,7 @@ from sqlalchemy import (
     Boolean,
     DateTime,
     ForeignKey,
+    UniqueConstraint
 )
 from sqlalchemy.orm import (
     Mapped,
@@ -49,7 +50,7 @@ class Role(AuthBase):
         default=uuid.uuid4,
     )
     name: Mapped[str] = mapped_column(TEXT)
-    code: Mapped[str] = mapped_column(TEXT)
+    code: Mapped[str] = mapped_column(TEXT, unique=True)
     created: Mapped[datetime.datetime] = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.datetime.now(datetime.UTC),
@@ -74,4 +75,8 @@ class UserRole(AuthBase):
     created: Mapped[datetime.datetime] = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.datetime.now(datetime.UTC),
+    )
+
+    __table_args__ = (
+        UniqueConstraint('user_id', 'role_id', name='uix_auth_role_id_user_id'),
     )
