@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import uuid
+from datetime import datetime
 from enum import Enum
 from typing import Optional
 
@@ -27,6 +28,8 @@ class RoleInDB(BaseModel):
     id: uuid.UUID
     name: str
     code: CodeRole
+    created: datetime
+    modified: datetime
 
     class Config:
         orm_mode = True

@@ -4,13 +4,13 @@ import uuid
 from http import HTTPStatus
 
 from fastapi import APIRouter, HTTPException
-from ....schemas.role import (
+from ....services.roles.models import (
     RoleInDB,
     RoleCreateDto,
     RoleUpdateDto,
     RoleDelete
 )
-from ....services.role import RoleServiceDep
+from ....services.roles.service import RoleServiceDep
 
 router = APIRouter()
 

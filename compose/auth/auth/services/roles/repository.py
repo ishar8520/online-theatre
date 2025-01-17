@@ -6,9 +6,9 @@ from typing import Annotated, TypeVar
 from fastapi import Depends
 from fastapi.encoders import jsonable_encoder
 
-from ..db.sqlalchemy import AsyncSessionDep, AsyncSession, AuthBase
-from ..schemas.role import RoleCreateDto, RoleInDB, RoleUpdateDto
-from ..models.sqlalchemy import Role
+from ...db.sqlalchemy import AsyncSessionDep, AsyncSession, AuthBase
+from .models import RoleCreateDto, RoleInDB, RoleUpdateDto
+from ...models.sqlalchemy import Role
 from sqlalchemy import select, delete, update
 
 ModelType = TypeVar('ModelType', bound=AuthBase)

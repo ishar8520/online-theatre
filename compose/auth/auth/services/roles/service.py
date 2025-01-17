@@ -4,11 +4,11 @@ import uuid
 from typing import Annotated
 from fastapi import Depends
 
-from ..repositories.role import (
+from .repository import (
     RoleRepositoryDep,
     RoleRepository
 )
-from ..schemas.role import (
+from .models import (
     RoleInDB,
     RoleCreateDto,
     RoleUpdateDto
