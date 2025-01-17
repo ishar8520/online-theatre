@@ -6,7 +6,6 @@ python = ">=3.12"
 
 asyncpg = "0.30.0"
 fastapi = { version = "0.115.6", extras = ["standard"] }
-makefun = "1.15.6"
 pwdlib = { version = "0.2.1", extras = ["argon2", "bcrypt"] }
 pydantic = { version = "2.10.5", extras = ["email"] }
 pydantic-settings = "2.7.1"
