@@ -6,8 +6,12 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
-from .api.v1.endpoints import users
 from .api.v1.endpoints import roles
+from .api.v1.endpoints.users import (
+    auth,
+    register,
+    users,
+)
 from .core import LOGGING
 from .db.sqlalchemy import create_db_tables
 
@@ -32,21 +36,19 @@ app = FastAPI(
 
 auth_api_prefix = f'{base_api_prefix}/v1'
 
-
-app.include_router(roles.router, prefix=f'{auth_api_prefix}/roles', tags=['auth'])
-
 app.include_router(
-    users.users_routers.auth,
+    auth.router,
     prefix=f'{auth_api_prefix}/jwt',
     tags=['auth'],
 )
 app.include_router(
-    users.users_routers.register,
+    register.router,
     prefix=auth_api_prefix,
     tags=['auth'],
 )
 app.include_router(
-    users.users_routers.users,
+    users.router,
     prefix=f'{auth_api_prefix}/users',
     tags=['users'],
 )
+app.include_router(roles.router, prefix=f'{auth_api_prefix}/roles', tags=['auth'])
