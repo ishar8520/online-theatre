@@ -1,17 +1,17 @@
 from __future__ import annotations
 
 
-class FastAPIUsersException(Exception):
+class UsersException(Exception):
     pass
 
 
-class InvalidID(FastAPIUsersException):
+class InvalidID(UsersException):
     pass
 
 
-class UserAlreadyExists(FastAPIUsersException):
+class UserAlreadyExists(UsersException):
     pass
 
 
-class UserNotExists(FastAPIUsersException):
+class UserDoesNotExist(UsersException):
     pass

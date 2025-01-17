@@ -66,7 +66,7 @@ class JWTStrategy(Strategy):
         try:
             parsed_id = user_manager.parse_id(user_id)
             return await user_manager.get(parsed_id)
-        except (exceptions.UserNotExists, exceptions.InvalidID):
+        except (exceptions.UserDoesNotExist, exceptions.InvalidID):
             return None
 
     async def write_token(self, user: User) -> str:

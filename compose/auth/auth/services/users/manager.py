@@ -50,13 +50,13 @@ class UserManager:
         Get a user by id.
 
         :param id: Id. of the user to retrieve.
-        :raises UserNotExists: The user does not exist.
+        :raises UserDoesNotExist: The user does not exist.
         :return: A user.
         """
         user = await self.user_db.get(id)
 
         if user is None:
-            raise exceptions.UserNotExists()
+            raise exceptions.UserDoesNotExist
 
         return user
 
@@ -65,13 +65,13 @@ class UserManager:
         Get a user by login.
 
         :param user_login: Login of the user to retrieve.
-        :raises UserNotExists: The user does not exist.
+        :raises UserDoesNotExist: The user does not exist.
         :return: A user.
         """
         user = await self.user_db.get_by_login(user_login)
 
         if user is None:
-            raise exceptions.UserNotExists()
+            raise exceptions.UserDoesNotExist
 
         return user
 
@@ -142,7 +142,7 @@ class UserManager:
         """
         try:
             user = await self.get_by_login(credentials.username)
-        except exceptions.UserNotExists:
+        except exceptions.UserDoesNotExist:
             # Run the hasher to mitigate timing attack
             # Inspired from Django: https://code.djangoproject.com/ticket/20760
             self.password_helper.hash(credentials.password)
@@ -167,7 +167,7 @@ class UserManager:
                 try:
                     await self.get_by_login(value)
                     raise exceptions.UserAlreadyExists()
-                except exceptions.UserNotExists:
+                except exceptions.UserDoesNotExist:
                     validated_update_dict["login"] = value
             elif field == "password" and value is not None:
                 validated_update_dict["password"] = self.password_helper.hash(value)
