@@ -38,6 +38,7 @@ class Settings(BaseSettings):
     elasticsearch: ElasticsearchSettings = ElasticsearchSettings()
 
     movies_url: str = Field(default='http://localhost:8000')
+    auth_url: str = Field(default='http://localhost:8000')
 
     @property
     def movies_api_url(self) -> str:
@@ -49,7 +50,11 @@ class Settings(BaseSettings):
     
     @property
     def auth_api_url(self) -> str:
-        return urljoin(self.movies_url, '/auth/')
+        return urljoin(self.auth_url, '/auth/api/')
+    
+    @property
+    def auth_api_v1_url(self) -> str:
+        return urljoin(self.auth_url, '/auth/api/v1/')
 
 
 settings = Settings()
