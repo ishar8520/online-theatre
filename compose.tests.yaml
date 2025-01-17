@@ -11,7 +11,7 @@ services:
       - movies-network
     environment:
       - MOVIES_URL=http://movies:8000
-      - AUTH_SERVICE_URL=http://auth-service:8000
+      - AUTH_URL=http://auth-service:8000
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - ELASTIC_HOST=elasticsearch
