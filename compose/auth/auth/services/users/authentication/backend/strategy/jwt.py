@@ -33,7 +33,7 @@ class JWTStrategy(Strategy):
         self.lifetime_seconds = lifetime_seconds
 
         if token_audience is None:
-            token_audience = ['fastapi-users:auth']
+            token_audience = ['users:auth']
 
         self.token_audience = token_audience
         self.algorithm = algorithm

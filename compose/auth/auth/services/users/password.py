@@ -11,11 +11,11 @@ from pwdlib.hashers.bcrypt import BcryptHasher
 class PasswordHelperProtocol(Protocol):
     def verify_and_update(
             self, plain_password: str, hashed_password: str
-    ) -> tuple[bool, Union[str, None]]: ...  # pragma: no cover
+    ) -> tuple[bool, Union[str, None]]: ...
 
-    def hash(self, password: str) -> str: ...  # pragma: no cover
+    def hash(self, password: str) -> str: ...
 
-    def generate(self) -> str: ...  # pragma: no cover
+    def generate(self) -> str: ...
 
 
 class PasswordHelper(PasswordHelperProtocol):
@@ -28,7 +28,7 @@ class PasswordHelper(PasswordHelperProtocol):
                 )
             )
         else:
-            self.password_hash = password_hash  # pragma: no cover
+            self.password_hash = password_hash
 
     def verify_and_update(
             self, plain_password: str, hashed_password: str

@@ -35,7 +35,7 @@ class UserManager:
         if password_helper is None:
             self.password_helper = PasswordHelper()
         else:
-            self.password_helper = password_helper  # pragma: no cover
+            self.password_helper = password_helper
 
     def parse_id(self, value: Any) -> uuid.UUID:
         if isinstance(value, uuid.UUID):
@@ -75,17 +75,11 @@ class UserManager:
 
         return user
 
-    async def create(
-            self,
-            user_create: UserCreate,
-            safe: bool = False,
-    ) -> User:
+    async def create(self, user_create: UserCreate) -> User:
         """
         Create a user in database.
 
         :param user_create: The UserCreate model to create.
-        :param safe: If True, sensitive values like is_superuser
-        will be ignored during the creation, defaults to False.
         :raises UserAlreadyExists: A user already exists with the same login.
         :return: A new user.
         """
@@ -93,11 +87,7 @@ class UserManager:
         if existing_user is not None:
             raise exceptions.UserAlreadyExists()
 
-        user_dict = (
-            user_create.create_update_dict()
-            if safe
-            else user_create.create_update_dict_superuser()
-        )
+        user_dict = user_create.model_dump()
         password = user_dict.pop("password")
         user_dict["password"] = self.password_helper.hash(password)
 
@@ -105,12 +95,7 @@ class UserManager:
 
         return created_user
 
-    async def update(
-            self,
-            user_update: UserUpdate,
-            user: User,
-            safe: bool = False,
-    ) -> User:
+    async def update(self, user_update: UserUpdate, user: User) -> User:
         """
         Update a user.
 
@@ -119,15 +104,11 @@ class UserManager:
         :param user_update: The UserUpdate model containing
         the changes to apply to the user.
         :param user: The current user to update.
-        :param safe: If True, sensitive values like is_superuser
-        will be ignored during the update, defaults to False
         :return: The updated user.
         """
-        if safe:
-            updated_user_data = user_update.create_update_dict()
-        else:
-            updated_user_data = user_update.create_update_dict_superuser()
+        updated_user_data = user_update.model_dump(exclude_unset=True)
         updated_user = await self._update(user, updated_user_data)
+
         return updated_user
 
     async def authenticate(

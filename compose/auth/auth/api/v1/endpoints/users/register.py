@@ -38,13 +38,11 @@ router = APIRouter()
 )
 async def register(user_create: UserCreate, user_manager: UserManagerDep):
     try:
-        created_user = await user_manager.create(
-            user_create, safe=True,
-        )
+        created_user = await user_manager.create(user_create)
     except UserAlreadyExists:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=ErrorCode.REGISTER_USER_ALREADY_EXISTS,
         )
 
-    return UserRead.model_validate(created_user)
+    return UserRead.model_validate(created_user, from_attributes=True)

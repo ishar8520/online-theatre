@@ -26,7 +26,7 @@ router = APIRouter()
     },
 )
 async def me(user: User = Depends(get_current_user)):
-    return UserRead.model_validate(user)
+    return UserRead.model_validate(user, from_attributes=True)
 
 
 @router.patch(
@@ -62,10 +62,8 @@ async def update_me(
         user_manager: UserManagerDep,
 ):
     try:
-        user = await user_manager.update(
-            user_update, user, safe=True,
-        )
-        return UserRead.model_validate(user)
+        user = await user_manager.update(user_update, user)
+        return UserRead.model_validate(user, from_attributes=True)
     except UserAlreadyExists:
         raise HTTPException(
             status.HTTP_400_BAD_REQUEST,
