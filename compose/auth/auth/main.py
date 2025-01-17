@@ -6,13 +6,13 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
-from .core import LOGGING
-from .db.sqlalchemy import create_db_tables
-from .services.users.fastapi_users.router import (
+from .api.v1.endpoints.users import (
     auth,
     register,
     users,
 )
+from .core import LOGGING
+from .db.sqlalchemy import create_db_tables
 
 logging.config.dictConfig(LOGGING)
 

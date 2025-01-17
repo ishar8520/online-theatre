@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql import Select
 
 from ..db.base import BaseUserDatabase
-from .....models.sqlalchemy import User
+from ....models.sqlalchemy import User
 
 
 class SQLAlchemyUserDatabase(BaseUserDatabase):

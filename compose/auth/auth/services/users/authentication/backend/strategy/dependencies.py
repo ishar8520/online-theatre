@@ -6,7 +6,7 @@ from fastapi import Depends
 
 from .base import Strategy
 from .jwt import JWTStrategy
-from .......core import settings
+from ......core import settings
 
 
 async def get_strategy() -> Strategy:

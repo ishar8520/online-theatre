@@ -15,7 +15,7 @@ from .transport import (
     TransportLogoutNotSupportedError,
 )
 from ...manager import UserManager
-from ......models.sqlalchemy import User
+from .....models.sqlalchemy import User
 
 
 class AuthenticationBackend:

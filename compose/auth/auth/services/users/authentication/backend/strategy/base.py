@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Optional, Protocol
 
 from ....manager import UserManager
-from .......models.sqlalchemy import User
+from ......models.sqlalchemy import User
 
 
 class StrategyDestroyNotSupportedError(Exception):

@@ -13,7 +13,7 @@ from .db import (
 )
 from .password import PasswordHelper, PasswordHelperProtocol
 from .schemas import UserCreate, UserUpdate
-from ....models.sqlalchemy import User
+from ...models.sqlalchemy import User
 
 
 class UserManager:

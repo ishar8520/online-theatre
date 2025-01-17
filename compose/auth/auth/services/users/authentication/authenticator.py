@@ -13,7 +13,7 @@ from ..manager import (
     UserManager,
     UserManagerDep,
 )
-from .....models.sqlalchemy import User
+from ....models.sqlalchemy import User
 
 
 class DuplicateBackendNamesError(Exception):

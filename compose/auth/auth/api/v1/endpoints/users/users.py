@@ -3,14 +3,14 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from .common import ErrorCode, ErrorModel
-from .. import exceptions
-from ..authentication import get_current_user
-from ..manager import UserManagerDep
-from ..schemas import (
+from .....models.sqlalchemy import User
+from .....services.users import (
+    get_current_user,
+    UserManagerDep,
     UserRead,
     UserUpdate,
+    UserAlreadyExists,
 )
-from .....models.sqlalchemy import User
 
 router = APIRouter()
 
@@ -66,7 +66,7 @@ async def update_me(
             user_update, user, safe=True,
         )
         return UserRead.model_validate(user)
-    except exceptions.UserAlreadyExists:
+    except UserAlreadyExists:
         raise HTTPException(
             status.HTTP_400_BAD_REQUEST,
             detail=ErrorCode.UPDATE_USER_LOGIN_ALREADY_EXISTS,

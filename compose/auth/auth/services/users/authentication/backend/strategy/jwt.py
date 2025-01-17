@@ -11,7 +11,7 @@ from .base import (
 from .... import exceptions
 from ....jwt import SecretType, decode_jwt, generate_jwt
 from ....manager import UserManager
-from .......models.sqlalchemy import User
+from ......models.sqlalchemy import User
 
 
 class JWTStrategyDestroyNotSupportedError(StrategyDestroyNotSupportedError):

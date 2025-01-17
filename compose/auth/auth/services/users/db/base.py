@@ -3,7 +3,7 @@ from __future__ import annotations
 import uuid
 from typing import Any
 
-from .....models.sqlalchemy import User
+from ....models.sqlalchemy import User
 
 
 class BaseUserDatabase:

@@ -3,11 +3,13 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 
-from ..authentication import get_current_user_token
-from ..authentication.backend import AuthenticationBackendDep
-from ..manager import UserManagerDep
-from ..router.common import ErrorCode, ErrorModel
+from .common import ErrorCode, ErrorModel
 from .....models.sqlalchemy import User
+from .....services.users import (
+    get_current_user_token,
+    AuthenticationBackendDep,
+    UserManagerDep,
+)
 
 router = APIRouter()
 
