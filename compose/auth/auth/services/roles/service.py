@@ -32,7 +32,7 @@ class RoleService:
     async def update(self, id: uuid.UUID, role_update: RoleUpdateDto) -> RoleInDB | None:
         if role_update.code is not None:
             role = await self._repository.get_by_code(role_update.code)
-            if role is not None:
+            if role is not None and role.id != id:
                 raise DuplicateRoleTypeError
 
         await self._repository.update(id, role_update)

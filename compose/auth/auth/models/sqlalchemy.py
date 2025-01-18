@@ -9,7 +9,7 @@ from sqlalchemy import (
     Boolean,
     DateTime,
     ForeignKey,
-    UniqueConstraint
+    UniqueConstraint, Index
 )
 from sqlalchemy.orm import (
     Mapped,
@@ -78,5 +78,29 @@ class UserRole(AuthBase):
     )
 
     __table_args__ = (
-        UniqueConstraint('user_id', 'role_id', name='uix_auth_role_id_user_id'),
+        UniqueConstraint(
+            'user_id',
+            'role_id',
+            name='uix_auth_role_id_user_id'
+        ),
+    )
+
+
+class LoginHistory(AuthBase):
+    __tablename__ = 'login_history'
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID,
+        primary_key=True,
+        default=uuid.uuid4,
+    )
+    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey('auth.user.id'))
+    user_agent: Mapped[str] = mapped_column(TEXT)
+    created: Mapped[datetime.datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.datetime.now(datetime.UTC),
+    )
+
+    __table_args__ = (
+        Index('ix_login_history_user_id', 'user_id'),
     )

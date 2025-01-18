@@ -1,9 +1,12 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordRequestForm
 
 from .common import ErrorCode, ErrorModel
+from .....services.users.authentication.login_history.service import (
+    LoginHistoryServiceDep
+)
 from .....services.users import (
     CurrentUserDep,
     TokenDep,
@@ -38,8 +41,12 @@ async def login(
         credentials: OAuth2PasswordRequestForm = Depends(),
         user_manager: UserManagerDep,
         backend: AuthenticationBackendDep,
+        request: Request
 ):
-    user = await user_manager.authenticate(credentials)
+    user = await user_manager.authenticate(
+        credentials,
+        request
+    )
 
     if user is None:
         raise HTTPException(
