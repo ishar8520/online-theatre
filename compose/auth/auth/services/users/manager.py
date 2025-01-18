@@ -3,8 +3,9 @@ from __future__ import annotations
 import uuid
 from typing import Any, Optional, Annotated
 
-from fastapi import Depends
+from fastapi import Depends, Request
 from fastapi.security import OAuth2PasswordRequestForm
+from sqlalchemy.exc import SQLAlchemyError
 
 from . import exceptions
 from .db import (
@@ -13,6 +14,8 @@ from .db import (
 )
 from .password import PasswordHelper, PasswordHelperProtocol
 from .schemas import UserCreate, UserUpdate
+from .authentication.login_history.models import LoginHistoryCreate
+from .authentication.login_history.service import LoginHistoryService, LoginHistoryServiceDep
 from ...models.sqlalchemy import User
 
 
@@ -25,13 +28,16 @@ class UserManager:
 
     user_db: BaseUserDatabase
     password_helper: PasswordHelperProtocol
+    login_logger: LoginHistoryService
 
     def __init__(
             self,
             user_db: BaseUserDatabase,
+            login_logger: LoginHistoryService,
             password_helper: Optional[PasswordHelperProtocol] = None,
     ):
         self.user_db = user_db
+        self.login_logger = login_logger
         if password_helper is None:
             self.password_helper = PasswordHelper()
         else:
@@ -112,13 +118,16 @@ class UserManager:
         return updated_user
 
     async def authenticate(
-            self, credentials: OAuth2PasswordRequestForm
+            self,
+            credentials: OAuth2PasswordRequestForm,
+            request: Request
     ) -> User | None:
         """
         Authenticate and return a user following a login and a password.
 
         Will automatically upgrade password hash if necessary.
 
+        :param request: http request
         :param credentials: The user credentials.
         """
         try:
@@ -138,7 +147,20 @@ class UserManager:
         if updated_password_hash is not None:
             await self.user_db.update(user, {"password": updated_password_hash})
 
+        await self._record_user_login(user, request)
+
         return user
+
+    async def _record_user_login(self, user: User, request: Request):
+        row = LoginHistoryCreate(
+            user_id=user.id,
+            user_agent=request.headers.get('User-Agent')
+        )
+
+        try:
+            await self.login_logger.record_to_log(row)
+        except SQLAlchemyError:
+            pass
 
     async def _update(self, user: User, update_dict: dict[str, Any]) -> User:
         validated_update_dict = {}
@@ -158,8 +180,8 @@ class UserManager:
         return await self.user_db.update(user, validated_update_dict)
 
 
-async def get_user_manager(user_db: UserDatabaseDep) -> UserManager:
-    return UserManager(user_db=user_db)
+async def get_user_manager(user_db: UserDatabaseDep, login_logger: LoginHistoryServiceDep) -> UserManager:
+    return UserManager(user_db=user_db, login_logger=login_logger)
 
 
 UserManagerDep = Annotated[UserManager, Depends(get_user_manager)]
