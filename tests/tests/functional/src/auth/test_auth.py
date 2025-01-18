@@ -6,37 +6,33 @@ import http
 
 from ...settings import settings
 
-
-@pytest.mark.parametrize(
-    'input, expected',
-    [
-        (
-            {
-                'login': 'testuser',
-                'password': 'strongpassword',
-                'is_superuser': False
-            },
-            {'status': http.HTTPStatus.CREATED}
-        ),
-        (
-            {
-                'login': 'testuser',
-                'password': 'strongpassword',
-                'is_superuser': False
-            },
-            {'status': http.HTTPStatus.BAD_REQUEST, 'detail': 'REGISTER_USER_ALREADY_EXISTS'}
-        )
-    ]
-)
 @pytest.mark.asyncio(loop_scope='session')
-async def test_register(aiohttp_session, input, expected):
+async def test_register(aiohttp_session, clean_tables_before):
+    login = {
+                'login': 'test_user',
+                'password': 'password',
+                'is_superuser': False
+            }
     url = urljoin(settings.auth_api_v1_url, 'register/')
-    async with aiohttp_session.post(url, json=input) as response:
+    async with aiohttp_session.post(url, json=login) as response:
         status = response.status
-        assert status == expected['status']
+        assert status == http.HTTPStatus.CREATED
+
+
+@pytest.mark.asyncio(loop_scope='session')
+async def test_register_exists_user(aiohttp_session):
+    login = {
+                'login': 'test_user',
+                'password': 'password',
+                'is_superuser': False
+            }
+    url = urljoin(settings.auth_api_v1_url, 'register/')
+    await aiohttp_session.post(url, json=login)
+    async with aiohttp_session.post(url, json=login) as response:
+        status = response.status
         data = await response.json()
-        if expected['status'] == http.HTTPStatus.BAD_REQUEST:
-            assert data['detail'] == expected['detail']
+    assert status == http.HTTPStatus.BAD_REQUEST
+    assert data['detail'] == 'REGISTER_USER_ALREADY_EXISTS'
 
 
 @pytest.mark.parametrize(
@@ -45,8 +41,8 @@ async def test_register(aiohttp_session, input, expected):
         (
             {
                 'grand_type': 'password',
-                'username': 'testuser',
-                'password': 'strongpassword',
+                'username': 'test_user',
+                'password': 'password',
                 'scope': '',
                 'client_id': 'string',
                 'client_secret': 'secret'
@@ -56,7 +52,7 @@ async def test_register(aiohttp_session, input, expected):
         (
             {
                 'grand_type': 'password',
-                'username': 'test_user',
+                'username': 'test_user_BAD_CREDENTIALS',
                 'password': 'password',
                 'scope': '',
                 'client_id': 'string',
@@ -68,6 +64,13 @@ async def test_register(aiohttp_session, input, expected):
 )
 @pytest.mark.asyncio(loop_scope='session')
 async def test_login(aiohttp_session, input, expected):
+    login = {
+                'login': 'test_user',
+                'password': 'password',
+                'is_superuser': False
+            }
+    url = urljoin(settings.auth_api_v1_url, 'register/')
+    await aiohttp_session.post(url, json=login)
     url = urljoin(settings.auth_api_v1_url, 'jwt/login/')
     async with aiohttp_session.post(url, data=input) as response:
         status = response.status
@@ -86,8 +89,8 @@ async def test_login(aiohttp_session, input, expected):
         (
             {
                 'grand_type': 'password',
-                'username': 'testuser',
-                'password': 'strongpassword',
+                'username': 'test_user',
+                'password': 'password',
                 'scope': '',
                 'client_id': 'string',
                 'client_secret': 'secret'
@@ -124,8 +127,8 @@ async def test_logout(aiohttp_session, input):
 async def test_get_current_user(aiohttp_session):
     input = {
                 'grand_type': 'password',
-                'username': 'testuser',
-                'password': 'strongpassword',
+                'username': 'test_user',
+                'password': 'password',
                 'scope': '',
                 'client_id': 'string',
                 'client_secret': 'secret'
@@ -149,50 +152,20 @@ async def test_get_current_user(aiohttp_session):
         assert data['login'] == input['username']
 
 
-@pytest.mark.parametrize(
-    'input, patch',
-    [
-        (
-            {
-                'grand_type': 'password',
-                'username': 'testuser',
-                'password': 'strongpassword',
-                'scope': '',
-                'client_id': 'string',
-                'client_secret': 'secret'
-            },
-            {
-                'login': 'testuser2',
-                'password': 'strongpassword2',
-                'is_superuser': False
-            }
-        ),
-        (
-            {
-                'grand_type': 'password',
-                'username': 'testuser',
-                'password': 'strongpassword',
-                'scope': '',
-                'client_id': 'string',
-                'client_secret': 'secret'
-            },
-            {
-                'login': 'testuser2',
-                'password': 'strongpassword2',
-                'is_superuser': False
-            }
-        )
-    ]
-)
 @pytest.mark.asyncio(loop_scope='session')
-async def test_patch_current_user(aiohttp_session, input, patch):
+async def test_patch_current_user(aiohttp_session, clean_tables_after):
     input = {
                 'grand_type': 'password',
-                'username': 'testuser',
-                'password': 'strongpassword',
+                'username': 'test_user',
+                'password': 'password',
                 'scope': '',
                 'client_id': 'string',
                 'client_secret': 'secret'
+            }
+    patch = {
+                'login': 'test_user2',
+                'password': 'password',
+                'is_superuser': False
             }
     url = urljoin(settings.auth_api_v1_url, 'jwt/login/')
     async with aiohttp_session.post(url, data=input) as response:
@@ -203,16 +176,16 @@ async def test_patch_current_user(aiohttp_session, input, patch):
         token_type = data['token_type']
         headers = {
             'accept': 'application/json',
-            'Authorization': f'{token_type.title()} {token_jwt}'
+            'Authorization': f'{token_type.title()} {token_jwt}',
+            'Content-Type': 'application/json'
         }
-    input = {
-        'login': 'testuser2',
-        'password': 'strongpassword2',
-        'is_superuser': False
-    }
+        url = urljoin(settings.auth_api_v1_url, 'users/me/')
+        async with aiohttp_session.get(url, headers=headers) as response:
+            status = response.status
+            assert status == http.HTTPStatus.OK
     url = urljoin(settings.auth_api_v1_url, 'users/me/')
-    async with aiohttp_session.patch(url, headers=headers, data=input) as response:
+    async with aiohttp_session.patch(url, headers=headers, json=patch) as response:
         status = response.status
         assert status == http.HTTPStatus.OK
         data = await response.json()
-        assert data['login'] == input['login']
+        assert data['login'] == patch['login']
