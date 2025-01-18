@@ -1,6 +1,7 @@
 from .authentication import (
-    get_current_user,
-    get_current_user_token,
+    CurrentUserDep,
+    CurrentSuperuserDep,
+    TokenDep,
 )
 from .authentication.backend import (
     AuthenticationBackend,

@@ -4,9 +4,9 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 
 from .common import ErrorCode, ErrorModel
-from .....models.sqlalchemy import User
 from .....services.users import (
-    get_current_user_token,
+    CurrentUserDep,
+    TokenDep,
     AuthenticationBackendDep,
     UserManagerDep,
 )
@@ -55,14 +55,13 @@ async def login(
     name='auth:logout',
     responses={
         status.HTTP_401_UNAUTHORIZED: {
-            "description": "Token is invalid or missing."
+            "description": "Token is invalid or missing.",
         },
     },
 )
 async def logout(
-        *,
-        user_token: tuple[User, str] = Depends(get_current_user_token),
+        user: CurrentUserDep,
+        token: TokenDep,
         backend: AuthenticationBackendDep,
 ):
-    user, token = user_token
     return await backend.logout(user, token)

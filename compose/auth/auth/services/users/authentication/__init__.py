@@ -1,9 +1,12 @@
 from .authenticator import (
     Authenticator,
-    get_current_user,
-    get_current_user_token,
+    AuthenticatorDep,
 )
 from .backend import (
     AuthenticationBackend,
     TokenDep,
+)
+from .dependencies import (
+    CurrentUserDep,
+    CurrentSuperuserDep,
 )
