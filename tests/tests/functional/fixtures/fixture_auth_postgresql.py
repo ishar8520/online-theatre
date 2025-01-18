@@ -37,11 +37,17 @@ async def clean_tables(async_session):
         )
     await async_session.commit()
 
-
-@pytest_asyncio.fixture(scope="module", autouse=True)
-async def clean_tables(async_session):
+        
+@pytest_asyncio.fixture(scope='function')
+async def clean_tables_before(async_session):
     for table in reversed(AuthBase.metadata.sorted_tables):
-        await async_session.execute(
-            text(f"TRUNCATE TABLE auth.{table.name} RESTART IDENTITY CASCADE")
-        )
+        await async_session.execute(text(f'TRUNCATE TABLE auth.{table.name} RESTART IDENTITY CASCADE'))
+    await async_session.commit()
+    yield
+        
+@pytest_asyncio.fixture(scope='function')
+async def clean_tables_after(async_session):
+    yield
+    for table in reversed(AuthBase.metadata.sorted_tables):
+        await async_session.execute(text(f'TRUNCATE TABLE auth.{table.name} RESTART IDENTITY CASCADE'))
     await async_session.commit()

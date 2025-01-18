@@ -14,13 +14,14 @@ from .exceptions import AddError, DeleteError, UpdateError
 from .models import RoleCreateDto, RoleInDB, RoleUpdateDto
 
 
+
 class RoleRepository:
     _db: AsyncSession
 
     def __init__(self, db: AsyncSession):
         self._db = db
 
-    async def add(self, role_create: RoleCreateDto) -> RoleInDB:
+    async def create(self, role_create: RoleCreateDto) -> RoleInDB:
         role_dto = jsonable_encoder(role_create)
         role = Role(**role_dto)
         self._db.add(role)
@@ -45,7 +46,7 @@ class RoleRepository:
             await self._db.rollback()
             raise UpdateError
 
-    async def findByCode(self, code: str) -> RoleInDB | None:
+    async def get_by_code(self, code: str) -> RoleInDB | None:
         statement = select(Role).where(Role.code == code)
         result = await self._db.execute(statement)
         return result.scalar_one_or_none()

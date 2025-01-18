@@ -4,11 +4,19 @@ import logging.config
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
+import redis.asyncio as redis
 from fastapi import FastAPI
 
-from .api.v1.endpoints import users
-from .api.v1.endpoints import roles
-from .core import LOGGING
+from .api.v1.endpoints import (
+    roles,
+    permissions
+)
+from .api.v1.endpoints.users import (
+    auth,
+    register,
+    users,
+)
+from .core import settings, LOGGING
 from .db.sqlalchemy import create_db_tables
 
 logging.config.dictConfig(LOGGING)
@@ -17,8 +25,13 @@ logging.config.dictConfig(LOGGING)
 # noinspection PyUnusedLocal,PyShadowingNames
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
-    await create_db_tables()
-    yield
+    async with (
+        redis.Redis(host=settings.redis.host, port=settings.redis.port) as redis_client,
+    ):
+        await create_db_tables()
+        yield {
+            'redis_client': redis_client,
+        }
 
 
 base_api_prefix = '/auth/api'
@@ -32,21 +45,28 @@ app = FastAPI(
 
 auth_api_prefix = f'{base_api_prefix}/v1'
 
-
-app.include_router(roles.router, prefix=f'{auth_api_prefix}/roles', tags=['auth'])
-
 app.include_router(
-    users.users_routers.auth,
+    roles.router,
+    prefix=f'{auth_api_prefix}/roles',
+    tags=['auth']
+)
+app.include_router(
+    permissions.router,
+    prefix=f'{auth_api_prefix}/permissions',
+    tags=['auth']
+)
+app.include_router(
+    auth.router,
     prefix=f'{auth_api_prefix}/jwt',
     tags=['auth'],
 )
 app.include_router(
-    users.users_routers.register,
+    register.router,
     prefix=auth_api_prefix,
     tags=['auth'],
 )
 app.include_router(
-    users.users_routers.users,
+    users.router,
     prefix=f'{auth_api_prefix}/users',
     tags=['users'],
 )
