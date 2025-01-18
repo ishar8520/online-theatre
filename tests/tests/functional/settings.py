@@ -32,10 +32,20 @@ class ElasticsearchSettings(BaseSettings):
     def url(self) -> str:
         return f'{self.scheme}://{self.host}:{self.port}'
 
+class AutPostgresqlSettings(BaseSettings):
+    model_config = SettingsConfigDict(env_prefix='auth_postgresql_')
+    
+    database: str = Field(default='auth')
+    username: str = Field(default='auth')
+    password: str = Field()
+    host: str = Field(default='localhost')
+    port: int = Field(default=5432)
+
 
 class Settings(BaseSettings):
     redis: RedisSettings = RedisSettings()
     elasticsearch: ElasticsearchSettings = ElasticsearchSettings()
+    auth_postgresql: AutPostgresqlSettings = AutPostgresqlSettings()
 
     movies_url: str = Field(default='http://localhost:8000')
     auth_url: str = Field(default='http://localhost:8000')

@@ -12,6 +12,8 @@ services:
     environment:
       - MOVIES_URL=http://movies:8000
       - AUTH_URL=http://auth-service:8000
+      - AUTH_POSTGRESQL_HOST=auth-postgresql
+      - AUTH_POSTGRESQL_PASSWORD=$AUTH_POSTGRESQL_PASSWORD
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - ELASTIC_HOST=elasticsearch
