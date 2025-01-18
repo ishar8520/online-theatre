@@ -20,23 +20,25 @@ from ....services.roles.models import (
     RoleDelete
 )
 from ....services.roles.service import RoleServiceDep
+from ....services.users import CurrentSuperuserDep
 
 router = APIRouter()
 
 
 @router.post(
-    '/add',
+    '/create',
     response_model=RoleInDB,
     status_code=HTTPStatus.CREATED,
     summary='Create new role',
     description='Creation new role in service'
 )
-async def add(
+async def create(
     role: RoleCreateDto,
-    role_service: RoleServiceDep
+    role_service: RoleServiceDep,
+    superuser: CurrentSuperuserDep
 ) -> RoleInDB:
     try:
-        created_role = await role_service.add(role)
+        created_role = await role_service.create(role)
     except DuplicateRoleTypeError:
         raise HTTPException(
             status_code=HTTPStatus.BAD_REQUEST,
@@ -61,7 +63,8 @@ async def add(
 async def update(
     id: uuid.UUID,
     role_update: RoleUpdateDto,
-    role_service: RoleServiceDep
+    role_service: RoleServiceDep,
+    superuser: CurrentSuperuserDep
 ) -> RoleInDB | None:
     try:
         update_role = await role_service.update(id, role_update)
@@ -94,7 +97,8 @@ async def update(
 )
 async def delete(
     id: uuid.UUID,
-    role_service: RoleServiceDep
+    role_service: RoleServiceDep,
+    superuser: CurrentSuperuserDep
 ) -> RoleDelete:
     try:
         role = await role_service.delete(id)
@@ -122,7 +126,8 @@ async def delete(
 )
 async def get(
     id: uuid.UUID,
-    role_service: RoleServiceDep
+    role_service: RoleServiceDep,
+    superuser: CurrentSuperuserDep
 ) -> RoleInDB:
     role = await role_service.get(id)
     if role is None:
@@ -135,13 +140,14 @@ async def get(
 
 
 @router.get(
-    '/list',
+    '/get_list',
     response_model=list[RoleInDB],
     status_code=HTTPStatus.OK,
     summary='List of roles',
     description='Get list of roles with description'
 )
-async def list(
-    role_service: RoleServiceDep
+async def get_list(
+    role_service: RoleServiceDep,
+    superuser: CurrentSuperuserDep
 ) -> list[RoleInDB]:
-    return await role_service.list()
+    return await role_service.get_list()

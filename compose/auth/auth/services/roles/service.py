@@ -22,16 +22,16 @@ class RoleService:
     def __init__(self, repository: RoleRepository):
         self._repository = repository
 
-    async def add(self, role_create: RoleCreateDto) -> RoleInDB:
-        role_existed = await self._repository.findByCode(role_create.code)
+    async def create(self, role_create: RoleCreateDto) -> RoleInDB:
+        role_existed = await self._repository.get_by_code(role_create.code)
         if role_existed is not None:
             raise DuplicateRoleTypeError
 
-        return await self._repository.add(role_create)
+        return await self._repository.create(role_create)
 
     async def update(self, id: uuid.UUID, role_update: RoleUpdateDto) -> RoleInDB | None:
         if role_update.code is not None:
-            role = await self._repository.findByCode(role_update.code)
+            role = await self._repository.get_by_code(role_update.code)
             if role is not None:
                 raise DuplicateRoleTypeError
 
@@ -49,7 +49,7 @@ class RoleService:
     async def get(self, id: uuid.UUID) -> RoleInDB:
         return await self._repository.get(id)
 
-    async def list(self) -> list[RoleInDB]:
+    async def get_list(self) -> list[RoleInDB]:
         return await self._repository.get_list()
 
 

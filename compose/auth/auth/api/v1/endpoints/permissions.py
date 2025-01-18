@@ -19,6 +19,7 @@ from ....services.permissions.models import (
     DeletePermission
 )
 from ....services.permissions.service import PermissionServiceDep
+from ....services.users import CurrentSuperuserDep
 
 router = APIRouter()
 
@@ -31,7 +32,8 @@ router = APIRouter()
 )
 async def assign(
     permission: CreatePermissionDto,
-    permission_service: PermissionServiceDep
+    permission_service: PermissionServiceDep,
+    superuser: CurrentSuperuserDep
 ):
     try:
         permission = await permission_service.assign(permission)
@@ -57,7 +59,8 @@ async def assign(
 )
 async def get_by_user(
     user_id: uuid.UUID,
-    permission_service: PermissionServiceDep
+    permission_service: PermissionServiceDep,
+    superuser: CurrentSuperuserDep
 ) -> list[PermissionInDb]:
     return await permission_service.get_by_user(user_id)
 
@@ -70,20 +73,21 @@ async def get_by_user(
 )
 async def revoke(
     id: uuid.UUID,
-    permission_service: PermissionServiceDep
+    permission_service: PermissionServiceDep,
+    superuser: CurrentSuperuserDep
 ) -> DeletePermission | None:
     try:
-        role = await permission_service.revoke(id)
+        permission = await permission_service.revoke(id)
     except DeleteError:
         raise HTTPException(
             status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
             detail='Delete error'
         )
 
-    if role is None:
+    if permission is None:
         raise HTTPException(
             status_code=HTTPStatus.NOT_FOUND,
             detail='Permission not found'
         )
 
-    return role
+    return permission
