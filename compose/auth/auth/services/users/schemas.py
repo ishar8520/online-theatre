@@ -2,16 +2,20 @@ from __future__ import annotations
 
 import uuid
 
-from .fastapi_users import schemas
+from pydantic import BaseModel
 
 
-class UserRead(schemas.BaseUser[uuid.UUID]):
-    pass
+class UserRead(BaseModel):
+    id: uuid.UUID
+    login: str
+    is_superuser: bool = False
 
 
-class UserCreate(schemas.BaseUserCreate):
-    pass
+class UserCreate(BaseModel):
+    login: str
+    password: str
 
 
-class UserUpdate(schemas.BaseUserUpdate):
-    pass
+class UserUpdate(BaseModel):
+    login: str | None = None
+    password: str | None = None
