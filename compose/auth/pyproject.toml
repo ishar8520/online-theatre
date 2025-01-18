@@ -10,6 +10,7 @@ pwdlib = { version = "0.2.1", extras = ["argon2", "bcrypt"] }
 pydantic = { version = "2.10.5", extras = ["email"] }
 pydantic-settings = "2.7.1"
 PyJWT = { version = "2.10.1", extras = ["crypto"] }
+redis = { version = "5.2.1", extras = ["hiredis"] }
 SQLAlchemy = { version = "2.0.37", extras = ["asyncio"] }
 uvicorn-worker = "0.2.0"
 
