@@ -5,10 +5,13 @@ from http import HTTPStatus
 
 from fastapi import APIRouter, HTTPException
 
-from ....services.roles.exceptions import (
+from ....services.base.exceptions import (
     UpdateError,
-    DuplicateRoleTypeError,
-    AddError, DeleteError
+    AddError,
+    DeleteError
+)
+from ....services.roles.exceptions import (
+    DuplicateRoleTypeError
 )
 from ....services.roles.models import (
     RoleInDB,
@@ -35,9 +38,15 @@ async def add(
     try:
         created_role = await role_service.add(role)
     except DuplicateRoleTypeError:
-        raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail='Duplicate role type')
+        raise HTTPException(
+            status_code=HTTPStatus.BAD_REQUEST,
+            detail='Duplicate role type'
+        )
     except AddError:
-        raise HTTPException(status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail='Add error')
+        raise HTTPException(
+            status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
+            detail='Add error'
+        )
 
     return created_role
 
@@ -57,12 +66,21 @@ async def update(
     try:
         update_role = await role_service.update(id, role_update)
     except DuplicateRoleTypeError:
-        raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail='Duplicate role type')
+        raise HTTPException(
+            status_code=HTTPStatus.BAD_REQUEST,
+            detail='Duplicate role type'
+        )
     except UpdateError:
-        raise HTTPException(status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail='Update error')
+        raise HTTPException(
+            status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
+            detail='Update error'
+        )
 
     if update_role is None:
-        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail='Role not found')
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND,
+            detail='Role not found'
+        )
 
     return update_role
 
@@ -81,10 +99,16 @@ async def delete(
     try:
         role = await role_service.delete(id)
     except DeleteError:
-        raise HTTPException(status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail='Delete error')
+        raise HTTPException(
+            status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
+            detail='Delete error'
+        )
 
     if role is None:
-        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail='Role not found')
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND,
+            detail='Role not found'
+        )
 
     return role
 
@@ -102,7 +126,10 @@ async def get(
 ) -> RoleInDB:
     role = await role_service.get(id)
     if role is None:
-        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail='Role not found')
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND,
+            detail='Role not found'
+        )
 
     return role
 

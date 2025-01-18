@@ -6,7 +6,10 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
-from .api.v1.endpoints import roles
+from .api.v1.endpoints import (
+    roles,
+    permissions
+)
 from .api.v1.endpoints.users import (
     auth,
     register,
@@ -36,6 +39,17 @@ app = FastAPI(
 
 auth_api_prefix = f'{base_api_prefix}/v1'
 
+
+app.include_router(
+    roles.router,
+    prefix=f'{auth_api_prefix}/roles',
+    tags=['auth']
+)
+app.include_router(
+    permissions.router,
+    prefix=f'{auth_api_prefix}/permissions',
+    tags=['auth']
+)
 app.include_router(
     auth.router,
     prefix=f'{auth_api_prefix}/jwt',
@@ -51,4 +65,3 @@ app.include_router(
     prefix=f'{auth_api_prefix}/users',
     tags=['users'],
 )
-app.include_router(roles.router, prefix=f'{auth_api_prefix}/roles', tags=['auth'])
