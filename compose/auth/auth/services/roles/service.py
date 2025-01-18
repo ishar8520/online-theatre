@@ -2,18 +2,12 @@ from __future__ import annotations
 
 import uuid
 from typing import Annotated
+
 from fastapi import Depends
 
 from .exceptions import DuplicateRoleTypeError
-from .repository import (
-    RoleRepositoryDep,
-    RoleRepository
-)
-from .models import (
-    RoleInDB,
-    RoleCreateDto,
-    RoleUpdateDto
-)
+from .models import RoleCreateDto, RoleInDB, RoleUpdateDto
+from .repository import RoleRepository, RoleRepositoryDep
 
 
 class RoleService:
@@ -32,7 +26,7 @@ class RoleService:
     async def update(self, id: uuid.UUID, role_update: RoleUpdateDto) -> RoleInDB | None:
         if role_update.code is not None:
             role = await self._repository.findByCode(role_update.code)
-            if role is not None:
+            if role is not None and role.id != id:
                 raise DuplicateRoleTypeError
 
         await self._repository.update(id, role_update)

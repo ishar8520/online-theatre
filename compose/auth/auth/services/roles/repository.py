@@ -1,21 +1,17 @@
 from __future__ import annotations
 
 import uuid
-from typing import Annotated, TypeVar
+from typing import Annotated
 
 from fastapi import Depends
 from fastapi.encoders import jsonable_encoder
+from sqlalchemy import delete, select, update
 from sqlalchemy.exc import SQLAlchemyError
 
-from .exceptions import (
-    UpdateError,
-    AddError,
-    DeleteError
-)
-from ...db.sqlalchemy import AsyncSessionDep, AsyncSession, AuthBase
-from .models import RoleCreateDto, RoleInDB, RoleUpdateDto
+from ...db.sqlalchemy import AsyncSession, AsyncSessionDep
 from ...models.sqlalchemy import Role
-from sqlalchemy import select, delete, update
+from .exceptions import AddError, DeleteError, UpdateError
+from .models import RoleCreateDto, RoleInDB, RoleUpdateDto
 
 
 class RoleRepository:

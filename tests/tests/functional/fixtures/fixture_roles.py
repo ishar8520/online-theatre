@@ -1,10 +1,12 @@
 from __future__ import annotations
-from sqlalchemy.ext.asyncio import AsyncSession
-from ..utils.auth.sqlalchemy import Role
+
 import pytest_asyncio
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from ..utils.auth.sqlalchemy import Role
 
 
-@pytest_asyncio.fixture(scope='function')
+@pytest_asyncio.fixture(scope='module')
 async def create_role(async_session: AsyncSession):
     new_role = Role(name="subscribers", code="subscribers")
     async_session.add(new_role)
