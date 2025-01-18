@@ -1,11 +1,10 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, HTTPException, status
 
 from .common import ErrorCode, ErrorModel
-from .....models.sqlalchemy import User
 from .....services.users import (
-    get_current_user,
+    CurrentUserDep,
     UserManagerDep,
     UserRead,
     UserUpdate,
@@ -21,22 +20,21 @@ router = APIRouter()
     name='users:current_user',
     responses={
         status.HTTP_401_UNAUTHORIZED: {
-            "description": "Missing token.",
+            "description": "Token is invalid or missing.",
         },
     },
 )
-async def me(user: User = Depends(get_current_user)):
+async def me(user: CurrentUserDep):
     return UserRead.model_validate(user, from_attributes=True)
 
 
 @router.patch(
     "/me",
     response_model=UserRead,
-    dependencies=[Depends(get_current_user)],
     name='users:patch_current_user',
     responses={
         status.HTTP_401_UNAUTHORIZED: {
-            "description": "Missing token.",
+            "description": "Token is invalid or missing.",
         },
         status.HTTP_400_BAD_REQUEST: {
             "model": ErrorModel,
@@ -56,9 +54,8 @@ async def me(user: User = Depends(get_current_user)):
     },
 )
 async def update_me(
-        *,
+        user: CurrentUserDep,
         user_update: UserUpdate,
-        user: User = Depends(get_current_user),
         user_manager: UserManagerDep,
 ):
     try:
