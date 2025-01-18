@@ -4,6 +4,7 @@ import logging.config
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
+import redis.asyncio as redis
 from fastapi import FastAPI
 
 from .api.v1.endpoints import (
@@ -15,7 +16,7 @@ from .api.v1.endpoints.users import (
     register,
     users,
 )
-from .core import LOGGING
+from .core import settings, LOGGING
 from .db.sqlalchemy import create_db_tables
 
 logging.config.dictConfig(LOGGING)
@@ -24,8 +25,13 @@ logging.config.dictConfig(LOGGING)
 # noinspection PyUnusedLocal,PyShadowingNames
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
-    await create_db_tables()
-    yield
+    async with (
+        redis.Redis(host=settings.redis.host, port=settings.redis.port) as redis_client,
+    ):
+        await create_db_tables()
+        yield {
+            'redis_client': redis_client,
+        }
 
 
 base_api_prefix = '/auth/api'
@@ -38,7 +44,6 @@ app = FastAPI(
 )
 
 auth_api_prefix = f'{base_api_prefix}/v1'
-
 
 app.include_router(
     roles.router,
