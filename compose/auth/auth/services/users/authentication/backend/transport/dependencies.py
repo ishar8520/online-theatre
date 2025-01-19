@@ -7,8 +7,12 @@ from fastapi.security import OAuth2PasswordBearer
 
 from .base import Transport
 from .bearer import BearerTransport
+from ......core import settings
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl='v1/jwt/login', auto_error=False)
+oauth2_scheme = OAuth2PasswordBearer(
+    tokenUrl=settings.auth.oauth2_token_url,
+    auto_error=False,
+)
 Oauth2TokenDep = Annotated[str, Depends(oauth2_scheme)]
 
 

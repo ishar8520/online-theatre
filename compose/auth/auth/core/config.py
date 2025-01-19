@@ -14,6 +14,10 @@ class AuthConfig(BaseSettings):
     access_jwt_lifetime: int = 60 * 60
     refresh_jwt_lifetime: int = 24 * 60 * 60
 
+    @property
+    def oauth2_token_url(self) -> str:
+        return 'v1/jwt/login'
+
 
 class PostgreSQLConfig(BaseSettings):
     model_config = SettingsConfigDict(env_prefix='postgresql_')
