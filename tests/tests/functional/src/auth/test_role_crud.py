@@ -13,7 +13,7 @@ role_id_save = {}
 
 async def login_superuser(aiohttp_session):
     superuser = {
-        'grand_type': 'password',
+        'grant_type': 'password',
         'username': settings.superuser.login,
         'password': settings.superuser.password
     }

@@ -40,7 +40,7 @@ async def test_register_exists_user(aiohttp_session):
     [
         (
             {
-                'grand_type': 'password',
+                'grant_type': 'password',
                 'username': 'test_user',
                 'password': 'password',
                 'scope': '',
@@ -51,7 +51,7 @@ async def test_register_exists_user(aiohttp_session):
         ),
         (
             {
-                'grand_type': 'password',
+                'grant_type': 'password',
                 'username': 'test_user_BAD_CREDENTIALS',
                 'password': 'password',
                 'scope': '',
@@ -88,7 +88,7 @@ async def test_login(aiohttp_session, input, expected):
         ),
         (
             {
-                'grand_type': 'password',
+                'grant_type': 'password',
                 'username': 'test_user',
                 'password': 'password',
                 'scope': '',
@@ -126,7 +126,7 @@ async def test_logout(aiohttp_session, input):
 @pytest.mark.asyncio(loop_scope='session')
 async def test_get_current_user(aiohttp_session):
     input = {
-                'grand_type': 'password',
+                'grant_type': 'password',
                 'username': 'test_user',
                 'password': 'password',
                 'scope': '',
@@ -155,7 +155,7 @@ async def test_get_current_user(aiohttp_session):
 @pytest.mark.asyncio(loop_scope='session')
 async def test_patch_current_user(aiohttp_session, clean_all_tables_after):
     input = {
-                'grand_type': 'password',
+                'grant_type': 'password',
                 'username': 'test_user',
                 'password': 'password',
                 'scope': '',
