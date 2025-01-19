@@ -5,17 +5,14 @@ from typing import Annotated
 
 from fastapi import Depends
 from fastapi.encoders import jsonable_encoder
+from sqlalchemy import delete, select, update
 from sqlalchemy.exc import SQLAlchemyError
 
-from ..base.exceptions import (
-    UpdateError,
-    AddError,
-    DeleteError
-)
-from ...db.sqlalchemy import AsyncSessionDep, AsyncSession
-from .models import RoleCreateDto, RoleInDB, RoleUpdateDto
+from ...db.sqlalchemy import AsyncSession, AsyncSessionDep
 from ...models.sqlalchemy import Role
-from sqlalchemy import select, delete, update
+from ..base.exceptions import AddError, DeleteError, UpdateError
+from .models import RoleCreateDto, RoleInDB, RoleUpdateDto
+
 
 
 class RoleRepository:

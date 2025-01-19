@@ -2,18 +2,13 @@ from __future__ import annotations
 
 import uuid
 from typing import Annotated
+
 from fastapi import Depends
 
 from .exceptions import DuplicateRoleTypeError
-from .repository import (
-    RoleRepositoryDep,
-    RoleRepository
-)
-from .models import (
-    RoleInDB,
-    RoleCreateDto,
-    RoleUpdateDto
-)
+from .models import RoleCreateDto, RoleInDB, RoleUpdateDto
+from .repository import RoleRepository, RoleRepositoryDep
+
 
 
 class RoleService:
