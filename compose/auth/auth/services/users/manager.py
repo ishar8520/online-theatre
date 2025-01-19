@@ -111,9 +111,7 @@ class UserManager:
 
         return updated_user
 
-    async def authenticate(
-            self, credentials: OAuth2PasswordRequestForm
-    ) -> User | None:
+    async def authenticate(self, credentials: OAuth2PasswordRequestForm) -> User | None:
         """
         Authenticate and return a user following a login and a password.
 
@@ -134,6 +132,7 @@ class UserManager:
         )
         if not verified:
             return None
+
         # Update password hash to a more robust one if needed
         if updated_password_hash is not None:
             await self.user_db.update(user, {"password": updated_password_hash})
@@ -150,8 +149,10 @@ class UserManager:
                     raise exceptions.UserAlreadyExists()
                 except exceptions.UserDoesNotExist:
                     validated_update_dict["login"] = value
+
             elif field == "password" and value is not None:
                 validated_update_dict["password"] = self.password_helper.hash(value)
+
             else:
                 validated_update_dict[field] = value
 

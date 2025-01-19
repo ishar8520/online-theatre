@@ -1,10 +1,7 @@
 from __future__ import annotations
 
-from typing import Annotated
-
-from fastapi import Depends, Response, status
+from fastapi import Response
 from fastapi.responses import JSONResponse
-from fastapi.security import OAuth2PasswordBearer
 from pydantic import BaseModel
 
 from .base import (
@@ -12,19 +9,33 @@ from .base import (
     TransportLogoutNotSupportedError,
 )
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl='v1/jwt/login', auto_error=False)
-Oauth2TokenDep = Annotated[str, Depends(oauth2_scheme)]
-
 
 class BearerResponse(BaseModel):
-    access_token: str
     token_type: str
+    access_token: str
+    refresh_token: str
 
 
 class BearerTransport(Transport):
-    async def get_login_response(self, token: str) -> Response:
-        bearer_response = BearerResponse(access_token=token, token_type="bearer")
-        return JSONResponse(bearer_response.model_dump())
+    async def get_login_response(self, access_token: str, refresh_token: str) -> Response:
+        return await self._create_bearer_response(
+            access_token=access_token,
+            refresh_token=refresh_token,
+        )
 
     async def get_logout_response(self) -> Response:
         raise TransportLogoutNotSupportedError()
+
+    async def get_refresh_response(self, access_token: str, refresh_token: str) -> Response:
+        return await self._create_bearer_response(
+            access_token=access_token,
+            refresh_token=refresh_token,
+        )
+
+    async def _create_bearer_response(self, access_token: str, refresh_token: str) -> Response:
+        bearer_response = BearerResponse(
+            token_type='bearer',
+            access_token=access_token,
+            refresh_token=refresh_token,
+        )
+        return JSONResponse(bearer_response.model_dump())

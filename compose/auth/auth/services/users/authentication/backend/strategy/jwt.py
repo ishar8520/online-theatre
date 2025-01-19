@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import Optional
-
 import jwt
 
 from .base import (
@@ -21,14 +19,12 @@ class JWTStrategyDestroyNotSupportedError(StrategyDestroyNotSupportedError):
 
 
 class JWTStrategy(Strategy):
-    def __init__(
-            self,
-            secret: SecretType,
-            lifetime_seconds: Optional[int],
-            token_audience: list[str] | None = None,
-            algorithm: str = "HS256",
-            public_key: Optional[SecretType] = None,
-    ):
+    def __init__(self,
+                 secret: SecretType,
+                 lifetime_seconds: int | None,
+                 token_audience: list[str] | None = None,
+                 algorithm: str = 'HS256',
+                 public_key: SecretType | None = None) -> None:
         self.secret = secret
         self.lifetime_seconds = lifetime_seconds
 
@@ -47,19 +43,18 @@ class JWTStrategy(Strategy):
     def decode_key(self) -> SecretType:
         return self.public_key or self.secret
 
-    async def read_token(
-            self, token: Optional[str], user_manager: UserManager
-    ) -> User | None:
-        if token is None:
-            return None
-
+    async def read_token(self, token: str, user_manager: UserManager) -> User | None:
         try:
             data = decode_jwt(
-                token, self.decode_key, self.token_audience, algorithms=[self.algorithm]
+                token,
+                secret=self.decode_key,
+                audience=self.token_audience,
+                algorithms=[self.algorithm],
             )
-            user_id = data.get("sub")
+            user_id = data.get('sub')
             if user_id is None:
                 return None
+
         except jwt.PyJWTError:
             return None
 
@@ -70,9 +65,16 @@ class JWTStrategy(Strategy):
             return None
 
     async def write_token(self, user: User) -> str:
-        data = {"sub": str(user.id), "aud": self.token_audience}
+        data = {
+            'sub': str(user.id),
+            'aud': self.token_audience,
+        }
+
         return generate_jwt(
-            data, self.encode_key, self.lifetime_seconds, algorithm=self.algorithm
+            data,
+            secret=self.encode_key,
+            lifetime_seconds=self.lifetime_seconds,
+            algorithm=self.algorithm,
         )
 
     async def destroy_token(self, token: str, user: User) -> None:
