@@ -10,6 +10,8 @@ from .....services.users import (
     UserUpdate,
     UserAlreadyExists,
 )
+from .....services.users.authentication.login_history.models import LoginHistoryInDb
+from .....services.users.authentication.login_history.service import LoginHistoryServiceDep
 
 router = APIRouter()
 
@@ -66,3 +68,16 @@ async def update_me(
             status.HTTP_400_BAD_REQUEST,
             detail=ErrorCode.UPDATE_USER_LOGIN_ALREADY_EXISTS,
         )
+
+
+@router.get(
+    "/get_login_history",
+    response_model=list[LoginHistoryInDb],
+    status_code=status.HTTP_200_OK,
+    name="users:history_login_current_user"
+)
+async def get_login_history(
+        login_history_service: LoginHistoryServiceDep,
+        user: CurrentUserDep,
+):
+    return await login_history_service.get_list(user.id)

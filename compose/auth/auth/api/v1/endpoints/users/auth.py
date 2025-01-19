@@ -4,6 +4,7 @@ from typing import Annotated
 
 from fastapi import (
     APIRouter,
+    Request,
     Form,
     Depends,
     HTTPException,
@@ -44,8 +45,12 @@ router = APIRouter()
 async def login(*,
                 credentials: OAuth2PasswordRequestForm = Depends(),
                 user_manager: UserManagerDep,
-                backend: AuthenticationBackendDep):
-    user = await user_manager.authenticate(credentials)
+                backend: AuthenticationBackendDep,
+                request: Request):
+    user = await user_manager.authenticate(
+        credentials=credentials,
+        request=request,
+    )
 
     if user is None:
         raise HTTPException(
