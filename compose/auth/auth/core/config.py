@@ -36,10 +36,18 @@ class RedisConfig(BaseSettings):
     cache_expire_in_seconds: int = 60 * 5
 
 
+class SuperUserConfig(BaseSettings):
+    model_config = SettingsConfigDict(env_prefix='superuser_')
+
+    login: str
+    password: str
+
+
 class Settings(BaseSettings):
     auth: AuthConfig = AuthConfig()
     postgresql: PostgreSQLConfig = PostgreSQLConfig()
     redis: RedisConfig = RedisConfig()
+    superuser: SuperUserConfig = SuperUserConfig()
 
 
 settings = Settings()
