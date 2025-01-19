@@ -4,6 +4,7 @@ import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.sql import text
+from urllib.parse import urljoin
 
 from ..settings import settings
 
@@ -63,3 +64,22 @@ async def clean_all_tables_after(async_session):
             text(query)
         )
     await async_session.commit()
+
+@pytest_asyncio.fixture(scope='module')
+async def login_superuser(aiohttp_session):
+    superuser = {
+        'grant_type': 'password',
+        'username': settings.superuser.login,
+        'password': settings.superuser.password
+    }
+    url = urljoin(settings.auth_api_v1_url, 'jwt/login/')
+    async with aiohttp_session.post(url, data=superuser) as response:
+        data = await response.json()
+        token_jwt = data['access_token']
+        token_type = data['token_type']
+        headers = {
+            'accept': 'application/json',
+            'Authorization': f'{token_type.title()} {token_jwt}',
+            'Content-Type': 'application/json'
+        }
+        return headers
