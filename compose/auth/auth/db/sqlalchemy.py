@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from collections.abc import AsyncGenerator
 from typing import Annotated
-from uuid import uuid4
 
 from fastapi import Depends
 from sqlalchemy import MetaData, insert
