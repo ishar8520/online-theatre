@@ -2,4 +2,7 @@ from .base import (
     Strategy,
     StrategyDestroyNotSupportedError,
 )
-from .dependencies import StrategyDep
+from .dependencies import (
+    AccessStrategyDep,
+    RefreshStrategyDep,
+)

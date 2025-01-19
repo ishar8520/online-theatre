@@ -8,14 +8,14 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.exc import SQLAlchemyError
 
 from . import exceptions
+from .authentication.login_history.models import LoginHistoryCreate
+from .authentication.login_history.service import LoginHistoryService, LoginHistoryServiceDep
 from .db import (
     BaseUserDatabase,
     UserDatabaseDep,
 )
 from .password import PasswordHelper, PasswordHelperProtocol
 from .schemas import UserCreate, UserUpdate
-from .authentication.login_history.models import LoginHistoryCreate
-from .authentication.login_history.service import LoginHistoryService, LoginHistoryServiceDep
 from ...models.sqlalchemy import User
 
 
@@ -117,11 +117,7 @@ class UserManager:
 
         return updated_user
 
-    async def authenticate(
-            self,
-            credentials: OAuth2PasswordRequestForm,
-            request: Request
-    ) -> User | None:
+    async def authenticate(self, credentials: OAuth2PasswordRequestForm, request: Request) -> User | None:
         """
         Authenticate and return a user following a login and a password.
 
@@ -143,6 +139,7 @@ class UserManager:
         )
         if not verified:
             return None
+
         # Update password hash to a more robust one if needed
         if updated_password_hash is not None:
             await self.user_db.update(user, {"password": updated_password_hash})
@@ -172,8 +169,10 @@ class UserManager:
                     raise exceptions.UserAlreadyExists()
                 except exceptions.UserDoesNotExist:
                     validated_update_dict["login"] = value
+
             elif field == "password" and value is not None:
                 validated_update_dict["password"] = self.password_helper.hash(value)
+
             else:
                 validated_update_dict[field] = value
 

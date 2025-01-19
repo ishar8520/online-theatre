@@ -24,7 +24,7 @@ logging.config.dictConfig(LOGGING)
 
 # noinspection PyUnusedLocal,PyShadowingNames
 @asynccontextmanager
-async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
+async def lifespan(app: FastAPI) -> AsyncGenerator[dict]:
     async with (
         redis.Redis(host=settings.redis.host, port=settings.redis.port) as redis_client,
     ):
@@ -46,16 +46,6 @@ app = FastAPI(
 auth_api_prefix = f'{base_api_prefix}/v1'
 
 app.include_router(
-    roles.router,
-    prefix=f'{auth_api_prefix}/roles',
-    tags=['auth']
-)
-app.include_router(
-    permissions.router,
-    prefix=f'{auth_api_prefix}/permissions',
-    tags=['auth']
-)
-app.include_router(
     auth.router,
     prefix=f'{auth_api_prefix}/jwt',
     tags=['auth'],
@@ -63,10 +53,20 @@ app.include_router(
 app.include_router(
     register.router,
     prefix=auth_api_prefix,
-    tags=['auth'],
+    tags=['register'],
 )
 app.include_router(
     users.router,
     prefix=f'{auth_api_prefix}/users',
     tags=['users'],
+)
+app.include_router(
+    roles.router,
+    prefix=f'{auth_api_prefix}/roles',
+    tags=['roles']
+)
+app.include_router(
+    permissions.router,
+    prefix=f'{auth_api_prefix}/permissions',
+    tags=['permissions']
 )
