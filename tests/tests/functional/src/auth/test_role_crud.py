@@ -11,10 +11,35 @@ from ...settings import settings
 role_id_save = {}
 
 
+async def login_superuser(aiohttp_session):
+    superuser = {
+        'grant_type': 'password',
+        'username': settings.superuser.login,
+        'password': settings.superuser.password
+    }
+    url = urljoin(settings.auth_api_v1_url, 'jwt/login/')
+    async with aiohttp_session.post(url, data=superuser) as response:
+        status = response.status
+        assert status ==  HTTPStatus.OK
+        data = await response.json()
+        token_jwt = data['access_token']
+        token_type = data['token_type']
+        headers = {
+            'accept': 'application/json',
+            'Authorization': f'{token_type.title()} {token_jwt}',
+            'Content-Type': 'application/json'
+        }
+        return headers
+
+
 @pytest.mark.parametrize(
     'input_data, expected_status, expected_detail',
     [
-        ({'name': 'admin', 'code': 'admin'}, HTTPStatus.CREATED, None),
+        (
+            {'name': 'string', 'code': 'admin'},
+            HTTPStatus.CREATED, 
+            None
+        ),
         (
             {'name': 'admin', 'code': 'admin'},
             HTTPStatus.BAD_REQUEST,
@@ -23,15 +48,20 @@ role_id_save = {}
     ],
 )
 @pytest.mark.asyncio(loop_scope='session')
-async def test_add_role(aiohttp_session, input_data, expected_status, expected_detail):
-    url = urljoin(settings.auth_api_v1_url, 'roles/add/')
-    async with aiohttp_session.post(url, json=input_data) as response:
-        status = response.status
-        assert status == expected_status
-        if expected_status == HTTPStatus.BAD_REQUEST:
+async def test_add_role(aiohttp_session, clean_all_tables_before, input_data, expected_status, expected_detail):
+    headers = await login_superuser(aiohttp_session)
+    url = urljoin(settings.auth_api_v1_url, 'roles/create/')
+    if expected_status == HTTPStatus.BAD_REQUEST:
+        await aiohttp_session.post(url, headers=headers, json=input_data)
+        async with aiohttp_session.post(url, headers=headers, json=input_data) as response:
+            status = response.status
+            assert status == expected_status
             data = await response.json()
             assert data['detail'] == expected_detail
-        elif expected_status == HTTPStatus.CREATED:
+    elif expected_status == HTTPStatus.CREATED:
+        async with aiohttp_session.post(url, headers=headers, json=input_data) as response:
+            status = response.status
+            assert status == expected_status
             data = await response.json()
             assert 'id' in data
             assert data['name'] == input_data['name']
@@ -49,9 +79,10 @@ async def test_add_role(aiohttp_session, input_data, expected_status, expected_d
 async def test_update_role(
     aiohttp_session, input_data, expected_status, expected_detail
 ):
+    headers = await login_superuser(aiohttp_session)
     role_id = role_id_save.get('id')
     url = urljoin(settings.auth_api_v1_url, f'roles/update/{role_id}/')
-    async with aiohttp_session.put(url, json=input_data) as response:
+    async with aiohttp_session.put(url, headers=headers, json=input_data) as response:
         status = response.status
         assert status == expected_status
         if (
@@ -81,9 +112,10 @@ async def test_update_role(
 async def test_update_role_duplicate(
     aiohttp_session, create_role, input_data, expected_status, expected_detail
 ):
+    headers = await login_superuser(aiohttp_session)
     role_id = create_role.id
     url = urljoin(settings.auth_api_v1_url, f'roles/update/{role_id}/')
-    async with aiohttp_session.put(url, json=input_data) as response:
+    async with aiohttp_session.put(url, headers=headers, json=input_data) as response:
         status = response.status
         assert status == expected_status
         if (
@@ -108,9 +140,10 @@ async def test_update_role_duplicate(
 async def test_update_role_not_found(
     aiohttp_session, input_data, expected_status, expected_detail
 ):
+    headers = await login_superuser(aiohttp_session)
     role_id = str(uuid.uuid4())
     url = urljoin(settings.auth_api_v1_url, f'roles/update/{role_id}/')
-    async with aiohttp_session.put(url, json=input_data) as response:
+    async with aiohttp_session.put(url, headers=headers, json=input_data) as response:
         status = response.status
         assert status == expected_status
         if expected_status == HTTPStatus.NOT_FOUND:
@@ -129,9 +162,10 @@ async def test_update_role_not_found(
 )
 @pytest.mark.asyncio(loop_scope='session')
 async def test_get_role(aiohttp_session, expected_result, expected_status):
+    headers = await login_superuser(aiohttp_session)
     role_id = role_id_save.get('id')
     url = urljoin(settings.auth_api_v1_url, f'roles/get/{role_id}/')
-    async with aiohttp_session.get(url) as response:
+    async with aiohttp_session.get(url, headers=headers) as response:
         status = response.status
         data = await response.json()
         assert status == expected_status
@@ -151,8 +185,9 @@ async def test_get_role(aiohttp_session, expected_result, expected_status):
 )
 @pytest.mark.asyncio(loop_scope='session')
 async def test_get_many_roles(aiohttp_session, expected_status):
-    url = urljoin(settings.auth_api_v1_url, f'roles/list/')
-    async with aiohttp_session.get(url) as response:
+    headers = await login_superuser(aiohttp_session)
+    url = urljoin(settings.auth_api_v1_url, f'roles/get_list/')
+    async with aiohttp_session.get(url, headers=headers) as response:
         status = response.status
         data = await response.json()
         assert status == expected_status
@@ -170,9 +205,10 @@ async def test_get_many_roles(aiohttp_session, expected_status):
 )
 @pytest.mark.asyncio(loop_scope='session')
 async def test_delete_role(aiohttp_session, create_role, expected_status):
+    headers = await login_superuser(aiohttp_session)
     role_id = create_role.id
     url = urljoin(settings.auth_api_v1_url, f'roles/delete/{role_id}/')
-    async with aiohttp_session.delete(url) as response:
+    async with aiohttp_session.delete(url, headers=headers) as response:
         status = response.status
         data = await response.json()
         assert status == expected_status

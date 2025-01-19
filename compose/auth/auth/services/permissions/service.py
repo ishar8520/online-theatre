@@ -20,8 +20,6 @@ class PermissionService:
         self._repository = repository
 
     async def assign(self, permission: CreatePermissionDto) -> PermissionInDb:
-        # todo search user
-
         user_permission = await self._repository.get_by_user_role(
             user_id=permission.user_id,
             role_id=permission.role_id

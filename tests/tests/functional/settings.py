@@ -42,10 +42,18 @@ class AutPostgresqlSettings(BaseSettings):
     port: int = Field(default=5432)
 
 
+class SuperUserSettings(BaseSettings):
+    model_config = SettingsConfigDict(env_prefix='auth_superuser_')
+
+    login: str = Field()
+    password: str = Field()
+
+
 class Settings(BaseSettings):
     redis: RedisSettings = RedisSettings()
     elasticsearch: ElasticsearchSettings = ElasticsearchSettings()
     auth_postgresql: AutPostgresqlSettings = AutPostgresqlSettings()
+    superuser: SuperUserSettings = SuperUserSettings()
 
     movies_url: str = Field(default='http://localhost:8000')
     auth_url: str = Field(default='http://localhost:8000')
