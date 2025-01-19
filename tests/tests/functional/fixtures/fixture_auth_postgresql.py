@@ -6,10 +6,10 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.sql import text
 
 from ..settings import settings
-from ..utils.auth.sqlalchemy import AuthBase
 
 auth = settings.auth_postgresql
 DATABASE_URL = f'postgresql+asyncpg://{auth.username}:{auth.password}@{auth.host}:{auth.port}/{auth.database}'
+TABLES = ['login_history', 'user_role', 'user', 'role']
 
 
 @pytest_asyncio.fixture(scope='session')
@@ -29,25 +29,37 @@ async def async_session(async_engine):
         await session.rollback()
 
 
-@pytest_asyncio.fixture(scope='module', autouse=True)
-async def clean_tables(async_session):
-    for table in reversed(AuthBase.metadata.sorted_tables):
+@pytest_asyncio.fixture(scope='module')
+async def clean_all_tables(async_session):
+    for table in TABLES:
         await async_session.execute(
-            text(f'TRUNCATE TABLE auth.{table.name} RESTART IDENTITY CASCADE')
+            text(f'TRUNCATE TABLE auth.{table} RESTART IDENTITY CASCADE')
         )
     await async_session.commit()
 
-        
-@pytest_asyncio.fixture(scope='function')
-async def clean_tables_before(async_session):
-    for table in reversed(AuthBase.metadata.sorted_tables):
-        await async_session.execute(text(f'TRUNCATE TABLE auth.{table.name} RESTART IDENTITY CASCADE'))
+ 
+@pytest_asyncio.fixture(scope='module')
+async def clean_all_tables_before(async_session):
+    for table in TABLES:
+        if table == 'user':
+            query = f'DELETE FROM auth.user WHERE is_superuser != true'
+        else:
+            query = f'TRUNCATE TABLE auth.{table} RESTART IDENTITY CASCADE'
+        await async_session.execute(
+            text(query)
+        )
     await async_session.commit()
     yield
-        
-@pytest_asyncio.fixture(scope='function')
-async def clean_tables_after(async_session):
+
+@pytest_asyncio.fixture(scope='module')
+async def clean_all_tables_after(async_session):
     yield
-    for table in reversed(AuthBase.metadata.sorted_tables):
-        await async_session.execute(text(f'TRUNCATE TABLE auth.{table.name} RESTART IDENTITY CASCADE'))
+    for table in TABLES:
+        if table == 'user':
+            query = f'DELETE FROM auth.user WHERE is_superuser != true'
+        else:
+            query = f'TRUNCATE TABLE auth.{table} RESTART IDENTITY CASCADE'
+        await async_session.execute(
+            text(query)
+        )
     await async_session.commit()

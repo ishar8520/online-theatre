@@ -7,7 +7,7 @@ import http
 from ...settings import settings
 
 @pytest.mark.asyncio(loop_scope='session')
-async def test_register(aiohttp_session, clean_tables_before):
+async def test_register(aiohttp_session, clean_all_tables_before):
     login = {
                 'login': 'test_user',
                 'password': 'password',
@@ -153,7 +153,7 @@ async def test_get_current_user(aiohttp_session):
 
 
 @pytest.mark.asyncio(loop_scope='session')
-async def test_patch_current_user(aiohttp_session, clean_tables_after):
+async def test_patch_current_user(aiohttp_session, clean_all_tables_after):
     input = {
                 'grand_type': 'password',
                 'username': 'test_user',
