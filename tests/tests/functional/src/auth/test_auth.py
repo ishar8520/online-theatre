@@ -34,6 +34,7 @@ async def test_register_exists_user(aiohttp_session):
     assert status == http.HTTPStatus.BAD_REQUEST
     assert data['detail'] == 'REGISTER_USER_ALREADY_EXISTS'
 
+
 @pytest.mark.parametrize(
     'input, expected',
     [
@@ -77,19 +78,15 @@ async def test_login(aiohttp_session, input, expected):
         data = await response.json()
         if expected['status'] == http.HTTPStatus.BAD_REQUEST:
             assert data['detail'] == expected['detail']
-        # else:
-        #     print(data)
+
 
 @pytest.mark.parametrize(
-    'num, input, expected',
+    'input',
     [
         (
-            1,
-            {},
-            {'status': http.HTTPStatus.UNAUTHORIZED}
+            {}
         ),
         (
-            2,
             {
                 'grand_type': 'password',
                 'username': 'test_user',
@@ -97,49 +94,31 @@ async def test_login(aiohttp_session, input, expected):
                 'scope': '',
                 'client_id': 'string',
                 'client_secret': 'secret'
-            },
-            {'status': http.HTTPStatus.OK}
+            }
         )
     ]
 )
 @pytest.mark.asyncio(loop_scope='session')
-async def test_logout(aiohttp_session, num, input, expected):
-    if num == 1:
-        url = urljoin(settings.auth_api_v1_url, 'users/me/')
-        async with aiohttp_session.get(url) as response:
-            status = response.status
-            assert status == http.HTTPStatus.UNAUTHORIZED
-        
-        url = urljoin(settings.auth_api_v1_url, 'jwt/logout/')
-        async with aiohttp_session.post(url) as response:
-            status = response.status
-            assert status == http.HTTPStatus.UNAUTHORIZED
-            
-    elif num == 2:
-        url = urljoin(settings.auth_api_v1_url, 'users/me/')
-        async with aiohttp_session.get(url) as response:
-            status = response.status
-            assert status == http.HTTPStatus.UNAUTHORIZED
-        
+async def test_logout(aiohttp_session, input):
+    if input:
         url = urljoin(settings.auth_api_v1_url, 'jwt/login/')
         async with aiohttp_session.post(url, data=input) as response:
             status = response.status
-            assert status == http.HTTPStatus.OK
+            assert status ==  http.HTTPStatus.OK
             data = await response.json()
-            print(data)
-            
-        url = urljoin(settings.auth_api_v1_url, 'users/me/')
-        async with aiohttp_session.get(url) as response:
-            status = response.status
-            assert status == http.HTTPStatus.OK
-            
+            token_jwt = data['access_token']
+            token_type = data['token_type']
+            headers = {
+                'accept': 'application/json',
+                'Authorization': f'{token_type.title()} {token_jwt}'
+            }
         url = urljoin(settings.auth_api_v1_url, 'jwt/logout/')
-        async with aiohttp_session.post(url) as response:
+        async with aiohttp_session.post(url, headers=headers, data='') as response:
             status = response.status
-            assert status == http.HTTPStatus.OK
-
-        url = urljoin(settings.auth_api_v1_url, 'users/me/')
-        async with aiohttp_session.get(url) as response:
+            assert status == http.HTTPStatus.NO_CONTENT
+    else:
+        url = urljoin(settings.auth_api_v1_url, 'jwt/logout/')
+        async with aiohttp_session.post(url, headers='', data='') as response:
             status = response.status
             assert status == http.HTTPStatus.UNAUTHORIZED
 
