@@ -10,7 +10,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from ...db.sqlalchemy import AsyncSession, AsyncSessionDep
 from ...models.sqlalchemy import Role
-from .exceptions import AddError, DeleteError, UpdateError
+from ..base.exceptions import AddError, DeleteError, UpdateError
 from .models import RoleCreateDto, RoleInDB, RoleUpdateDto
 
 
