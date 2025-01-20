@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from pydantic import Field
 from pydantic_settings import (
     BaseSettings,
     SettingsConfigDict,
@@ -24,9 +23,9 @@ class PostgreSQLConfig(BaseSettings):
 
     host: str = 'localhost'
     port: int = 5432
-    database: str = Field()
-    username: str = Field()
-    password: str = Field()
+    database: str
+    username: str
+    password: str
 
     @property
     def engine_url(self) -> str:
@@ -38,7 +37,12 @@ class RedisConfig(BaseSettings):
 
     host: str = 'localhost'
     port: int = 5432
-    cache_expire_in_seconds: int = 60 * 5
+
+
+class CacheConfig(BaseSettings):
+    model_config = SettingsConfigDict(env_prefix='cache_')
+
+    timeout: int = 60 * 5
 
 
 class SuperUserConfig(BaseSettings):
@@ -48,10 +52,12 @@ class SuperUserConfig(BaseSettings):
     password: str
 
 
+# noinspection PyArgumentList
 class Settings(BaseSettings):
     auth: AuthConfig = AuthConfig()
     postgresql: PostgreSQLConfig = PostgreSQLConfig()
     redis: RedisConfig = RedisConfig()
+    cache: CacheConfig = CacheConfig()
     superuser: SuperUserConfig = SuperUserConfig()
 
 

@@ -7,7 +7,6 @@ import redis.asyncio as redis
 import redis.exceptions
 
 from ..base import BaseCache
-from .....core.config import settings
 
 
 class RedisCache(BaseCache):
@@ -28,5 +27,12 @@ class RedisCache(BaseCache):
             redis.exceptions.ConnectionError,
             redis.exceptions.TimeoutError,
     ))
-    async def _set_value(self, key: str, value: str) -> None:
-        await self.redis_client.set(key, value, ex=settings.redis.cache_expire_in_seconds)
+    async def _set_value(self, key: str, value: str, *, timeout: int | None) -> None:
+        await self.redis_client.set(key, value, ex=timeout)
+
+    @backoff.on_exception(backoff.expo, (
+            redis.exceptions.ConnectionError,
+            redis.exceptions.TimeoutError,
+    ))
+    async def _delete_key(self, key: str) -> None:
+        await self.redis_client.delete(key)
