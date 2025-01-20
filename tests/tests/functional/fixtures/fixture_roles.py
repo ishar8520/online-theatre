@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import pytest_asyncio
+from sqlalchemy import delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..utils.auth.sqlalchemy import Role
@@ -15,5 +16,5 @@ async def create_role(async_session: AsyncSession):
 
     yield new_role
 
-    await async_session.delete(new_role)
+    await async_session.execute(delete(Role).where(Role.id == new_role.id))
     await async_session.commit()
