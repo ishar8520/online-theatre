@@ -2,8 +2,9 @@
 package-mode = false
 
 [tool.poetry.dependencies]
-python = ">=3.12"
+python = "^3.12"
 
+asyncpg = "0.30.0"
 aiohttp = { version = "^3.11.11", extras = ["speedups"] }
 elasticsearch = { version = "^8.17.0", extras = ["async"] }
 pydantic = "^2.10.4"
@@ -12,7 +13,6 @@ pytest = "^8.3.4"
 pytest-asyncio = "^0.25.0"
 redis = { version = "^5.2.1", extras = ["hiredis"] }
 SQLAlchemy = { version = "2.0.37", extras = ["asyncio"] }
-asyncpg = "0.30.0"
 
 [build-system]
 requires = ["poetry-core"]
