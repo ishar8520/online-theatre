@@ -54,9 +54,15 @@ async def create_super_user(connection: AsyncConnection):
         pass
 
 
-async def get_async_session() -> AsyncGenerator[AsyncSession]:
+async def get_async_session() -> AsyncGenerator[AsyncSession, None]:
     async with async_session_maker() as session:
-        yield session
+        try:
+            yield session
+        except Exception:
+            await session.rollback()
+            raise
+        finally:
+            await session.close()
 
 
 AsyncSessionDep = Annotated[AsyncSession, Depends(get_async_session)]
