@@ -24,7 +24,7 @@ class AuthBase(DeclarativeBase):
     metadata = auth_metadata_obj
 
 
-engine = create_async_engine(settings.postgresql.engine_url, echo=True)
+engine = create_async_engine(settings.postgresql.engine_url, echo=settings.auth.sql_echo)
 async_session_maker = async_sessionmaker(engine, expire_on_commit=False)
 
 
@@ -54,9 +54,15 @@ async def create_super_user(connection: AsyncConnection):
         pass
 
 
-async def get_async_session() -> AsyncGenerator[AsyncSession]:
+async def get_async_session() -> AsyncGenerator[AsyncSession, None]:
     async with async_session_maker() as session:
-        yield session
+        try:
+            yield session
+        except Exception:
+            await session.rollback()
+            raise
+        finally:
+            await session.close()
 
 
 AsyncSessionDep = Annotated[AsyncSession, Depends(get_async_session)]
