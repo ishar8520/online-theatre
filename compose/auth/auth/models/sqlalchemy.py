@@ -70,8 +70,8 @@ class UserRole(AuthBase):
         primary_key=True,
         default=uuid.uuid4,
     )
-    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey('auth.user.id'))
-    role_id: Mapped[uuid.UUID] = mapped_column(ForeignKey('auth.role.id'))
+    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey('auth.user.id'), ondelete='CASCADE')
+    role_id: Mapped[uuid.UUID] = mapped_column(ForeignKey('auth.role.id'), ondelete='CASCADE')
     created: Mapped[datetime.datetime] = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.datetime.now(datetime.UTC),
@@ -94,7 +94,7 @@ class LoginHistory(AuthBase):
         primary_key=True,
         default=uuid.uuid4,
     )
-    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey('auth.user.id'))
+    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey('auth.user.id'), ondelete='CASCADE')
     user_agent: Mapped[str] = mapped_column(TEXT)
     created: Mapped[datetime.datetime] = mapped_column(
         DateTime(timezone=True),
