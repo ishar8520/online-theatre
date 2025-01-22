@@ -7,6 +7,7 @@ from fastapi.encoders import jsonable_encoder
 from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 
+from .dependencies import Page
 from .models import (
     LoginHistoryCreate,
     LoginHistoryInDb
@@ -42,9 +43,16 @@ class LoginHistoryRepository:
 
     async def get_list_by_user(
             self,
-            user_id: uuid.UUID
+            user_id: uuid.UUID,
+            page: Page
     ) -> list[LoginHistoryInDb]:
-        statement = select(LoginHistory).where(LoginHistory.user_id == user_id)
+        statement = (
+            select(LoginHistory)
+            .where(LoginHistory.user_id == user_id)
+            .limit(page.size)
+            .offset((page.number - 1) * page.size)
+        )
+
         result = await self._db.execute(statement)
         return result.scalars().all()
 
