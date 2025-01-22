@@ -10,6 +10,7 @@ from .....services.users import (
     UserUpdate,
     UserAlreadyExists,
 )
+from .....services.users.authentication.login_history.dependencies import PageDep
 from .....services.users.authentication.login_history.models import LoginHistoryInDb
 from .....services.users.authentication.login_history.service import LoginHistoryServiceDep
 
@@ -78,6 +79,7 @@ async def update_me(
 )
 async def get_login_history(
         login_history_service: LoginHistoryServiceDep,
+        page: PageDep,
         user: CurrentUserDep,
 ):
-    return await login_history_service.get_list(user.id)
+    return await login_history_service.get_list(user.id, page)
