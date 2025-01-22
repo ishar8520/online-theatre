@@ -24,7 +24,7 @@ class AuthBase(DeclarativeBase):
     metadata = auth_metadata_obj
 
 
-engine = create_async_engine(settings.postgresql.engine_url, echo=True)
+engine = create_async_engine(settings.postgresql.engine_url, echo=settings.auth.sql_echo)
 async_session_maker = async_sessionmaker(engine, expire_on_commit=False)
 
 
