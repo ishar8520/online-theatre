@@ -17,7 +17,7 @@ from .api.v1.endpoints.users import (
     users,
 )
 from .core import settings, LOGGING
-from .db.sqlalchemy import create_db
+from .db.sqlalchemy import init_db
 
 logging.config.dictConfig(LOGGING)
 
@@ -28,7 +28,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[dict]:
     async with (
         redis.Redis(host=settings.redis.host, port=settings.redis.port) as redis_client,
     ):
-        await create_db()
+        await init_db()
         yield {
             'redis_client': redis_client,
         }
