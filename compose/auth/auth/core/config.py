@@ -46,20 +46,12 @@ class CacheConfig(BaseSettings):
     timeout: int = 60 * 5
 
 
-class SuperUserConfig(BaseSettings):
-    model_config = SettingsConfigDict(env_prefix='superuser_')
-
-    login: str
-    password: str
-
-
 # noinspection PyArgumentList
 class Settings(BaseSettings):
     auth: AuthConfig = AuthConfig()
     postgresql: PostgreSQLConfig = PostgreSQLConfig()
     redis: RedisConfig = RedisConfig()
     cache: CacheConfig = CacheConfig()
-    superuser: SuperUserConfig = SuperUserConfig()
 
 
 settings = Settings()
