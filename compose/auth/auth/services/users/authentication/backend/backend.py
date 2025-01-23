@@ -6,7 +6,6 @@ from fastapi import Depends, Response, status
 
 from .strategy import (
     Strategy,
-    StrategyDestroyNotSupportedError,
     AccessStrategyDep,
     RefreshStrategyDep,
 )
@@ -50,19 +49,19 @@ class AuthenticationBackend:
         )
 
     async def login(self, user: User) -> Response:
-        access_token = await self.access_strategy.write_token(user)
         refresh_token = await self.refresh_strategy.write_token(user)
+        access_token = await self.access_strategy.write_token(user, parent_id=refresh_token.token_id)
 
         return await self.transport.get_login_response(
-            access_token=access_token,
-            refresh_token=refresh_token,
+            access_token=access_token.token,
+            refresh_token=refresh_token.token,
         )
 
     async def logout(self, user: User, token: str) -> Response:
-        try:
-            await self.access_strategy.destroy_token(token=token, user=user)
-        except StrategyDestroyNotSupportedError:
-            pass
+        access_token = await self.access_strategy.destroy_token(token=token, user=user)
+
+        if access_token is not None and access_token.parent_id:
+            await self.refresh_strategy.destroy_token_id(access_token.parent_id)
 
         try:
             response = await self.transport.get_logout_response()
@@ -72,17 +71,14 @@ class AuthenticationBackend:
         return response
 
     async def refresh(self, user: User, token: str) -> Response:
-        try:
-            await self.refresh_strategy.destroy_token(token=token, user=user)
-        except StrategyDestroyNotSupportedError:
-            pass
+        await self.refresh_strategy.destroy_token(token=token, user=user)
 
-        access_token = await self.access_strategy.write_token(user)
         refresh_token = await self.refresh_strategy.write_token(user)
+        access_token = await self.access_strategy.write_token(user, parent_id=refresh_token.token_id)
 
         return await self.transport.get_refresh_response(
-            access_token=access_token,
-            refresh_token=refresh_token,
+            access_token=access_token.token,
+            refresh_token=refresh_token.token,
         )
 
 
