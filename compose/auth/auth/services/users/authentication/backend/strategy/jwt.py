@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+import dataclasses
+import uuid
+
 import jwt
 
 from .base import (
     Strategy,
-    StrategyDestroyNotSupportedError,
-    InvalidToken,
+    Token,
 )
 from .... import exceptions
 from ....jwt import (
@@ -21,10 +23,15 @@ from .....cache import (
 from ......models.sqlalchemy import User
 
 
-class JWTStrategyDestroyNotSupportedError(StrategyDestroyNotSupportedError):
-    def __init__(self) -> None:
-        message = "A JWT can't be invalidated: it's valid until it expires."
-        super().__init__(message)
+class InvalidToken(Exception):
+    pass
+
+
+@dataclasses.dataclass(kw_only=True)
+class TokenData:
+    token_id: uuid.UUID
+    parent_id: uuid.UUID | None = None
+    data: dict
 
 
 class JWTStrategy(Strategy):
@@ -65,17 +72,9 @@ class JWTStrategy(Strategy):
         return self.public_key or self.secret
 
     async def read_token(self, token: str, user_manager: UserManager) -> User | None:
-        try:
-            data = decode_jwt(
-                token,
-                secret=self.decode_key,
-                audience=self.token_audience,
-                algorithms=[self.algorithm],
-            )
-        except jwt.PyJWTError:
-            return None
+        token_data = self._decode_token(token)
 
-        user_id = data.get('sub')
+        user_id = token_data.data.get('sub')
         if user_id is None:
             return None
 
@@ -90,20 +89,56 @@ class JWTStrategy(Strategy):
             return None
 
         try:
-            await self._validate_token(token=token, user=user)
+            await self._validate_token(token_data.token_id)
         except InvalidToken:
             return None
 
         return user
 
-    async def _validate_token(self, token: str, user: User) -> None:
+    def _decode_token(self, token: str) -> TokenData | None:
+        try:
+            data = decode_jwt(
+                token,
+                secret=self.decode_key,
+                audience=self.token_audience,
+                algorithms=[self.algorithm],
+            )
+        except jwt.PyJWTError:
+            return None
+
+        jti = data.get('jti')
+        if jti is None:
+            return None
+
+        try:
+            token_id = uuid.UUID(jti)
+        except ValueError:
+            return None
+
+        parent_id: uuid.UUID | None = None
+        parent_id_str = data.get('parent_id')
+
+        if parent_id_str is not None:
+            try:
+                parent_id = uuid.UUID(parent_id_str)
+            except ValueError:
+                pass
+
+        return TokenData(token_id=token_id, parent_id=parent_id, data=data)
+
+    async def _validate_token(self, token_id: uuid.UUID) -> None:
         pass
 
-    async def write_token(self, user: User) -> str:
+    async def write_token(self, user: User, parent_id: uuid.UUID | None = None) -> Token:
+        token_id = uuid.uuid4()
         data = {
+            'jti': str(token_id),
             'sub': str(user.id),
             'aud': self.token_audience,
         }
+
+        if parent_id is not None:
+            data['parent_id'] = str(parent_id)
 
         token = generate_jwt(
             data,
@@ -111,48 +146,64 @@ class JWTStrategy(Strategy):
             lifetime_seconds=self.lifetime_seconds,
             algorithm=self.algorithm,
         )
-        await self._save_token(token=token, user=user)
+        await self._save_token(token_id)
 
-        return token
+        return Token(
+            token_id=token_id,
+            parent_id=parent_id,
+            token=token,
+        )
 
-    async def _save_token(self, token: str, user: User) -> None:
+    async def _save_token(self, token_id: uuid.UUID) -> None:
         pass
 
-    async def destroy_token(self, token: str, user: User) -> None:
-        raise JWTStrategyDestroyNotSupportedError()
+    async def destroy_token(self, token: str, user: User) -> Token | None:
+        token_data = self._decode_token(token)
+
+        if token_data is None:
+            return None
+
+        await self.destroy_token_id(token_data.token_id)
+
+        return Token(
+            token_id=token_data.token_id,
+            parent_id=token_data.parent_id,
+            token=token,
+        )
+
+    async def destroy_token_id(self, token_id: uuid.UUID) -> None:
+        pass
 
 
 class AccessJWTStrategy(JWTStrategy):
-    async def _validate_token(self, token: str, user: User) -> None:
-        cache_key = self._create_cache_key(token)
+    async def _validate_token(self, token_id: uuid.UUID) -> None:
+        cache_key = self._create_cache_key(token_id)
 
         if await self.cache.get(cache_key) is not None:
             raise InvalidToken
 
-    async def destroy_token(self, token: str, user: User) -> None:
-        cache_key = self._create_cache_key(token)
+    async def destroy_token_id(self, token_id: uuid.UUID) -> None:
+        cache_key = self._create_cache_key(token_id)
         await self.cache.set(cache_key, 'access', timeout=self.lifetime_seconds)
 
-    def _create_cache_key(self, token: str) -> str:
-        return f'access-{token}'
+    def _create_cache_key(self, token_id: uuid.UUID) -> str:
+        return f'access-{token_id}'
 
 
 class RefreshJWTStrategy(JWTStrategy):
-    async def _validate_token(self, token: str, user: User) -> None:
-        cache_key = self._create_cache_key(token)
+    async def _validate_token(self, token_id: uuid.UUID) -> None:
+        cache_key = self._create_cache_key(token_id)
 
         if await self.cache.get(cache_key) is None:
             raise InvalidToken
 
-        await self.destroy_token(token=token, user=user)
-
-    async def _save_token(self, token: str, user: User) -> None:
-        cache_key = self._create_cache_key(token)
+    async def _save_token(self, token_id: uuid.UUID) -> None:
+        cache_key = self._create_cache_key(token_id)
         await self.cache.set(cache_key, 'refresh', timeout=self.lifetime_seconds)
 
-    async def destroy_token(self, token: str, user: User) -> None:
-        cache_key = self._create_cache_key(token)
+    async def destroy_token_id(self, token_id: uuid.UUID) -> None:
+        cache_key = self._create_cache_key(token_id)
         await self.cache.delete(cache_key)
 
-    def _create_cache_key(self, token: str) -> str:
-        return f'refresh-{token}'
+    def _create_cache_key(self, token_id: uuid.UUID) -> str:
+        return f'refresh-{token_id}'
