@@ -14,6 +14,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import (
     Mapped,
     mapped_column,
+    relationship
 )
 
 from ..db.sqlalchemy import AuthBase
@@ -39,6 +40,12 @@ class User(AuthBase):
         default=lambda: datetime.datetime.now(datetime.UTC),
         onupdate=lambda: datetime.datetime.now(datetime.UTC),
     )
+    roles: Mapped[list[UserRole]] = relationship(
+        "UserRole", cascade="all, delete-orphan", back_populates="user"
+    )
+    login_history: Mapped[list[LoginHistory]] = relationship(
+        "LoginHistory", cascade="all, delete-orphan", back_populates="user"
+    )
 
 
 class Role(AuthBase):
@@ -60,6 +67,9 @@ class Role(AuthBase):
         default=lambda: datetime.datetime.now(datetime.UTC),
         onupdate=lambda: datetime.datetime.now(datetime.UTC),
     )
+    user_roles: Mapped[list[UserRole]] = relationship(
+        "UserRole", cascade="all, delete-orphan", back_populates="role"
+    )
 
 
 class UserRole(AuthBase):
@@ -76,7 +86,6 @@ class UserRole(AuthBase):
         DateTime(timezone=True),
         default=lambda: datetime.datetime.now(datetime.UTC),
     )
-
     __table_args__ = (
         UniqueConstraint(
             'user_id',
@@ -84,6 +93,8 @@ class UserRole(AuthBase):
             name='uix_auth_role_id_user_id'
         ),
     )
+    user: Mapped[User] = relationship("User", back_populates="roles")
+    role: Mapped[Role] = relationship("Role", back_populates="user_roles")
 
 
 class LoginHistory(AuthBase):
@@ -100,7 +111,7 @@ class LoginHistory(AuthBase):
         DateTime(timezone=True),
         default=lambda: datetime.datetime.now(datetime.UTC),
     )
-
     __table_args__ = (
         Index('ix_login_history_user_id', 'user_id'),
     )
+    user: Mapped[User] = relationship("User", back_populates="login_history")
