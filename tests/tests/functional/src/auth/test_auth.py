@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import asyncio
 import http
 from urllib.parse import urljoin
 
@@ -102,7 +101,6 @@ async def test_refresh(aiohttp_session) -> None:
         'refresh_token': refresh_token,
     }
 
-    await asyncio.sleep(1)
     async with aiohttp_session.post(refresh_url, data=refresh_data) as response:
         assert response.status == http.HTTPStatus.OK
         response_data = await response.json()
@@ -185,30 +183,37 @@ async def test_patch_current_user(aiohttp_session, clean_all_tables_after) -> No
 
 @pytest.mark.asyncio(loop_scope='session')
 async def test_logout(aiohttp_session) -> None:
+    login_url = urljoin(settings.auth_api_v1_url, 'jwt/login/')
     login_data = {
         'grant_type': 'password',
         'username': 'test_user2',
         'password': 'password',
     }
-    url = urljoin(settings.auth_api_v1_url, 'jwt/login/')
 
-    async with aiohttp_session.post(url, data=login_data) as response:
-        status = response.status
-        assert status == http.HTTPStatus.OK
-        data = await response.json()
+    async with aiohttp_session.post(login_url, data=login_data) as response:
+        assert response.status == http.HTTPStatus.OK
+        response_data = await response.json()
 
-    token_jwt = data['access_token']
-    token_type = data['token_type']
+    access_token = response_data['access_token']
+    refresh_token = response_data['refresh_token']
+    token_type = response_data['token_type']
     headers = {
         'accept': 'application/json',
-        'Authorization': f'{token_type.title()} {token_jwt}',
+        'Authorization': f'{token_type.title()} {access_token}',
     }
-    url = urljoin(settings.auth_api_v1_url, 'jwt/logout/')
 
-    async with aiohttp_session.post(url, headers=headers) as response:
-        status = response.status
-        assert status == http.HTTPStatus.NO_CONTENT
+    logout_url = urljoin(settings.auth_api_v1_url, 'jwt/logout/')
 
-    async with aiohttp_session.post(url, headers=headers) as response:
-        status = response.status
-        assert status == http.HTTPStatus.UNAUTHORIZED
+    async with aiohttp_session.post(logout_url, headers=headers) as response:
+        assert response.status == http.HTTPStatus.NO_CONTENT
+
+    async with aiohttp_session.post(logout_url, headers=headers) as response:
+        assert response.status == http.HTTPStatus.UNAUTHORIZED
+
+    refresh_url = urljoin(settings.auth_api_v1_url, 'jwt/refresh/')
+    refresh_data = {
+        'refresh_token': refresh_token,
+    }
+
+    async with aiohttp_session.post(refresh_url, data=refresh_data) as response:
+        assert response.status == http.HTTPStatus.UNAUTHORIZED
