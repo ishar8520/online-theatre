@@ -32,11 +32,11 @@ class RoleInDB(BaseModel):
     modified: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class RoleDelete(BaseModel):
     id: uuid.UUID
 
     class Config:
-        orm_mode = True
+        from_attributes = True

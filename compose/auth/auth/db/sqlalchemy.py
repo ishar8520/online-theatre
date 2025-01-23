@@ -34,24 +34,6 @@ async def create_db() -> None:
     async with engine.begin() as connection:
         await connection.execute(CreateSchema('auth', if_not_exists=True))
         await connection.run_sync(AuthBase.metadata.create_all)
-        await create_super_user(connection)
-
-
-async def create_super_user(connection: AsyncConnection):
-    from ..models.sqlalchemy import User
-    from ..services.users.password import PasswordHelper
-
-    superuser = {
-        "login": settings.superuser.login,
-        "password": PasswordHelper().hash(settings.superuser.password),
-        "is_superuser": True
-    }
-
-    statement = insert(User).values(superuser)
-    try:
-        await connection.execute(statement=statement)
-    except SQLAlchemyError:
-        pass
 
 
 async def get_async_session() -> AsyncGenerator[AsyncSession, None]:

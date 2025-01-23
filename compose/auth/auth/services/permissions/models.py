@@ -17,7 +17,7 @@ class PermissionInDb(BaseModel):
     created: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class DeletePermission(BaseModel):
@@ -25,4 +25,4 @@ class DeletePermission(BaseModel):
     role_id: uuid.UUID
 
     class Config:
-        orm_mode = True
+        from_attributes = True
