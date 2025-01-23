@@ -36,6 +36,7 @@ ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
 COPY --from=venv "$VIRTUAL_ENV" "$VIRTUAL_ENV"
 COPY ./pyproject.toml .
+COPY ./alembic.ini .
 COPY ./auth/ ./auth/
 
 COPY ./commands/ ./commands/
