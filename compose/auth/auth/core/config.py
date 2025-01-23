@@ -12,6 +12,7 @@ class AuthConfig(BaseSettings):
     secret_key: str = 'SECRET'
     access_jwt_lifetime: int = 60 * 60
     refresh_jwt_lifetime: int = 24 * 60 * 60
+    sql_echo: bool = False
 
     @property
     def oauth2_token_url(self) -> str:
