@@ -1,7 +1,0 @@
-elasticsearch[async]==8.16.0
-fastapi[standard]==0.115.6
-pydantic==2.10.3
-redis[hiredis]==5.2.1
-uvicorn-worker==0.2.0
-pydantic-settings==2.6.1
-backoff==2.2.1

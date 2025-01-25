@@ -10,13 +10,20 @@ WORKDIR /opt/app
 
 FROM base AS venv
 
+ENV PATH="/root/.local/bin:$PATH"
+
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install --user pipx==1.7.1
+RUN pipx install poetry==2.0.1
+
 ENV VIRTUAL_ENV=/venv
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
 RUN python -m venv "$VIRTUAL_ENV"
-RUN --mount=type=bind,source=requirements.txt,target=requirements.txt \
-    --mount=type=cache,target=/root/.cache/pip \
-    pip install -r requirements.txt
+RUN --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
+    --mount=type=bind,source=poetry.lock,target=poetry.lock \
+    --mount=type=cache,target=/root/.cache/pypoetry \
+    poetry install --no-ansi --no-interaction
 
 FROM base
 
@@ -28,6 +35,7 @@ ENV VIRTUAL_ENV=/venv
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
 COPY --from=venv "$VIRTUAL_ENV" "$VIRTUAL_ENV"
+COPY ./pyproject.toml .
 COPY ./movies/ ./movies/
 
 COPY ./commands/ ./commands/
