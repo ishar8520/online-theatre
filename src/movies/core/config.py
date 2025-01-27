@@ -33,10 +33,27 @@ class ElasticConfig(BaseSettings):
         return f'{self.scheme}://{self.host}:{self.port}'
 
 
+class AuthConfig(BaseSettings):
+    model_config = SettingsConfigDict(env_prefix='auth_')
+
+    scheme: str = 'http'
+    host: str = 'localhost'
+    port: int = 8000
+
+    @property
+    def url_token(self) -> str:
+        return f'{self.scheme}://{self.host}:{self.port}/auth/api/v1/jwt/login'
+
+    @property
+    def url_me(self) -> str:
+        return f'{self.scheme}://{self.host}:{self.port}/auth/api/v1/users/me'
+
+
 class Settings(BaseSettings):
     project: ProjectConfig = ProjectConfig()
     redis: RedisConfig = RedisConfig()
     elasticsearch: ElasticConfig = ElasticConfig()
+    auth: AuthConfig = AuthConfig()
 
 
 settings = Settings()

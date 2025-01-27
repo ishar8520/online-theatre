@@ -74,6 +74,9 @@ class JWTStrategy(Strategy):
     async def read_token(self, token: str, user_manager: UserManager) -> User | None:
         token_data = self._decode_token(token)
 
+        if not token_data:
+            return None
+
         user_id = token_data.data.get('sub')
         if user_id is None:
             return None
