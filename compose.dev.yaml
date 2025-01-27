@@ -28,6 +28,7 @@ services:
     environment:
       - PROJECT_NAME=$PROJECT_NAME
       - OTEL_ENABLED=${OTEL_ENABLED:-True}
+      - OTEL_REQUEST_ID_REQUIRED=${OTEL_REQUEST_ID_REQUIRED:-True}
       - OTEL_EXPORTER_OTLP_HTTP_ENDPOINT=http://jaeger:4318/v1/traces
       - OTEL_SERVICE_NAME=${OTEL_SERVICE_NAME:-movies}
       - REDIS_HOST=redis
@@ -36,7 +37,7 @@ services:
       - ELASTIC_PORT=9200
     command: [ '/opt/app/commands/fastapi.sh', 'dev' ]
     healthcheck:
-      test: [ 'CMD-SHELL', 'curl -s http://localhost:8000/api/openapi.json' ]
+      test: [ 'CMD-SHELL', 'curl -s -H "X-Request-Id: healthcheck" http://localhost:8000/api/openapi.json' ]
       interval: 10s
       timeout: 10s
       retries: 5
@@ -156,6 +157,7 @@ services:
       - AUTH_REFRESH_JWT_LIFETIME=${AUTH_REFRESH_JWT_LIFETIME:-86400}
       - AUTH_SQL_ECHO=${AUTH_SQL_ECHO:-True}
       - OTEL_ENABLED=${OTEL_ENABLED:-True}
+      - OTEL_REQUEST_ID_REQUIRED=${OTEL_REQUEST_ID_REQUIRED:-True}
       - OTEL_EXPORTER_OTLP_HTTP_ENDPOINT=http://jaeger:4318/v1/traces
       - OTEL_SERVICE_NAME=${AUTH_OTEL_SERVICE_NAME:-auth}
       - SUPERUSER_LOGIN=$AUTH_SUPERUSER_LOGIN
@@ -170,7 +172,7 @@ services:
     command: [ '/opt/app/commands/fastapi.sh', 'dev' ]
     restart: unless-stopped
     healthcheck:
-      test: [ 'CMD-SHELL', 'curl -s http://localhost:8000/auth/api/openapi.json' ]
+      test: [ 'CMD-SHELL', 'curl -s -H "X-Request-Id: healthcheck" http://localhost:8000/auth/api/openapi.json' ]
       interval: 10s
       timeout: 10s
       retries: 5
@@ -205,6 +207,7 @@ services:
       - AUTH_REFRESH_JWT_LIFETIME=${AUTH_REFRESH_JWT_LIFETIME:-86400}
       - AUTH_SQL_ECHO=${AUTH_SQL_ECHO:-True}
       - OTEL_ENABLED=${OTEL_ENABLED:-True}
+      - OTEL_REQUEST_ID_REQUIRED=${OTEL_REQUEST_ID_REQUIRED:-True}
       - OTEL_EXPORTER_OTLP_HTTP_ENDPOINT=http://jaeger:4318/v1/traces
       - OTEL_SERVICE_NAME=${AUTH_OTEL_SERVICE_NAME:-auth}
       - SUPERUSER_LOGIN=$AUTH_SUPERUSER_LOGIN
@@ -260,7 +263,7 @@ services:
     networks:
       - movies-network
     healthcheck:
-      test: [ 'CMD-SHELL', 'wget --spider http://localhost:16686' ]
+      test: [ 'CMD-SHELL', 'wget -q --spider http://localhost:16686' ]
       interval: 10s
       timeout: 10s
       retries: 5
