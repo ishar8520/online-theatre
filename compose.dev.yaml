@@ -37,7 +37,7 @@ services:
       - ELASTIC_PORT=9200
     command: [ '/opt/app/commands/fastapi.sh', 'dev' ]
     healthcheck:
-      test: [ 'CMD-SHELL', 'curl -s -H "X-Request-Id: healthcheck" http://localhost:8000/api/openapi.json' ]
+      test: [ 'CMD-SHELL', 'curl -s -H "X-Request-Id: healthcheck" http://localhost:8000/api/_health' ]
       interval: 10s
       timeout: 10s
       retries: 5
@@ -172,7 +172,7 @@ services:
     command: [ '/opt/app/commands/fastapi.sh', 'dev' ]
     restart: unless-stopped
     healthcheck:
-      test: [ 'CMD-SHELL', 'curl -s -H "X-Request-Id: healthcheck" http://localhost:8000/auth/api/openapi.json' ]
+      test: [ 'CMD-SHELL', 'curl -s -H "X-Request-Id: healthcheck" http://localhost:8000/auth/api/_health' ]
       interval: 10s
       timeout: 10s
       retries: 5

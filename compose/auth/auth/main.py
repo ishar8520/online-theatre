@@ -74,7 +74,11 @@ app = FastAPI(
     openapi_url=f'{base_api_prefix}/openapi.json',
     lifespan=lifespan,
 )
-FastAPIInstrumentor.instrument_app(app, http_capture_headers_server_request=['X-Request-Id'])
+FastAPIInstrumentor.instrument_app(
+    app,
+    excluded_urls=f'{base_api_prefix}/_health',
+    http_capture_headers_server_request=['X-Request-Id'],
+)
 
 
 @app.middleware('http')
@@ -89,6 +93,11 @@ async def check_request_id(request: Request, call_next: Callable[[Request], Awai
             )
 
     return await call_next(request)
+
+
+@app.get(f'{base_api_prefix}/_health')
+async def healthcheck():
+    return {}
 
 
 auth_api_prefix = f'{base_api_prefix}/v1'

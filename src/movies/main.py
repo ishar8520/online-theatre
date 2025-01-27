@@ -61,18 +61,23 @@ async def lifespan(_app) -> AsyncGenerator[dict]:
         }
 
 
+base_api_prefix = '/api'
 app = FastAPI(
     title=settings.project.name,
     description=(
         'Backend service that returns films, persons (actors, writers, directors) '
         'and genres of films by uuid.'
     ),
-    docs_url='/api/openapi',
-    openapi_url='/api/openapi.json',
+    docs_url=f'{base_api_prefix}/openapi',
+    openapi_url=f'{base_api_prefix}/openapi.json',
     default_response_class=JSONResponse,
     lifespan=lifespan,
 )
-FastAPIInstrumentor.instrument_app(app, http_capture_headers_server_request=['X-Request-Id'])
+FastAPIInstrumentor.instrument_app(
+    app,
+    excluded_urls=f'{base_api_prefix}/_health',
+    http_capture_headers_server_request=['X-Request-Id'],
+)
 
 
 @app.middleware('http')
@@ -89,6 +94,13 @@ async def check_request_id(request: Request, call_next: Callable[[Request], Awai
     return await call_next(request)
 
 
-app.include_router(films.router, prefix='/api/v1/films', tags=['films'])
-app.include_router(genres.router, prefix='/api/v1/genres', tags=['genres'])
-app.include_router(persons.router, prefix='/api/v1/persons', tags=['persons'])
+@app.get(f'{base_api_prefix}/_health')
+async def healthcheck():
+    return {}
+
+
+movies_api_prefix = f'{base_api_prefix}/v1'
+
+app.include_router(films.router, prefix=f'{movies_api_prefix}/films', tags=['films'])
+app.include_router(genres.router, prefix=f'{movies_api_prefix}/genres', tags=['genres'])
+app.include_router(persons.router, prefix=f'{movies_api_prefix}/persons', tags=['persons'])
