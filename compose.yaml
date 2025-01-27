@@ -1,6 +1,7 @@
 services:
   nginx:
-    image: 'bitnami/nginx:1.27.3-debian-12-r5'
+    build:
+      context: ./compose/nginx
     depends_on:
       movies:
         condition: service_healthy
@@ -8,8 +9,6 @@ services:
       - '8000:8080'
     networks:
       - movies-network
-    volumes:
-      - './compose/nginx/movies.conf:/opt/bitnami/nginx/conf/server_blocks/movies.conf:ro'
 
   movies:
     build:
