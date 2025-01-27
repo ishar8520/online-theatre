@@ -28,7 +28,7 @@ services:
     environment:
       - PROJECT_NAME=$PROJECT_NAME
       - GUNICORN_WORKERS=${GUNICORN_WORKERS:-}
-      - OTEL_ENABLED=True
+      - OTEL_ENABLED=${OTEL_ENABLED:-True}
       - OTEL_EXPORTER_OTLP_HTTP_ENDPOINT=http://jaeger:4318/v1/traces
       - OTEL_SERVICE_NAME=${OTEL_SERVICE_NAME:-movies}
       - REDIS_HOST=redis
@@ -127,6 +127,8 @@ services:
         condition: service_healthy
       auth-service-init:
         condition: service_completed_successfully
+      jaeger:
+        condition: service_healthy
     networks:
       - movies-network
     environment:
@@ -135,6 +137,9 @@ services:
       - AUTH_ACCESS_JWT_LIFETIME=${AUTH_ACCESS_JWT_LIFETIME:-3600}
       - AUTH_REFRESH_JWT_LIFETIME=${AUTH_REFRESH_JWT_LIFETIME:-86400}
       - AUTH_SQL_ECHO=${AUTH_SQL_ECHO:-False}
+      - OTEL_ENABLED=${OTEL_ENABLED:-True}
+      - OTEL_EXPORTER_OTLP_HTTP_ENDPOINT=http://jaeger:4318/v1/traces
+      - OTEL_SERVICE_NAME=${AUTH_OTEL_SERVICE_NAME:-auth}
       - SUPERUSER_LOGIN=$AUTH_SUPERUSER_LOGIN
       - SUPERUSER_PASSWORD=$AUTH_SUPERUSER_PASSWORD
       - POSTGRESQL_HOST=auth-postgresql
@@ -161,12 +166,18 @@ services:
         condition: service_healthy
       auth-redis:
         condition: service_healthy
+      jaeger:
+        condition: service_healthy
     networks:
       - movies-network
     environment:
       - AUTH_SECRET_KEY=$AUTH_SECRET_KEY
       - AUTH_ACCESS_JWT_LIFETIME=${AUTH_ACCESS_JWT_LIFETIME:-3600}
       - AUTH_REFRESH_JWT_LIFETIME=${AUTH_REFRESH_JWT_LIFETIME:-86400}
+      - AUTH_SQL_ECHO=${AUTH_SQL_ECHO:-False}
+      - OTEL_ENABLED=${OTEL_ENABLED:-True}
+      - OTEL_EXPORTER_OTLP_HTTP_ENDPOINT=http://jaeger:4318/v1/traces
+      - OTEL_SERVICE_NAME=${AUTH_OTEL_SERVICE_NAME:-auth}
       - SUPERUSER_LOGIN=$AUTH_SUPERUSER_LOGIN
       - SUPERUSER_PASSWORD=$AUTH_SUPERUSER_PASSWORD
       - POSTGRESQL_HOST=auth-postgresql
