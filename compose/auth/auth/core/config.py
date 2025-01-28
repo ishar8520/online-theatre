@@ -19,6 +19,15 @@ class AuthConfig(BaseSettings):
         return 'v1/jwt/login'
 
 
+class OpenTelemetryConfig(BaseSettings):
+    model_config = SettingsConfigDict(env_prefix='otel_')
+
+    enabled: bool = False
+    request_id_required: bool = False
+    exporter_otlp_http_endpoint: str | None = None
+    service_name: str = 'auth'
+
+
 class PostgreSQLConfig(BaseSettings):
     model_config = SettingsConfigDict(env_prefix='postgresql_')
 
@@ -59,6 +68,7 @@ class Settings(BaseSettings):
     redis: RedisConfig = RedisConfig()
     cache: CacheConfig = CacheConfig()
     ratelimiter: RateLimiterConfig = RateLimiterConfig()
+    otel: OpenTelemetryConfig = OpenTelemetryConfig()
 
 
 settings = Settings()
