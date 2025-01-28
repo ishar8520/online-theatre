@@ -66,7 +66,7 @@ async def clean_all_tables_after(async_session):
     await async_session.commit()
 
 @pytest_asyncio.fixture(scope='module')
-async def login_superuser(aiohttp_session):
+async def auth_headers(aiohttp_session):
     superuser = {
         'grant_type': 'password',
         'username': settings.superuser.login,

@@ -20,6 +20,7 @@ class BaseGenreByIdTestCase:
     redis_cache: RedisCache
     genres_index: ElasticsearchIndex[Genre]
     aiohttp_session: aiohttp.ClientSession
+    headers: dict
     genres_count: int
 
     def __init__(self,
@@ -27,10 +28,13 @@ class BaseGenreByIdTestCase:
                  redis_cache: RedisCache,
                  genres_index: ElasticsearchIndex[Genre],
                  aiohttp_session: aiohttp.ClientSession,
-                 genres_count: int = 10) -> None:
+                 headers: dict,
+                 genres_count: int = 10
+                 ) -> None:
         self.genres_index = genres_index
         self.aiohttp_session = aiohttp_session
         self.redis_cache = redis_cache
+        self.headers = headers
         self.genres_count = genres_count
 
     async def run(self) -> None:
@@ -49,6 +53,7 @@ class BaseGenreByIdTestCase:
         self.validate_genre_result(genre=genre, genre_result_data=genre_result_data)
 
         await self.redis_cache.clear()
+
 
         genre_result_data = await self.get_genre_result(genre_id=genre_id, expected_status=http.HTTPStatus.NOT_FOUND)
         assert genre_result_data is None
@@ -95,7 +100,7 @@ class BaseGenreByIdTestCase:
                                        expected_status: int = http.HTTPStatus.OK) -> Any:
         genre_by_id_api_url = urljoin(settings.movies_api_url, f'v1/genres/{genre_id}')
 
-        async with self.aiohttp_session.get(genre_by_id_api_url) as response:
+        async with self.aiohttp_session.get(genre_by_id_api_url, headers=self.headers) as response:
             assert response.status == expected_status
             response_data = await response.json()
 
@@ -138,6 +143,7 @@ async def test_genre_by_id(
         redis_cache,
         create_elasticsearch_index,
         aiohttp_session,
+        auth_headers
 ) -> None:
     genres_index = await create_elasticsearch_index(index_name='genres')
 
@@ -145,6 +151,7 @@ async def test_genre_by_id(
         redis_cache=redis_cache,
         genres_index=genres_index,
         aiohttp_session=aiohttp_session,
+        headers=auth_headers,
     ).run()
 
 
@@ -153,6 +160,7 @@ async def test_genre_does_not_exist(
         redis_cache,
         create_elasticsearch_index,
         aiohttp_session,
+        auth_headers,
 ) -> None:
     genres_index = await create_elasticsearch_index(index_name='genres')
 
@@ -160,4 +168,5 @@ async def test_genre_does_not_exist(
         redis_cache=redis_cache,
         genres_index=genres_index,
         aiohttp_session=aiohttp_session,
+        headers=auth_headers,
     ).run()

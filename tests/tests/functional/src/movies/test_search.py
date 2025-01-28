@@ -31,6 +31,7 @@ INDEX_NAME_PERSON = 'persons'
 async def test_search_film(
         create_elasticsearch_index,
         aiohttp_session,
+        auth_headers,
         input,
         expected
 ):
@@ -44,7 +45,11 @@ async def test_search_film(
     await elastic.load_documents(documents=[film])
 
     url = urljoin(settings.movies_api_v1_url, 'films/search/')
-    async with aiohttp_session.get(url, params={'query': input['search']}) as response:
+    async with aiohttp_session.get(
+            url,
+            headers=auth_headers,
+            params={'query': input['search']}
+    ) as response:
         status = response.status
         data = await response.json()
 
@@ -77,6 +82,7 @@ async def test_search_film(
 async def test_search_person(
         create_elasticsearch_index,
         aiohttp_session,
+        auth_headers,
         input,
         expected
 ):
@@ -94,7 +100,11 @@ async def test_search_person(
     await elastic.load_documents(documents=persons)
 
     url = urljoin(settings.movies_api_v1_url, 'persons/search/')
-    async with aiohttp_session.get(url, params={'query': input['search_full_name']}) as response:
+    async with aiohttp_session.get(
+            url,
+            headers=auth_headers,
+            params={'query': input['search_full_name']}
+    ) as response:
         status = response.status
         data = await response.json()
 
@@ -122,6 +132,7 @@ async def test_search_person(
 async def test_search_person_with_redis(
         create_elasticsearch_index,
         aiohttp_session,
+        auth_headers,
         input,
         expected
 ):
@@ -135,7 +146,11 @@ async def test_search_person_with_redis(
 
     async def inner_test_search_person_with_redis(aiohttp_session, input, expected):
         url = urljoin(settings.movies_api_v1_url, 'persons/search/')
-        async with aiohttp_session.get(url, params={'query': input['search_full_name']}) as response:
+        async with aiohttp_session.get(
+                url,
+                headers=auth_headers,
+                params={'query': input['search_full_name']}
+        ) as response:
             status = response.status
             data = await response.json()
 
