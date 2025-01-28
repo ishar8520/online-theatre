@@ -5,6 +5,9 @@ from collections.abc import AsyncGenerator, Callable, Awaitable
 from contextlib import asynccontextmanager
 
 import redis.asyncio as redis
+from fastapi import FastAPI, Depends
+from fastapi_limiter import FastAPILimiter
+from fastapi_limiter.depends import RateLimiter
 from fastapi import FastAPI, Request, Response, status
 from fastapi.responses import JSONResponse
 from opentelemetry import trace
@@ -62,6 +65,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[dict]:
     async with (
         redis.Redis(host=settings.redis.host, port=settings.redis.port) as redis_client,
     ):
+        await FastAPILimiter.init(redis_client)
         yield {
             'redis_client': redis_client,
         }
@@ -74,6 +78,8 @@ app = FastAPI(
     docs_url=f'{base_api_prefix}/openapi',
     openapi_url=f'{base_api_prefix}/openapi.json',
     lifespan=lifespan,
+    dependencies=[Depends(RateLimiter(
+        times=settings.ratelimiter.times, seconds=settings.ratelimiter.seconds))]
 )
 FastAPIInstrumentor.instrument_app(
     app,
