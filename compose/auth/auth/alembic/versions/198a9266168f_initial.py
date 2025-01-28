@@ -55,27 +55,9 @@ def upgrade() -> None:
         sa.UniqueConstraint('user_id', 'role_id', name='uix_auth_role_id_user_id'),
         schema='auth',
     )
-    op.create_table(
-        'login_history',
-        sa.Column('id', sa.UUID()),
-        sa.Column('user_id', sa.UUID()),
-        sa.Column('user_agent', sa.TEXT()),
-        sa.Column('created', postgresql.TIMESTAMP(timezone=True)),
-        sa.ForeignKeyConstraint(['user_id'], ['auth.user.id'], name='login_history_user_id_fkey'),
-        sa.PrimaryKeyConstraint('id', name='login_history_pkey'),
-        schema='auth',
-    )
-    op.create_index(
-        'ix_login_history_user_id',
-        'login_history',
-        ['user_id'],
-        schema='auth',
-    )
 
 
 def downgrade() -> None:
-    op.drop_index('ix_login_history_user_id', table_name='login_history', schema='auth')
-    op.drop_table('login_history', schema='auth')
     op.drop_table('user_role', schema='auth')
     op.drop_table('role', schema='auth')
     op.drop_table('user', schema='auth')
