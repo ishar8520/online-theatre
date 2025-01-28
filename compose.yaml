@@ -139,6 +139,8 @@ services:
       - POSTGRESQL_PASSWORD=$AUTH_POSTGRESQL_PASSWORD
       - REDIS_HOST=auth-redis
       - REDIS_PORT=6379
+      - RATELIMITER_TIMES=$RATELIMITER_TIMES
+      - RATELIMITER_SECONDS=$RATELIMITER_SECONDS
     command: [ '/opt/app/commands/gunicorn.sh' ]
     restart: unless-stopped
     healthcheck:

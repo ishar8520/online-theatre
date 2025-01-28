@@ -5,7 +5,9 @@ from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
 import redis.asyncio as redis
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
+from fastapi_limiter import FastAPILimiter
+from fastapi_limiter.depends import RateLimiter
 
 from .api.v1.endpoints import (
     roles,
@@ -27,6 +29,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[dict]:
     async with (
         redis.Redis(host=settings.redis.host, port=settings.redis.port) as redis_client,
     ):
+        await FastAPILimiter.init(redis_client)
         yield {
             'redis_client': redis_client,
         }
@@ -39,6 +42,8 @@ app = FastAPI(
     docs_url=f'{base_api_prefix}/openapi',
     openapi_url=f'{base_api_prefix}/openapi.json',
     lifespan=lifespan,
+    dependencies=[Depends(RateLimiter(
+        times=settings.ratelimiter.times, seconds=settings.ratelimiter.seconds))]
 )
 
 auth_api_prefix = f'{base_api_prefix}/v1'

@@ -46,12 +46,19 @@ class CacheConfig(BaseSettings):
     timeout: int = 60 * 5
 
 
+class RateLimiterConfig(BaseSettings):
+    model_config = SettingsConfigDict(env_prefix='ratelimiter_')
+
+    times: int = 5
+    seconds: int = 60
+
 # noinspection PyArgumentList
 class Settings(BaseSettings):
     auth: AuthConfig = AuthConfig()
     postgresql: PostgreSQLConfig = PostgreSQLConfig()
     redis: RedisConfig = RedisConfig()
     cache: CacheConfig = CacheConfig()
+    ratelimiter: RateLimiterConfig = RateLimiterConfig()
 
 
 settings = Settings()

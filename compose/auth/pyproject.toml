@@ -16,6 +16,7 @@ redis = { version = "5.2.1", extras = ["hiredis"] }
 SQLAlchemy = { version = "2.0.37", extras = ["asyncio"] }
 uvicorn-worker = "0.2.0"
 typer = "0.15.1"
+fastapi-limiter = "0.1.6"
 
 [build-system]
 requires = ["poetry-core"]
