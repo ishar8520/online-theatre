@@ -2,6 +2,7 @@ services:
   nginx:
     build:
       context: ./compose/nginx
+      target: dev
     depends_on:
       movies:
         condition: service_healthy
@@ -9,6 +10,11 @@ services:
       - '8000:8080'
     networks:
       - movies-network
+    develop:
+      watch:
+        - action: sync+restart
+          path: ./compose/nginx/conf
+          target: /opt/bitnami/nginx/conf/
 
   movies:
     build:
