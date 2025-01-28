@@ -1,6 +1,7 @@
 services:
   nginx:
-    image: 'bitnami/nginx:1.27.3-debian-12-r5'
+    build:
+      context: ./compose/nginx
     depends_on:
       movies:
         condition: service_healthy
@@ -8,8 +9,6 @@ services:
       - '8000:8080'
     networks:
       - movies-network
-    volumes:
-      - './compose/nginx/movies.conf:/opt/bitnami/nginx/conf/server_blocks/movies.conf:ro'
 
   movies:
     build:
@@ -21,11 +20,17 @@ services:
         condition: service_healthy
       auth-service:
         condition: service_healthy
+      jaeger:
+        condition: service_healthy
     networks:
       - movies-network
     environment:
       - PROJECT_NAME=$PROJECT_NAME
       - GUNICORN_WORKERS=${GUNICORN_WORKERS:-}
+      - OTEL_ENABLED=${OTEL_ENABLED:-True}
+      - OTEL_REQUEST_ID_REQUIRED=${OTEL_REQUEST_ID_REQUIRED:-True}
+      - OTEL_EXPORTER_OTLP_HTTP_ENDPOINT=http://jaeger:4318/v1/traces
+      - OTEL_SERVICE_NAME=${OTEL_SERVICE_NAME:-movies}
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - ELASTIC_HOST=elasticsearch
@@ -33,7 +38,7 @@ services:
       - AUTH_HOST=auth-service
     command: [ '/opt/app/commands/gunicorn.sh' ]
     healthcheck:
-      test: [ 'CMD-SHELL', 'curl -s http://localhost:8000/api/openapi.json' ]
+      test: [ 'CMD-SHELL', 'curl -s -H "X-Request-Id: healthcheck" http://localhost:8000/api/_health' ]
       interval: 10s
       timeout: 10s
       retries: 5
@@ -123,6 +128,8 @@ services:
         condition: service_healthy
       auth-service-init:
         condition: service_completed_successfully
+      jaeger:
+        condition: service_healthy
     networks:
       - movies-network
     environment:
@@ -131,6 +138,10 @@ services:
       - AUTH_ACCESS_JWT_LIFETIME=${AUTH_ACCESS_JWT_LIFETIME:-3600}
       - AUTH_REFRESH_JWT_LIFETIME=${AUTH_REFRESH_JWT_LIFETIME:-86400}
       - AUTH_SQL_ECHO=${AUTH_SQL_ECHO:-False}
+      - OTEL_ENABLED=${OTEL_ENABLED:-True}
+      - OTEL_REQUEST_ID_REQUIRED=${OTEL_REQUEST_ID_REQUIRED:-True}
+      - OTEL_EXPORTER_OTLP_HTTP_ENDPOINT=http://jaeger:4318/v1/traces
+      - OTEL_SERVICE_NAME=${AUTH_OTEL_SERVICE_NAME:-auth}
       - SUPERUSER_LOGIN=$AUTH_SUPERUSER_LOGIN
       - SUPERUSER_PASSWORD=$AUTH_SUPERUSER_PASSWORD
       - POSTGRESQL_HOST=auth-postgresql
@@ -140,10 +151,12 @@ services:
       - POSTGRESQL_PASSWORD=$AUTH_POSTGRESQL_PASSWORD
       - REDIS_HOST=auth-redis
       - REDIS_PORT=6379
+      - RATELIMITER_TIMES=$RATELIMITER_TIMES
+      - RATELIMITER_SECONDS=$RATELIMITER_SECONDS
     command: [ '/opt/app/commands/gunicorn.sh' ]
     restart: unless-stopped
     healthcheck:
-      test: [ 'CMD-SHELL', 'curl -s http://localhost:8000/auth/api/openapi.json' ]
+      test: [ 'CMD-SHELL', 'curl -s -H "X-Request-Id: healthcheck" http://localhost:8000/auth/api/_health' ]
       interval: 10s
       timeout: 10s
       retries: 5
@@ -157,12 +170,19 @@ services:
         condition: service_healthy
       auth-redis:
         condition: service_healthy
+      jaeger:
+        condition: service_healthy
     networks:
       - movies-network
     environment:
       - AUTH_SECRET_KEY=$AUTH_SECRET_KEY
       - AUTH_ACCESS_JWT_LIFETIME=${AUTH_ACCESS_JWT_LIFETIME:-3600}
       - AUTH_REFRESH_JWT_LIFETIME=${AUTH_REFRESH_JWT_LIFETIME:-86400}
+      - AUTH_SQL_ECHO=${AUTH_SQL_ECHO:-False}
+      - OTEL_ENABLED=${OTEL_ENABLED:-True}
+      - OTEL_REQUEST_ID_REQUIRED=${OTEL_REQUEST_ID_REQUIRED:-True}
+      - OTEL_EXPORTER_OTLP_HTTP_ENDPOINT=http://jaeger:4318/v1/traces
+      - OTEL_SERVICE_NAME=${AUTH_OTEL_SERVICE_NAME:-auth}
       - SUPERUSER_LOGIN=$AUTH_SUPERUSER_LOGIN
       - SUPERUSER_PASSWORD=$AUTH_SUPERUSER_PASSWORD
       - POSTGRESQL_HOST=auth-postgresql
@@ -204,6 +224,19 @@ services:
     restart: unless-stopped
     healthcheck:
       test: [ 'CMD', '/bin/bash', '-c', '[[ $(redis-cli ping) == "PONG" ]]' ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+
+  jaeger:
+    image: 'jaegertracing/jaeger:2.2.0'
+    ports:
+      - '16686:16686'
+    networks:
+      - movies-network
+    healthcheck:
+      test: [ 'CMD-SHELL', 'wget -q --spider http://localhost:16686' ]
       interval: 10s
       timeout: 10s
       retries: 5

@@ -9,6 +9,15 @@ class ProjectConfig(BaseSettings):
     name: str | None = None
 
 
+class OpenTelemetryConfig(BaseSettings):
+    model_config = SettingsConfigDict(env_prefix='otel_')
+
+    enabled: bool = False
+    request_id_required: bool = False
+    exporter_otlp_http_endpoint: str | None = None
+    service_name: str = 'movies'
+
+
 class RedisConfig(BaseSettings):
     model_config = SettingsConfigDict(env_prefix='redis_')
 
@@ -54,6 +63,7 @@ class Settings(BaseSettings):
     redis: RedisConfig = RedisConfig()
     elasticsearch: ElasticConfig = ElasticConfig()
     auth: AuthConfig = AuthConfig()
+    otel: OpenTelemetryConfig = OpenTelemetryConfig()
 
 
 settings = Settings()

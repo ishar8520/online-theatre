@@ -8,14 +8,21 @@ alembic = "1.14.1"
 asyncpg = "0.30.0"
 backoff = "2.2.1"
 fastapi = { version = "0.115.6", extras = ["standard"] }
+opentelemetry-api = "1.29.0"
+opentelemetry-exporter-otlp-proto-http = "1.29.0"
+opentelemetry-instrumentation = "0.50b0"
+opentelemetry-instrumentation-fastapi = "0.50b0"
+opentelemetry-propagator-jaeger = "1.29.0"
+opentelemetry-sdk = "1.29.0"
 pwdlib = { version = "0.2.1", extras = ["argon2", "bcrypt"] }
 pydantic = { version = "2.10.5", extras = ["email"] }
 pydantic-settings = "2.7.1"
 PyJWT = { version = "2.10.1", extras = ["crypto"] }
 redis = { version = "5.2.1", extras = ["hiredis"] }
 SQLAlchemy = { version = "2.0.37", extras = ["asyncio"] }
-uvicorn-worker = "0.2.0"
 typer = "0.15.1"
+fastapi-limiter = "0.1.6"
+uvicorn-worker = "0.2.0"
 
 [build-system]
 requires = ["poetry-core"]

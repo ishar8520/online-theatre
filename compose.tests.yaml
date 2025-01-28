@@ -68,7 +68,9 @@ services:
         - action: rebuild
           path: ./src/commands
         - action: rebuild
-          path: ./src/requirements.txt
+          path: ./src/pyproject.toml
+        - action: rebuild
+          path: ./src/poetry.lock
 
   redis:
     image: 'bitnami/redis:7.4.2-debian-12-r0'
@@ -126,6 +128,8 @@ services:
       - POSTGRESQL_DATABASE=$AUTH_POSTGRESQL_DATABASE
       - POSTGRESQL_USERNAME=$AUTH_POSTGRESQL_USERNAME
       - POSTGRESQL_PASSWORD=$AUTH_POSTGRESQL_PASSWORD
+      - RATELIMITER_TIMES=$RATELIMITER_TIMES
+      - RATELIMITER_SECONDS=$RATELIMITER_SECONDS
       - REDIS_HOST=auth-redis
       - REDIS_PORT=6379
     healthcheck:
