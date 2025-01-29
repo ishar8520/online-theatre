@@ -9,6 +9,5 @@ from ..settings import settings
 
 @pytest_asyncio.fixture(scope='function', autouse=True)
 async def reset_rate_limit():
-    # redis_client = redis.Redis(host=settings.auth_redis.host, port=settings.auth_redis.port, decode_responses=True)
-    redis_client = redis.Redis(host='auth-redis', port=6379, decode_responses=True)
+    redis_client = redis.Redis(host=settings.auth_redis.host, port=settings.auth_redis.port, decode_responses=True)
     await redis_client.flushdb()

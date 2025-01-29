@@ -23,7 +23,7 @@ services:
       - AUTH_HOST=auth-service
       - RATELIMITER_TIMES=$RATELIMITER_TIMES
       - RATELIMITER_SECONDS=$RATELIMITER_SECONDS
-      - AUTH_REDIS_HOST=auth_redis
+      - AUTH_REDIS_HOST=auth-redis
       - AUTH_REDIS_PORT=6379
     develop:
       watch:
