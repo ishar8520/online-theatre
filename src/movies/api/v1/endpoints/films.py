@@ -9,6 +9,7 @@ from fastapi import APIRouter, HTTPException
 from ..dependencies import PageDep
 from ..models.films import FilmInfo, Film
 from ....services import FilmServiceDep
+from ....services.auth.user import AuthUserDep
 
 router = APIRouter()
 
@@ -16,7 +17,6 @@ router = APIRouter()
 class SortOrderEnum(str, Enum):
     asc = "asc"
     desc = "desc"
-
 
 @router.get(
     '/',
@@ -30,6 +30,7 @@ async def get_list(
         genre: uuid.UUID | None = None,
         page: PageDep,
         film_service: FilmServiceDep,
+        auth_user: AuthUserDep
 ) -> list[Film]:
     sort_by = {}
     if sort:
@@ -62,7 +63,12 @@ async def get_list(
     summary='Get film by uuid',
     description='Get concrete film by uuid.'
 )
-async def get_by_id(*, uuid: uuid.UUID, film_service: FilmServiceDep) -> FilmInfo:
+async def get_by_id(
+        *,
+        uuid: uuid.UUID,
+        film_service: FilmServiceDep,
+        auth_user: AuthUserDep
+) -> FilmInfo:
     film = await film_service.get_by_id(uuid)
     if not film:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail='Film not found')
@@ -76,7 +82,13 @@ async def get_by_id(*, uuid: uuid.UUID, film_service: FilmServiceDep) -> FilmInf
     summary='Search film by query',
     description='Search film by title with pagination. The maximum count of films on one page are 150.'
 )
-async def search(*, query: str = '', page: PageDep, film_service: FilmServiceDep) -> list[Film]:
+async def search(
+        *,
+        query: str = '',
+        page: PageDep,
+        film_service: FilmServiceDep,
+        auth_user: AuthUserDep
+) -> list[Film]:
     if not query:
         return []
 

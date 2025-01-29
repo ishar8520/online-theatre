@@ -8,6 +8,7 @@ from fastapi import APIRouter, HTTPException
 from ..dependencies import PageDep
 from ..models.genres import Genre
 from ....services import GenreServiceDep
+from ....services.auth.user import AuthUserDep
 
 router = APIRouter()
 
@@ -18,7 +19,12 @@ router = APIRouter()
     summary='Get list of genres',
     description='Get list of genres with pagination. The maximum count of genres on one page are 150.'
 )
-async def get_list(*, page: PageDep, genre_service: GenreServiceDep) -> list[Genre]:
+async def get_list(
+        *,
+        page: PageDep,
+        genre_service: GenreServiceDep,
+        auth_user: AuthUserDep
+) -> list[Genre]:
     genre_list = await genre_service.get_list(
         page_number=page.number,
         page_size=page.size
@@ -35,7 +41,12 @@ async def get_list(*, page: PageDep, genre_service: GenreServiceDep) -> list[Gen
     summary='Get genre by uuid',
     description='Get concrete genre by uuid.'
 )
-async def get_by_id(*, uuid: uuid.UUID, genre_service: GenreServiceDep) -> Genre:
+async def get_by_id(
+        *,
+        uuid: uuid.UUID,
+        genre_service: GenreServiceDep,
+        auth_user: AuthUserDep
+) -> Genre:
     genre = await genre_service.get_by_id(uuid)
     if not genre:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail='Genre not found')

@@ -11,7 +11,9 @@ from fastapi import (
     status,
 )
 from fastapi.security import OAuth2PasswordRequestForm
+from fastapi_limiter.depends import RateLimiter
 
+from .....core.config import settings
 from .common import ErrorCode, ErrorModel
 from .....services.users import (
     CurrentUserDep,
@@ -41,6 +43,8 @@ router = APIRouter()
             },
         },
     },
+    dependencies=[Depends(RateLimiter(
+    times=settings.ratelimiter.times, seconds=settings.ratelimiter.seconds))]
 )
 async def login(*,
                 credentials: OAuth2PasswordRequestForm = Depends(),

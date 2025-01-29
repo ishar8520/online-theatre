@@ -78,8 +78,6 @@ app = FastAPI(
     docs_url=f'{base_api_prefix}/openapi',
     openapi_url=f'{base_api_prefix}/openapi.json',
     lifespan=lifespan,
-    dependencies=[Depends(RateLimiter(
-        times=settings.ratelimiter.times, seconds=settings.ratelimiter.seconds))]
 )
 FastAPIInstrumentor.instrument_app(
     app,
