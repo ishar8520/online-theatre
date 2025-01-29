@@ -5,11 +5,10 @@ from collections.abc import AsyncGenerator, Callable, Awaitable
 from contextlib import asynccontextmanager
 
 import redis.asyncio as redis
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, Request, Response, status
+from fastapi.responses import JSONResponse
 from fastapi_limiter import FastAPILimiter
 from fastapi_limiter.depends import RateLimiter
-from fastapi import FastAPI, Request, Response, status
-from fastapi.responses import JSONResponse
 from opentelemetry import trace
 from opentelemetry.baggage.propagation import W3CBaggagePropagator
 from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
