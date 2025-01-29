@@ -18,7 +18,6 @@ from sqlalchemy.orm import (
 )
 
 from ..db.sqlalchemy import AuthBase
-from .making_partitions import create_login_history_partition
 
 
 class User(AuthBase):
@@ -117,7 +116,6 @@ class LoginHistory(AuthBase):
         Index('ix_login_history_user_id', 'user_id', 'created'),
         {
             'postgresql_partition_by': 'RANGE (created)',
-            'listeners': [('after_create', create_login_history_partition)],
         }
     )
     user: Mapped[User] = relationship("User", back_populates="login_history")

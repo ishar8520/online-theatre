@@ -21,48 +21,69 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade():
     op.create_table(
-        "login_history",
+        "login_history_new",
         sa.Column("id", sa.UUID()),
         sa.Column("user_id", sa.UUID(), nullable=False),
         sa.Column("user_agent", sa.TEXT()),
         sa.Column("created", postgresql.TIMESTAMP(timezone=True)),
         sa.ForeignKeyConstraint(
-            ["user_id"], ["auth.user.id"], name="login_history_user_id_fkey"
+            ["user_id"], ["auth.user.id"], name="login_history_new_user_id_fkey"
         ),
-        sa.PrimaryKeyConstraint("id", "created", name="login_history_pkey"),
+        sa.PrimaryKeyConstraint("id", "created", name="login_history_new_pkey"),
         schema="auth",
         postgresql_partition_by="RANGE (created)",
     )
     op.execute(
         """
-        CREATE TABLE login_history_january PARTITION OF auth.login_history
+        CREATE TABLE login_history_january PARTITION OF auth.login_history_new
             FOR VALUES FROM ('2025-01-01') TO ('2025-02-01');
     """
     )
 
     op.execute(
         """
-        CREATE TABLE login_history_february PARTITION OF auth.login_history
+        CREATE TABLE login_history_february PARTITION OF auth.login_history_new
             FOR VALUES FROM ('2025-02-01') TO ('2025-03-01');
     """
     )
 
     op.execute(
         """
-        CREATE TABLE login_history_march PARTITION OF auth.login_history
+        CREATE TABLE login_history_march PARTITION OF auth.login_history_new
             FOR VALUES FROM ('2025-03-01') TO ('2025-04-01');
     """
     )
 
     op.execute(
         """
-        CREATE TABLE login_history_april PARTITION OF auth.login_history
+        CREATE TABLE login_history_april PARTITION OF auth.login_history_new
             FOR VALUES FROM ('2025-04-01') TO ('2025-05-01');
     """
     )
 
+    op.execute("""
+        INSERT INTO auth.login_history_new (id, user_id, user_agent, created)
+        SELECT id, user_id, user_agent, created FROM auth.login_history;
+    """)
+
+    op.drop_table("login_history", schema="auth")
+
+    op.rename_table("login_history_new", "login_history", schema="auth")
+    op.execute(
+        """
+        ALTER TABLE auth.login_history
+        RENAME CONSTRAINT login_history_new_user_id_fkey TO login_history_user_id_fkey;
+        """
+    )
+
+    op.execute(
+        """
+        ALTER TABLE auth.login_history
+        RENAME CONSTRAINT login_history_new_pkey TO login_history_pkey;
+        """
+    )
     op.create_index(
-        "ix_login_history_user_id",
+        "ix_login_history_user_id_created",
         "login_history",
         ["user_id", "created"],
         schema="auth",
@@ -70,9 +91,38 @@ def upgrade():
 
 
 def downgrade():
-    op.drop_index("ix_login_history_user_id", table_name="login_history", schema="auth")
+    op.create_table(
+        "login_history_new",
+        sa.Column("id", sa.UUID(), primary_key=True),
+        sa.Column("user_id", sa.UUID(), nullable=False),
+        sa.Column("user_agent", sa.TEXT()),
+        sa.Column("created", postgresql.TIMESTAMP(timezone=True)),
+        sa.ForeignKeyConstraint(
+            ["user_id"], ["auth.user.id"], name="login_history_new_user_id_fkey"
+        ),
+        schema="auth",
+    )
+    op.execute("""
+        INSERT INTO auth.login_history_new (id, user_id, user_agent, created)
+        SELECT id, user_id, user_agent, created FROM auth.login_history;
+    """)
     op.drop_table("login_history", schema="auth")
-    op.drop_table("login_history_april", schema="auth")
-    op.drop_table("login_history_march", schema="auth")
-    op.drop_table("login_history_february", schema="auth")
-    op.drop_table("login_history_january", schema="auth")
+    op.create_index(
+        "ix_login_history_user_id",
+        "login_history_new",
+        ["user_id"],
+        schema="auth",
+    )
+    op.execute(
+        """
+        ALTER TABLE auth.login_history_new
+        RENAME CONSTRAINT login_history_new_user_id_fkey TO login_history_user_id_fkey;
+        """
+    )
+    op.execute(
+        """
+        ALTER TABLE auth.login_history_new
+        RENAME CONSTRAINT login_history_new_pkey TO login_history_pkey;
+        """
+    )
+    op.rename_table("login_history_new", "login_history", schema="auth")
