@@ -19,6 +19,13 @@ class AuthConfig(BaseSettings):
         return 'v1/jwt/login'
 
 
+class OAuthConfig(BaseSettings):
+    model_config = SettingsConfigDict(env_prefix='oauth_')
+
+    google_client_id: str = ''
+    google_client_secret: str = ''
+
+
 class OpenTelemetryConfig(BaseSettings):
     model_config = SettingsConfigDict(env_prefix='otel_')
 
@@ -61,9 +68,11 @@ class RateLimiterConfig(BaseSettings):
     times: int = 5
     seconds: int = 60
 
+
 # noinspection PyArgumentList
 class Settings(BaseSettings):
     auth: AuthConfig = AuthConfig()
+    oauth: OAuthConfig = OAuthConfig()
     postgresql: PostgreSQLConfig = PostgreSQLConfig()
     redis: RedisConfig = RedisConfig()
     cache: CacheConfig = CacheConfig()

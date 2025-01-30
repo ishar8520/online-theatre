@@ -26,6 +26,7 @@ from .api.v1.endpoints import (
 )
 from .api.v1.endpoints.users import (
     auth,
+    oauth,
     register,
     users,
 )
@@ -107,6 +108,11 @@ auth_api_prefix = f'{base_api_prefix}/v1'
 app.include_router(
     auth.router,
     prefix=f'{auth_api_prefix}/jwt',
+    tags=['auth'],
+)
+app.include_router(
+    oauth.router,
+    prefix=f'{auth_api_prefix}/google',
     tags=['auth'],
 )
 app.include_router(

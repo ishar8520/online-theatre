@@ -996,6 +996,21 @@ socks = ["socksio (==1.*)"]
 zstd = ["zstandard (>=0.18.0)"]
 
 [[package]]
+name = "httpx-oauth"
+version = "0.16.1"
+description = "Async OAuth client using HTTPX"
+optional = false
+python-versions = ">=3.9"
+groups = ["main"]
+files = [
+    {file = "httpx_oauth-0.16.1-py3-none-any.whl", hash = "sha256:2fcad82f80f28d0473a0fc4b4eda223dc952050af7e3a8c8781342d850f09fb5"},
+    {file = "httpx_oauth-0.16.1.tar.gz", hash = "sha256:7402f061f860abc092ea4f5c90acfc576a40bbb79633c1d2920f1ca282c296ee"},
+]
+
+[package.dependencies]
+httpx = ">=0.18"
+
+[[package]]
 name = "idna"
 version = "3.10"
 description = "Internationalized Domain Names in Applications (IDNA)"
@@ -2352,4 +2367,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.12"
-content-hash = "c2e1720827dca50ab574c63c2639071a8eb94b897b8b45ed025904b041e4be6b"
+content-hash = "1f17fb2283971fd1a6b641a2484a55691791336df3cc62893c58e76d5079608f"
