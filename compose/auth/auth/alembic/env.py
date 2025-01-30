@@ -9,7 +9,7 @@ from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from auth.core import settings
-from auth.models.sqlalchemy import AuthBase
+from auth.models.sqlalchemy import auth_metadata_obj
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -24,7 +24,7 @@ if config.config_file_name is not None:
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-target_metadata = [AuthBase.metadata]
+target_metadata = [auth_metadata_obj]
 
 
 # other values from the config, defined by the needs of env.py,

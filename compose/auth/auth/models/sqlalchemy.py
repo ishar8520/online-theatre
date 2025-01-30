@@ -4,6 +4,7 @@ import datetime
 import uuid
 
 from sqlalchemy import (
+    MetaData,
     UUID,
     TEXT,
     Boolean,
@@ -17,8 +18,23 @@ from sqlalchemy.orm import (
     mapped_column,
     relationship
 )
+from sqlalchemy.orm import DeclarativeBase
 
-from ..db.sqlalchemy import AuthBase
+
+auth_metadata_obj = MetaData(
+    schema='auth',
+    naming_convention={
+        'ix': 'ix_%(column_0_label)s',
+        'uq': 'uq_%(table_name)s_%(column_0_name)s',
+        'ck': 'ck_%(table_name)s_%(constraint_name)s',
+        'fk': 'fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s',
+        'pk': 'pk_%(table_name)s',
+    },
+)
+
+
+class AuthBase(DeclarativeBase):
+    metadata = auth_metadata_obj
 
 
 class User(AuthBase):
