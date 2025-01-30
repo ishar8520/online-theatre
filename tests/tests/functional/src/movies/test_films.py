@@ -53,6 +53,7 @@ INDEX_NAME_FILM = 'films'
 async def test_get_list_pagination(
         create_elasticsearch_index,
         aiohttp_session,
+        auth_headers,
         count: int,
         input,
         expected
@@ -70,7 +71,7 @@ async def test_get_list_pagination(
     await elastic.load_documents(documents=films_generator())
 
     url = urljoin(settings.movies_api_v1_url, 'films/')
-    async with aiohttp_session.get(url, params=input) as response:
+    async with aiohttp_session.get(url, params=input, headers=auth_headers) as response:
         status = response.status
         data = await response.json()
 
@@ -97,6 +98,7 @@ async def test_get_list_pagination(
 async def test_get_list_sort(
         create_elasticsearch_index,
         aiohttp_session,
+        auth_headers,
         input,
         expected
 ):
@@ -117,7 +119,7 @@ async def test_get_list_sort(
     await elastic.load_documents(documents=films)
 
     url = urljoin(settings.movies_api_v1_url, 'films/')
-    async with aiohttp_session.get(url, params=input) as response:
+    async with aiohttp_session.get(url, params=input, headers=auth_headers) as response:
         status = response.status
         data = await response.json()
 
@@ -150,6 +152,7 @@ async def test_get_list_sort(
 async def test_get_list_genre(
         create_elasticsearch_index,
         aiohttp_session,
+        auth_headers,
         input: dict,
         expected: dict
 ):
@@ -182,7 +185,7 @@ async def test_get_list_genre(
     await elastic.load_documents(documents=films)
 
     url = urljoin(settings.movies_api_v1_url, 'films/')
-    async with aiohttp_session.get(url, params={'genre': input['genre_search_uuid']}) as response:
+    async with aiohttp_session.get(url, params={'genre': input['genre_search_uuid']}, headers=auth_headers) as response:
         status = response.status
         data = await response.json()
 
@@ -205,6 +208,7 @@ async def test_get_list_genre(
 async def test_get_by_id(
         create_elasticsearch_index,
         aiohttp_session,
+        auth_headers,
         expected
 ):
     film = Film(
@@ -219,7 +223,7 @@ async def test_get_by_id(
 
     url = f'{settings.movies_api_v1_url}films/{expected['uuid']}/'
 
-    async with aiohttp_session.get(url) as response:
+    async with aiohttp_session.get(url, headers=auth_headers) as response:
         data = await response.json()
 
         assert data['uuid'] == expected['uuid']
@@ -237,6 +241,7 @@ async def test_get_by_id(
 async def test_get_by_id_from_redis(
         create_elasticsearch_index,
         aiohttp_session,
+        auth_headers,
         expected
 ):
     film = Film(
@@ -251,14 +256,14 @@ async def test_get_by_id_from_redis(
 
     url = f'{settings.movies_api_v1_url}films/{expected['uuid']}/'
 
-    async with aiohttp_session.get(url) as response:
+    async with aiohttp_session.get(url, headers=auth_headers) as response:
         data = await response.json()
 
         assert data['uuid'] == expected['uuid']
 
     await elastic.delete_index()
 
-    async with aiohttp_session.get(url) as response:
+    async with aiohttp_session.get(url, headers=auth_headers) as response:
         data = await response.json()
 
         assert data['uuid'] == expected['uuid']

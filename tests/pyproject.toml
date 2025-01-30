@@ -13,6 +13,7 @@ pytest = "^8.3.4"
 pytest-asyncio = "^0.25.0"
 redis = { version = "^5.2.1", extras = ["hiredis"] }
 SQLAlchemy = { version = "2.0.37", extras = ["asyncio"] }
+fastapi-limiter = "0.1.6"
 
 [build-system]
 requires = ["poetry-core"]

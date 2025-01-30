@@ -5,7 +5,10 @@ from collections.abc import AsyncGenerator, Callable, Awaitable
 from contextlib import asynccontextmanager
 
 import redis.asyncio as redis
-from fastapi import FastAPI, Request, Response, HTTPException, status
+from fastapi import FastAPI, Depends, Request, Response, status
+from fastapi.responses import JSONResponse
+from fastapi_limiter import FastAPILimiter
+from fastapi_limiter.depends import RateLimiter
 from opentelemetry import trace
 from opentelemetry.baggage.propagation import W3CBaggagePropagator
 from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
@@ -61,6 +64,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[dict]:
     async with (
         redis.Redis(host=settings.redis.host, port=settings.redis.port) as redis_client,
     ):
+        await FastAPILimiter.init(redis_client)
         yield {
             'redis_client': redis_client,
         }
@@ -87,10 +91,9 @@ async def check_request_id(request: Request, call_next: Callable[[Request], Awai
         request_id = request.headers.get('X-Request-Id')
 
         if not request_id:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail='X-Request-Id is required',
-            )
+            return JSONResponse({
+                'detail': 'X-Request-Id is required',
+            }, status_code=status.HTTP_400_BAD_REQUEST)
 
     return await call_next(request)
 

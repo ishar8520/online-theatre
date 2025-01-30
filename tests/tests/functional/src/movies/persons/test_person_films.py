@@ -27,6 +27,7 @@ class BasePersonFilmsTestCase:
     redis_cache: RedisCache
     films_index: ElasticsearchIndex[Film]
     aiohttp_session: aiohttp.ClientSession
+    headers: dict
     films_count: int
 
     def __init__(self,
@@ -34,9 +35,11 @@ class BasePersonFilmsTestCase:
                  redis_cache: RedisCache,
                  films_index: ElasticsearchIndex[Film],
                  aiohttp_session: aiohttp.ClientSession,
+                 headers: dict,
                  films_count: int = 3) -> None:
         self.films_index = films_index
         self.aiohttp_session = aiohttp_session
+        self.headers = headers
         self.redis_cache = redis_cache
         self.films_count = films_count
 
@@ -132,7 +135,7 @@ class BasePersonFilmsTestCase:
                                               expected_status: int = http.HTTPStatus.OK) -> Any:
         person_films_api_url = urljoin(settings.movies_api_url, f'v1/persons/{person_id}/film/')
 
-        async with self.aiohttp_session.get(person_films_api_url) as response:
+        async with self.aiohttp_session.get(person_films_api_url, headers=self.headers) as response:
             assert response.status == expected_status
             response_data = await response.json()
 
@@ -197,6 +200,7 @@ async def test_person_films_list_empty(
         redis_cache,
         create_elasticsearch_index,
         aiohttp_session,
+        auth_headers,
 ) -> None:
     films_index = await create_elasticsearch_index(index_name='films')
 
@@ -204,6 +208,7 @@ async def test_person_films_list_empty(
         redis_cache=redis_cache,
         films_index=films_index,
         aiohttp_session=aiohttp_session,
+        headers=auth_headers,
     ).run()
 
 
@@ -212,6 +217,7 @@ async def test_person_films(
         redis_cache,
         create_elasticsearch_index,
         aiohttp_session,
+        auth_headers,
 ) -> None:
     films_index = await create_elasticsearch_index(index_name='films')
 
@@ -219,6 +225,7 @@ async def test_person_films(
         redis_cache=redis_cache,
         films_index=films_index,
         aiohttp_session=aiohttp_session,
+        headers=auth_headers,
     ).run()
 
 
@@ -227,6 +234,7 @@ async def test_person_films_not_found(
         redis_cache,
         create_elasticsearch_index,
         aiohttp_session,
+        auth_headers,
 ) -> None:
     films_index = await create_elasticsearch_index(index_name='films')
 
@@ -234,4 +242,5 @@ async def test_person_films_not_found(
         redis_cache=redis_cache,
         films_index=films_index,
         aiohttp_session=aiohttp_session,
+        headers=auth_headers,
     ).run()

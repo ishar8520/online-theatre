@@ -23,6 +23,7 @@ class BasePersonByIdTestCase:
     redis_cache: RedisCache
     persons_index: ElasticsearchIndex[Person]
     aiohttp_session: aiohttp.ClientSession
+    headers: dict
     persons_count: int
 
     def __init__(self,
@@ -30,9 +31,11 @@ class BasePersonByIdTestCase:
                  redis_cache: RedisCache,
                  persons_index: ElasticsearchIndex[Person],
                  aiohttp_session: aiohttp.ClientSession,
+                 headers: dict,
                  persons_count: int = 3) -> None:
         self.persons_index = persons_index
         self.aiohttp_session = aiohttp_session
+        self.headers = headers
         self.redis_cache = redis_cache
         self.persons_count = persons_count
 
@@ -107,7 +110,10 @@ class BasePersonByIdTestCase:
                                         expected_status: int = http.HTTPStatus.OK) -> Any:
         person_by_id_api_url = urljoin(settings.movies_api_url, f'v1/persons/{person_id}')
 
-        async with self.aiohttp_session.get(person_by_id_api_url) as response:
+        async with self.aiohttp_session.get(
+                person_by_id_api_url,
+                headers=self.headers,
+        ) as response:
             assert response.status == expected_status
             response_data = await response.json()
 
@@ -150,6 +156,7 @@ async def test_person_by_id(
         redis_cache,
         create_elasticsearch_index,
         aiohttp_session,
+        auth_headers,
 ) -> None:
     persons_index = await create_elasticsearch_index(index_name='persons')
 
@@ -157,6 +164,7 @@ async def test_person_by_id(
         redis_cache=redis_cache,
         persons_index=persons_index,
         aiohttp_session=aiohttp_session,
+        headers=auth_headers,
     ).run()
 
 
@@ -165,6 +173,7 @@ async def test_person_does_not_exist(
         redis_cache,
         create_elasticsearch_index,
         aiohttp_session,
+        auth_headers,
 ) -> None:
     persons_index = await create_elasticsearch_index(index_name='persons')
 
@@ -172,4 +181,5 @@ async def test_person_does_not_exist(
         redis_cache=redis_cache,
         persons_index=persons_index,
         aiohttp_session=aiohttp_session,
+        headers=auth_headers,
     ).run()

@@ -1,6 +1,8 @@
 services:
   nginx:
-    image: 'bitnami/nginx:1.27.3-debian-12-r5'
+    build:
+      context: ./compose/nginx
+      target: dev
     depends_on:
       movies:
         condition: service_healthy
@@ -8,8 +10,11 @@ services:
       - '8000:8080'
     networks:
       - movies-network
-    volumes:
-      - './compose/nginx/movies.conf:/opt/bitnami/nginx/conf/server_blocks/movies.conf:ro'
+    develop:
+      watch:
+        - action: sync+restart
+          path: ./compose/nginx/conf
+          target: /opt/bitnami/nginx/conf/
 
   movies:
     build:
@@ -35,6 +40,7 @@ services:
       - REDIS_PORT=6379
       - ELASTIC_HOST=elasticsearch
       - ELASTIC_PORT=9200
+      - AUTH_HOST=auth-service
     command: [ '/opt/app/commands/fastapi.sh', 'dev' ]
     healthcheck:
       test: [ 'CMD-SHELL', 'curl -s -H "X-Request-Id: healthcheck" http://localhost:8000/api/_health' ]
@@ -167,6 +173,8 @@ services:
       - POSTGRESQL_DATABASE=$AUTH_POSTGRESQL_DATABASE
       - POSTGRESQL_USERNAME=$AUTH_POSTGRESQL_USERNAME
       - POSTGRESQL_PASSWORD=$AUTH_POSTGRESQL_PASSWORD
+      - RATELIMITER_TIMES=$RATELIMITER_TIMES
+      - RATELIMITER_SECONDS=$RATELIMITER_SECONDS
       - REDIS_HOST=auth-redis
       - REDIS_PORT=6379
     command: [ '/opt/app/commands/fastapi.sh', 'dev' ]

@@ -49,11 +49,26 @@ class SuperUserSettings(BaseSettings):
     password: str = Field()
 
 
+class RateLimiterConfig(BaseSettings):
+    model_config = SettingsConfigDict(env_prefix='ratelimiter_')
+
+    times: int = 5
+    seconds: int = 60
+
+class AutRedisConfig(BaseSettings):
+    model_config = SettingsConfigDict(env_prefix='auth_redis_')
+
+    host: str = Field(default='localhost')
+    port: int = Field(default=6379)
+
+
 class Settings(BaseSettings):
     redis: RedisSettings = RedisSettings()
     elasticsearch: ElasticsearchSettings = ElasticsearchSettings()
     auth_postgresql: AutPostgresqlSettings = AutPostgresqlSettings()
     superuser: SuperUserSettings = SuperUserSettings()
+    ratelimiter: RateLimiterConfig = RateLimiterConfig()
+    auth_redis: AutRedisConfig = AutRedisConfig()
 
     movies_url: str = Field(default='http://localhost:8000')
     auth_url: str = Field(default='http://localhost:8000')

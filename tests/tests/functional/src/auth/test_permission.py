@@ -29,14 +29,14 @@ user_role_id_save = {}
 )
 @pytest.mark.asyncio(loop_scope='session')
 async def test_permision_assign(
-    aiohttp_session, login_superuser, clean_all_tables_before, user, role, expected):
+    aiohttp_session, auth_headers, clean_all_tables_before, user, role, expected):
     url = urljoin(settings.auth_api_v1_url, 'register/')
     async with aiohttp_session.post(url, json=user) as response:
         status = response.status
         assert status == expected
         data = await response.json()
         user_id_save['id'] = data['id']
-    headers = login_superuser
+    headers = auth_headers
     url = urljoin(settings.auth_api_v1_url, 'roles/create/')
     async with aiohttp_session.post(url, headers=headers, json=role) as response:
         status = response.status
@@ -56,8 +56,8 @@ async def test_permision_assign(
 
 @pytest.mark.asyncio(loop_scope='session')
 async def test_permision_get_by_user(
-    aiohttp_session, login_superuser):
-    headers = login_superuser
+    aiohttp_session, auth_headers):
+    headers = auth_headers
     url = urljoin(settings.auth_api_v1_url, f'permissions/get_by_user/{user_id_save.get('id')}')
     async with aiohttp_session.get(url, headers=headers) as response:
         status = response.status
@@ -67,8 +67,8 @@ async def test_permision_get_by_user(
 
 @pytest.mark.asyncio(loop_scope='session')
 async def test_permision_revoke(
-    aiohttp_session, login_superuser, clean_all_tables_after):
-    headers = login_superuser
+    aiohttp_session, auth_headers, clean_all_tables_after):
+    headers = auth_headers
     url = urljoin(settings.auth_api_v1_url, f'permissions/revoke/{user_role_id_save.get('id')}')
     async with aiohttp_session.delete(url, headers=headers) as response:
         status = response.status

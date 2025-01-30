@@ -11,6 +11,7 @@ from ....services import (
     PersonServiceDep,
     FilmServiceDep,
 )
+from ....services.auth.user import AuthUserDep
 
 router = APIRouter()
 
@@ -21,7 +22,12 @@ router = APIRouter()
     summary='Get person by uuid',
     description='Get concrete person by uuid with list of films and roles.',
 )
-async def get_by_id(*, uuid: uuid.UUID, person_service: PersonServiceDep) -> Person:
+async def get_by_id(
+        *,
+        uuid: uuid.UUID,
+        person_service: PersonServiceDep,
+        auth_user: AuthUserDep
+) -> Person:
     person = await person_service.get_by_id(uuid)
     if not person:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail='Person not found')
@@ -35,7 +41,12 @@ async def get_by_id(*, uuid: uuid.UUID, person_service: PersonServiceDep) -> Per
     summary='Get list of films by person uuid',
     description='Get list of films with imdb rating by person uuid.'
 )
-async def get_by_id_with_films(*, uuid: uuid.UUID, film_service: FilmServiceDep) -> list[PersonFilm]:
+async def get_by_id_with_films(
+        *,
+        uuid: uuid.UUID,
+        film_service: FilmServiceDep,
+        auth_user: AuthUserDep
+) -> list[PersonFilm]:
     films_person = await film_service.get_list_by_person(uuid)
     if not films_person:
         return []
@@ -54,6 +65,7 @@ async def search(
         query: str = '',
         page: PageDep,
         person_service: PersonServiceDep,
+        auth_user: AuthUserDep
 ) -> list[Person]:
     person_list = await person_service.search(query=query, page_number=page.number, page_size=page.size)
     if not person_list:

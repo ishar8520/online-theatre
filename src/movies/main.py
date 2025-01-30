@@ -6,7 +6,7 @@ from contextlib import asynccontextmanager
 
 import elasticsearch
 import redis.asyncio as redis
-from fastapi import FastAPI, Request, Response, HTTPException, status
+from fastapi import FastAPI, Request, Response, status
 from fastapi.responses import JSONResponse
 from opentelemetry import trace
 from opentelemetry.baggage.propagation import W3CBaggagePropagator
@@ -86,10 +86,9 @@ async def check_request_id(request: Request, call_next: Callable[[Request], Awai
         request_id = request.headers.get('X-Request-Id')
 
         if not request_id:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail='X-Request-Id is required',
-            )
+            return JSONResponse({
+                'detail': 'X-Request-Id is required',
+            }, status_code=status.HTTP_400_BAD_REQUEST)
 
     return await call_next(request)
 

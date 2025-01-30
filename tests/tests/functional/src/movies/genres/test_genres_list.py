@@ -21,6 +21,7 @@ class BaseGenresListTestCase:
     redis_cache: RedisCache
     genres_index: ElasticsearchIndex[Genre]
     aiohttp_session: aiohttp.ClientSession
+    headers: dict
     genres_count: int
 
     def __init__(self,
@@ -28,9 +29,11 @@ class BaseGenresListTestCase:
                  redis_cache: RedisCache,
                  genres_index: ElasticsearchIndex[Genre],
                  aiohttp_session: aiohttp.ClientSession,
+                 headers: dict,
                  genres_count: int) -> None:
         self.genres_index = genres_index
         self.aiohttp_session = aiohttp_session
+        self.headers = headers
         self.redis_cache = redis_cache
         self.genres_count = genres_count
 
@@ -86,7 +89,11 @@ class BaseGenresListTestCase:
                                              expected_status: int = http.HTTPStatus.OK) -> Any:
         genres_list_api_url = urljoin(settings.movies_api_url, 'v1/genres/')
 
-        async with self.aiohttp_session.get(genres_list_api_url, params=params) as response:
+        async with self.aiohttp_session.get(
+                genres_list_api_url,
+                headers=self.headers,
+                params=params
+        ) as response:
             assert response.status == expected_status
             response_data = await response.json()
 
@@ -157,6 +164,7 @@ async def test_genres_list_empty(
         redis_cache,
         create_elasticsearch_index,
         aiohttp_session,
+        auth_headers,
 ) -> None:
     genres_index = await create_elasticsearch_index(index_name='genres')
 
@@ -164,6 +172,7 @@ async def test_genres_list_empty(
         redis_cache=redis_cache,
         genres_index=genres_index,
         aiohttp_session=aiohttp_session,
+        headers=auth_headers,
     ).run()
 
 
@@ -172,6 +181,7 @@ async def test_genres_list_single_page(
         redis_cache,
         create_elasticsearch_index,
         aiohttp_session,
+        auth_headers,
 ) -> None:
     genres_index = await create_elasticsearch_index(index_name='genres')
 
@@ -179,6 +189,7 @@ async def test_genres_list_single_page(
         redis_cache=redis_cache,
         genres_index=genres_index,
         aiohttp_session=aiohttp_session,
+        headers=auth_headers,
         genres_count=10,
     ).run()
 
@@ -188,6 +199,7 @@ async def test_genres_list_multiple_pages(
         redis_cache,
         create_elasticsearch_index,
         aiohttp_session,
+        auth_headers,
 ) -> None:
     genres_index = await create_elasticsearch_index(index_name='genres')
 
@@ -195,6 +207,7 @@ async def test_genres_list_multiple_pages(
         redis_cache=redis_cache,
         genres_index=genres_index,
         aiohttp_session=aiohttp_session,
+        headers=auth_headers,
         genres_count=25,
         page_size=10,
     ).run()
