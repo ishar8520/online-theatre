@@ -10,7 +10,7 @@ from .common import (
 )
 from .....core import settings
 from .....services.users import (
-    OAuthClientDep,
+    OAuthClientServiceDep,
     AuthenticationBackendDep,
     UserManagerDep,
     UserAlreadyExists,
@@ -20,7 +20,7 @@ from .....services.users.jwt import (
     decode_jwt,
 )
 
-STATE_TOKEN_AUDIENCE = 'users:oauth-state'
+STATE_TOKEN_AUDIENCE = 'users:oauth-state:{provider_name}'
 
 router = APIRouter()
 
@@ -30,19 +30,24 @@ class OAuth2AuthorizeResponse(BaseModel):
 
 
 @router.get(
-    '/authorize',
+    '/{provider_name}/authorize',
     name='oauth:authorize',
     response_model=OAuth2AuthorizeResponse,
 )
 async def authorize(*,
                     request: Request,
+                    provider_name: str,
                     scope: list[str] | None = Query(None),
-                    oauth_client: OAuthClientDep) -> OAuth2AuthorizeResponse:
-    authorize_redirect_url = str(request.url_for('oauth:callback'))
-    state_data = {
-        'aud': STATE_TOKEN_AUDIENCE,
-    }
-    state = generate_jwt(state_data, secret=settings.auth.secret_key)
+                    oauth_client_service: OAuthClientServiceDep) -> OAuth2AuthorizeResponse:
+    oauth_client = oauth_client_service.create_client(provider_name)
+    if oauth_client is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+    authorize_redirect_url = str(request.url_for('oauth:callback', provider_name=provider_name))
+    audience = STATE_TOKEN_AUDIENCE.format(provider_name=provider_name)
+    state = generate_jwt({
+        'aud': audience,
+    }, secret=settings.auth.secret_key)
     authorization_url = await oauth_client.get_authorization_url(
         authorize_redirect_url,
         state=state,
@@ -53,27 +58,37 @@ async def authorize(*,
 
 
 @router.get(
-    '/callback',
+    '/{provider_name}/callback',
     name='oauth:callback',
 )
 async def callback(*,
                    request: Request,
-                   oauth_client: OAuthClientDep,
+                   provider_name: str,
+                   oauth_client_service: OAuthClientServiceDep,
                    code: str | None = Query(None),
                    code_verifier: str | None = Query(None),
                    state: str | None = Query(None),
                    error: str | None = Query(None),
                    user_manager: UserManagerDep,
                    backend: AuthenticationBackendDep):
+    oauth_client = oauth_client_service.create_client(provider_name)
+    if oauth_client is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+    audience = STATE_TOKEN_AUDIENCE.format(provider_name=provider_name)
     try:
-        decode_jwt(state, secret=settings.auth.secret_key, audience=[STATE_TOKEN_AUDIENCE])
+        decode_jwt(state, secret=settings.auth.secret_key, audience=[audience])
     except jwt.DecodeError:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=ErrorCode.OAUTH_INVALID_STATE_TOKEN,
         )
 
-    oauth2_authorize_callback = OAuth2AuthorizeCallback(oauth_client, route_name='oauth:callback')
+    authorize_callback_url = str(request.url_for('oauth:callback', provider_name=provider_name))
+    oauth2_authorize_callback = OAuth2AuthorizeCallback(
+        oauth_client,
+        redirect_url=authorize_callback_url,
+    )
     token, state = await oauth2_authorize_callback(
         request,
         code=code,
