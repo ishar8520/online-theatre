@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import uuid
+
 import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
@@ -80,6 +82,7 @@ async def auth_headers(aiohttp_session):
         headers = {
             'accept': 'application/json',
             'Authorization': f'{token_type.title()} {token_jwt}',
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'X-Request-Id': str(uuid.uuid4())
         }
         return headers
