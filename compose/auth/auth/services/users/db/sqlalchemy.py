@@ -40,11 +40,11 @@ class SQLAlchemyUserDatabase(BaseUserDatabase):
         statement = select(self.user_table).where(self.user_table.email == email)
         return await self._get_user(statement)
 
-    async def get_by_oauth_account(self, oauth: str, account_id: str) -> User:
+    async def get_by_oauth_account(self, *, oauth_name: str, account_id: str) -> User:
         statement = (
             select(self.user_table)
             .join(self.oauth_account_table)
-            .where(self.oauth_account_table.oauth_name == oauth)
+            .where(self.oauth_account_table.oauth_name == oauth_name)
             .where(self.oauth_account_table.account_id == account_id)
         )
         return await self._get_user(statement)

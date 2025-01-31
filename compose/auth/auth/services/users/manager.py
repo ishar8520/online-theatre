@@ -89,8 +89,8 @@ class UserManager:
 
         return user
 
-    async def get_by_oauth_account(self, oauth: str, account_id: str) -> User:
-        user = await self.user_db.get_by_oauth_account(oauth, account_id)
+    async def get_by_oauth_account(self, *, oauth_name: str, account_id: str) -> User:
+        user = await self.user_db.get_by_oauth_account(oauth_name=oauth_name, account_id=account_id)
 
         if user is None:
             raise exceptions.UserDoesNotExist
@@ -213,7 +213,7 @@ class UserManager:
         }
 
         try:
-            user = await self.get_by_oauth_account(oauth_name, account_id)
+            user = await self.get_by_oauth_account(oauth_name=oauth_name, account_id=account_id)
         except exceptions.UserDoesNotExist:
             try:
                 user = await self.get_by_email(account_email)
