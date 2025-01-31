@@ -11,6 +11,9 @@ from .common import (
 from .....core import settings
 from .....services.users import (
     OAuthClientDep,
+    AuthenticationBackendDep,
+    UserManagerDep,
+    UserAlreadyExists,
 )
 from .....services.users.jwt import (
     generate_jwt,
@@ -59,7 +62,9 @@ async def callback(*,
                    code: str | None = Query(None),
                    code_verifier: str | None = Query(None),
                    state: str | None = Query(None),
-                   error: str | None = Query(None)):
+                   error: str | None = Query(None),
+                   user_manager: UserManagerDep,
+                   backend: AuthenticationBackendDep):
     try:
         decode_jwt(state, secret=settings.auth.secret_key, audience=[STATE_TOKEN_AUDIENCE])
     except jwt.DecodeError:
@@ -85,7 +90,19 @@ async def callback(*,
             detail=ErrorCode.OAUTH_EMAIL_NOT_AVAILABLE,
         )
 
-    return {
-        'account_id': account_id,
-        'account_email': account_email,
-    }
+    try:
+        user = await user_manager.oauth_callback(
+            oauth_name=oauth_client.name,
+            access_token=token['access_token'],
+            account_id=account_id,
+            account_email=account_email,
+            expires_at=token.get('expires_at'),
+            refresh_token=token.get('refresh_token'),
+        )
+    except UserAlreadyExists:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=ErrorCode.OAUTH_USER_ALREADY_EXISTS,
+        )
+
+    return await backend.login(user)
