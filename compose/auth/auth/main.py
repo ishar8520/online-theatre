@@ -112,7 +112,7 @@ app.include_router(
 )
 app.include_router(
     oauth.router,
-    prefix=f'{auth_api_prefix}/google',
+    prefix=f'{auth_api_prefix}/oauth',
     tags=['auth'],
 )
 app.include_router(
