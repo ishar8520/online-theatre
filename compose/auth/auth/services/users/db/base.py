@@ -3,28 +3,39 @@ from __future__ import annotations
 import uuid
 from typing import Any
 
-from ....models.sqlalchemy import User
+from ....models.sqlalchemy import (
+    User,
+    OAuthAccount,
+)
 
 
 class BaseUserDatabase:
-    """Base adapter for retrieving, creating and updating users from a database."""
-
     async def get(self, id: uuid.UUID) -> User | None:
-        """Get a single user by id."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def get_by_login(self, login: str) -> User | None:
-        """Get a single user by login."""
-        raise NotImplementedError()
+        raise NotImplementedError
+
+    async def get_by_email(self, email: str) -> User | None:
+        raise NotImplementedError
+
+    async def get_by_oauth_account(self, *, oauth_name: str, account_id: str) -> User:
+        raise NotImplementedError
 
     async def create(self, create_dict: dict[str, Any]) -> User | None:
-        """Create a user."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def update(self, user: User | None, update_dict: dict[str, Any]) -> User:
-        """Update a user."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def delete(self, user: User) -> None:
-        """Delete a user."""
-        raise NotImplementedError()
+        raise NotImplementedError
+
+    async def add_oauth_account(self, user: User, create_dict: dict[str, Any]) -> User:
+        raise NotImplementedError
+
+    async def update_oauth_account(self,
+                                   user: User,
+                                   oauth_account: OAuthAccount,
+                                   update_dict: dict[str, Any]) -> User:
+        raise NotImplementedError

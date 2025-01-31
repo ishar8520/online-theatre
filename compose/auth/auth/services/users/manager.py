@@ -81,6 +81,22 @@ class UserManager:
 
         return user
 
+    async def get_by_email(self, user_email: str) -> User:
+        user = await self.user_db.get_by_email(user_email)
+
+        if user is None:
+            raise exceptions.UserDoesNotExist
+
+        return user
+
+    async def get_by_oauth_account(self, *, oauth_name: str, account_id: str) -> User:
+        user = await self.user_db.get_by_oauth_account(oauth_name=oauth_name, account_id=account_id)
+
+        if user is None:
+            raise exceptions.UserDoesNotExist
+
+        return user
+
     async def create(self, user_create: UserCreate) -> User:
         """
         Create a user in database.
@@ -177,6 +193,55 @@ class UserManager:
                 validated_update_dict[field] = value
 
         return await self.user_db.update(user, validated_update_dict)
+
+    async def oauth_callback(self,
+                             *,
+                             oauth_name: str,
+                             access_token: str,
+                             account_id: str,
+                             account_email: str,
+                             expires_at: int | None = None,
+                             refresh_token: str | None = None) -> User:
+        account_email = account_email.lower()
+        oauth_account_dict = {
+            'oauth_name': oauth_name,
+            'access_token': access_token,
+            'account_id': account_id,
+            'account_email': account_email,
+            'expires_at': expires_at,
+            'refresh_token': refresh_token,
+        }
+
+        try:
+            user = await self.get_by_oauth_account(oauth_name=oauth_name, account_id=account_id)
+        except exceptions.UserDoesNotExist:
+            try:
+                user = await self.get_by_email(account_email)
+            except exceptions.UserDoesNotExist:
+                password = self.password_helper.generate()
+                user_dict = {
+                    'email': account_email,
+                    'password': self.password_helper.hash(password),
+                }
+                user = await self.user_db.create(user_dict)
+
+            user = await self.user_db.add_oauth_account(user, oauth_account_dict)
+
+            return user
+
+        for oauth_account in user.oauth_accounts:
+            if all([
+                oauth_account.oauth_name == oauth_name,
+                oauth_account.account_id == account_id,
+            ]):
+                user = await self.user_db.update_oauth_account(
+                    user,
+                    oauth_account,
+                    oauth_account_dict,
+                )
+                break
+
+        return user
 
 
 async def get_user_manager(user_db: UserDatabaseDep, login_logger: LoginHistoryServiceDep) -> UserManager:

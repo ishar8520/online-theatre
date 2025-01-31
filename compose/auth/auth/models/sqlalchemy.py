@@ -171,3 +171,7 @@ class OAuthAccount(AuthBase):
     account_email: Mapped[str] = mapped_column(TEXT)
 
     user: Mapped[User] = relationship('User', back_populates='oauth_accounts')
+
+    __table_args__ = (
+        UniqueConstraint('oauth_name', 'account_id'),
+    )
