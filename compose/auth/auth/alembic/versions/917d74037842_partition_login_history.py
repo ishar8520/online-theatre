@@ -27,7 +27,8 @@ def upgrade():
         sa.Column("user_agent", sa.TEXT()),
         sa.Column("created", postgresql.TIMESTAMP(timezone=True)),
         sa.ForeignKeyConstraint(
-            ["user_id"], ["auth.user.id"], name="login_history_new_user_id_fkey"
+            ["user_id"], ["auth.user.id"], name="login_history_new_user_id_fkey",
+            ondelete='CASCADE'
         ),
         sa.PrimaryKeyConstraint("id", "created", name="login_history_new_pkey"),
         schema="auth",
@@ -98,7 +99,8 @@ def downgrade():
         sa.Column("user_agent", sa.TEXT()),
         sa.Column("created", postgresql.TIMESTAMP(timezone=True)),
         sa.ForeignKeyConstraint(
-            ["user_id"], ["auth.user.id"], name="login_history_new_user_id_fkey"
+            ["user_id"], ["auth.user.id"], name="login_history_new_user_id_fkey",
+            ondelete='CASCADE'
         ),
         schema="auth",
     )
