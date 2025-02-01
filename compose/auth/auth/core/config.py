@@ -9,6 +9,7 @@ from pydantic_settings import (
 class AuthConfig(BaseSettings):
     model_config = SettingsConfigDict(env_prefix='auth_')
 
+    test_mode: bool = False
     secret_key: str = 'SECRET'
     access_jwt_lifetime: int = 60 * 60
     refresh_jwt_lifetime: int = 24 * 60 * 60
@@ -79,5 +80,8 @@ class Settings(BaseSettings):
     ratelimiter: RateLimiterConfig = RateLimiterConfig()
     otel: OpenTelemetryConfig = OpenTelemetryConfig()
 
+    @property
+    def test_mode(self) -> bool:
+        return self.auth.test_mode
 
 settings = Settings()
