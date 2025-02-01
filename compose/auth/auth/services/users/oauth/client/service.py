@@ -9,7 +9,9 @@ from httpx_oauth.oauth2 import BaseOAuth2
 from .factories import (
     OAuthClientFactory,
     GoogleOAuthClientFactory,
+    FakeGoogleOAuthClientFactory,
 )
+from .....core import settings
 
 
 class OAuthClientService:
@@ -28,9 +30,18 @@ class OAuthClientService:
 
 
 async def get_oauth_client_service() -> OAuthClientService:
-    return OAuthClientService(client_factories={
-        'google': GoogleOAuthClientFactory(),
-    })
+    client_factories: Mapping[str, OAuthClientFactory]
+
+    if settings.test_mode:
+        client_factories = {
+            'google': FakeGoogleOAuthClientFactory(),
+        }
+    else:
+        client_factories = {
+            'google': GoogleOAuthClientFactory(),
+        }
+
+    return OAuthClientService(client_factories=client_factories)
 
 
 OAuthClientServiceDep = Annotated[OAuthClientService, Depends(get_oauth_client_service)]
