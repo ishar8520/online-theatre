@@ -121,8 +121,12 @@ class UserRole(AuthBase):
         ),
     )
 
-    user: Mapped[User] = relationship("User", back_populates="roles")
-    role: Mapped[Role] = relationship("Role", back_populates="user_roles")
+    user: Mapped[User] = relationship(
+        "User", cascade='all, delete-orphan', back_populates="roles"
+    )
+    role: Mapped[Role] = relationship(
+        "Role", cascade='all, delete-orphan', back_populates="user_roles"
+    )
 
 
 class LoginHistory(AuthBase):
@@ -148,7 +152,9 @@ class LoginHistory(AuthBase):
         }
     )
 
-    user: Mapped[User] = relationship("User", back_populates="login_history")
+    user: Mapped[User] = relationship(
+        "User", cascade='all, delete-orphan', back_populates="login_history"
+    )
 
 
 class OAuthAccount(AuthBase):
