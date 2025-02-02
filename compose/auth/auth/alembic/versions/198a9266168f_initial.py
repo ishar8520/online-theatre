@@ -49,8 +49,14 @@ def upgrade() -> None:
         sa.Column('user_id', sa.UUID()),
         sa.Column('role_id', sa.UUID()),
         sa.Column('created', postgresql.TIMESTAMP(timezone=True)),
-        sa.ForeignKeyConstraint(['role_id'], ['auth.role.id'], name='user_role_role_id_fkey'),
-        sa.ForeignKeyConstraint(['user_id'], ['auth.user.id'], name='user_role_user_id_fkey'),
+        sa.ForeignKeyConstraint(
+            ['role_id'], ['auth.role.id'],
+            name='user_role_role_id_fkey', ondelete='CASCADE'
+        ),
+        sa.ForeignKeyConstraint(
+            ['user_id'], ['auth.user.id'],
+            name='user_role_user_id_fkey', ondelete='CASCADE'
+        ),
         sa.PrimaryKeyConstraint('id', name='user_role_pkey'),
         sa.UniqueConstraint('user_id', 'role_id', name='uix_auth_role_id_user_id'),
         schema='auth',
@@ -61,7 +67,10 @@ def upgrade() -> None:
         sa.Column('user_id', sa.UUID()),
         sa.Column('user_agent', sa.TEXT()),
         sa.Column('created', postgresql.TIMESTAMP(timezone=True)),
-        sa.ForeignKeyConstraint(['user_id'], ['auth.user.id'], name='login_history_user_id_fkey'),
+        sa.ForeignKeyConstraint(
+            ['user_id'], ['auth.user.id'],
+            name='login_history_user_id_fkey', ondelete='CASCADE'
+        ),
         sa.PrimaryKeyConstraint('id', name='login_history_pkey'),
         schema='auth',
     )

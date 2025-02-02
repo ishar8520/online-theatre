@@ -60,7 +60,7 @@ class User(AuthBase):
     )
 
     roles: Mapped[list[UserRole]] = relationship(
-        "UserRole", cascade="all, delete-orphan", back_populates="user"
+        "UserRole", cascade="all, delete", back_populates="user"
     )
     login_history: Mapped[list[LoginHistory]] = relationship(
         "LoginHistory", cascade="all, delete-orphan", back_populates="user"
@@ -94,7 +94,7 @@ class Role(AuthBase):
     )
 
     user_roles: Mapped[list[UserRole]] = relationship(
-        "UserRole", cascade="all, delete-orphan", back_populates="role"
+        "UserRole", cascade="all, delete", back_populates="role"
     )
 
 
@@ -106,8 +106,8 @@ class UserRole(AuthBase):
         primary_key=True,
         default=uuid.uuid4,
     )
-    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey('auth.user.id'))
-    role_id: Mapped[uuid.UUID] = mapped_column(ForeignKey('auth.role.id'))
+    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey('auth.user.id', ondelete='CASCADE'))
+    role_id: Mapped[uuid.UUID] = mapped_column(ForeignKey('auth.role.id', ondelete='CASCADE'))
     created: Mapped[datetime.datetime] = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.datetime.now(datetime.UTC),
@@ -121,8 +121,12 @@ class UserRole(AuthBase):
         ),
     )
 
-    user: Mapped[User] = relationship("User", back_populates="roles")
-    role: Mapped[Role] = relationship("Role", back_populates="user_roles")
+    user: Mapped[User] = relationship(
+        "User", back_populates="roles"
+    )
+    role: Mapped[Role] = relationship(
+        "Role", back_populates="user_roles"
+    )
 
 
 class LoginHistory(AuthBase):
@@ -148,7 +152,9 @@ class LoginHistory(AuthBase):
         }
     )
 
-    user: Mapped[User] = relationship("User", back_populates="login_history")
+    user: Mapped[User] = relationship(
+        "User", cascade='all, delete', back_populates="login_history"
+    )
 
 
 class OAuthAccount(AuthBase):
