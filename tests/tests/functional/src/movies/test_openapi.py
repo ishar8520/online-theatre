@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import uuid
 from urllib.parse import urljoin
 
 import http
@@ -12,7 +13,11 @@ from ...settings import settings
 async def test_openapi(aiohttp_session) -> None:
     openapi_url = urljoin(settings.movies_api_url, 'openapi.json')
 
-    async with aiohttp_session.get(openapi_url) as response:
+    headers = {
+        'X-Request-Id': str(uuid.uuid4())
+    }
+
+    async with aiohttp_session.get(openapi_url, headers=headers) as response:
         assert response.status == http.HTTPStatus.OK
         response_data: dict = await response.json()
 
