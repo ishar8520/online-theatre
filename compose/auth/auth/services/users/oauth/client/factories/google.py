@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import time
-from typing import Any
+from typing import Any, Type
 
 import httpx
 from httpx_oauth.clients.google import GoogleOAuth2
@@ -12,16 +12,19 @@ from httpx_oauth.oauth2 import (
     OAuth2RequestError,
 )
 
-from .base import OAuthClientFactory
+from .base import BaseOAuthClientFactory
 from ......core import settings
 
 
-class GoogleOAuthClientFactory(OAuthClientFactory):
-    def create(self) -> BaseOAuth2:
-        return GoogleOAuth2(
-            client_id=settings.oauth.google_client_id,
-            client_secret=settings.oauth.google_client_secret,
-        )
+class GoogleOAuthClientFactory(BaseOAuthClientFactory):
+    def get_client_class(self) -> Type[BaseOAuth2]:
+        return GoogleOAuth2
+
+    def get_client_kwargs(self) -> dict:
+        return {
+            'client_id': settings.oauth.google_client_id,
+            'client_secret': settings.oauth.google_client_secret,
+        }
 
 
 class FakeGoogleOAuth2(GoogleOAuth2):
@@ -79,9 +82,12 @@ class FakeGoogleOAuth2(GoogleOAuth2):
         return httpx.Response(status_code=200, json={})
 
 
-class FakeGoogleOAuthClientFactory(OAuthClientFactory):
-    def create(self) -> BaseOAuth2:
-        return FakeGoogleOAuth2(
-            client_id='client_id',
-            client_secret='client_secret',
-        )
+class FakeGoogleOAuthClientFactory(BaseOAuthClientFactory):
+    def get_client_class(self) -> Type[BaseOAuth2]:
+        return FakeGoogleOAuth2
+
+    def get_client_kwargs(self) -> dict:
+        return {
+            'client_id': 'client_id',
+            'client_secret': 'client_secret',
+        }

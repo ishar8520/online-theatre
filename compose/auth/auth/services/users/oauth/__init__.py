@@ -1,4 +1,9 @@
-from .client import (
-    OAuthClientService,
-    OAuthClientServiceDep,
+from .service import (
+    OAuthService,
+    OAuthServiceDep,
+    OAuthAuthorizeResult,
+)
+from .exceptions import (
+    InvalidOAuthProvider,
+    InvalidStateToken,
 )

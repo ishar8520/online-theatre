@@ -15,8 +15,11 @@ from .manager import (
     UserManagerDep,
 )
 from .oauth import (
-    OAuthClientService,
-    OAuthClientServiceDep,
+    OAuthService,
+    OAuthServiceDep,
+    OAuthAuthorizeResult,
+    InvalidOAuthProvider,
+    InvalidStateToken,
 )
 from .schemas import (
     UserRead,

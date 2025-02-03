@@ -1,4 +1,4 @@
 from .service import (
-    OAuthClientService,
+    AbstractOAuthClientService,
     OAuthClientServiceDep,
 )
