@@ -26,6 +26,9 @@ class OAuthConfig(BaseSettings):
     google_client_id: str = ''
     google_client_secret: str = ''
 
+    yandex_client_id: str = ''
+    yandex_client_secret: str = ''
+
 
 class OpenTelemetryConfig(BaseSettings):
     model_config = SettingsConfigDict(env_prefix='otel_')

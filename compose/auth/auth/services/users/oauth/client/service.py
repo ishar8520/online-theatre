@@ -12,6 +12,7 @@ from .factories import (
     GoogleOAuthClientFactory,
     FakeGoogleOAuthClientFactory,
 )
+from .factories.yandex import YandexOAuthClientFactory
 from .....core import settings
 
 
@@ -45,6 +46,7 @@ async def get_oauth_client_service() -> AbstractOAuthClientService:
     else:
         client_factories = {
             'google': GoogleOAuthClientFactory(),
+            'yandex': YandexOAuthClientFactory(),
         }
 
     return OAuthClientService(client_factories=client_factories)
