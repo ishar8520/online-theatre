@@ -48,7 +48,6 @@ class YandexOAuth2(BaseOAuth2):
     async def get_id_email(self, token: str) -> tuple[str, Optional[str]]:
         try:
             profile = await self.get_profile(token)
-            print(profile)
         except GetProfileError as e:
             raise GetIdEmailError(response=e.response)
 

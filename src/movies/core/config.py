@@ -51,7 +51,7 @@ class AuthConfig(BaseSettings):
 
     @property
     def url_token(self) -> str:
-        return f'{self.scheme}://localhost:{self.port}/auth/api/v1/jwt/login'
+        return f'{self.scheme}://{self.host}:{self.port}/auth/api/v1/jwt/login'
 
     @property
     def url_me(self) -> str:
