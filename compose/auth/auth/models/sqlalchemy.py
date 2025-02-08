@@ -117,7 +117,6 @@ class UserRole(AuthBase):
         UniqueConstraint(
             'user_id',
             'role_id',
-            name='uix_auth_role_id_user_id'
         ),
     )
 
