@@ -1,11 +1,11 @@
 ### Как запустить тестирование
 
-- Поднять Clickhouse используя docker compose из директории src/data_warehouse_benchmarks/test_clickhouse/clickhouse
+- Поднять Clickhouse используя docker compose из директории test_db/test_clickhouse/clickhouse/docker-compose.yml
 
 ```
 docker compose up
 ```
-- Запустить скрипт проверки из директории src/data_warehouse_benchmarks/
+- Запустить скрипт проверки из директории test_db/test_clickhouse/
 
 Скрипт поддерживает два аргумента:
 
@@ -21,13 +21,13 @@ docker compose up
     batch_size = 1_000
 
 ```
-python test_clickhouse/benchmark_clickhouse.py
+python benchmark_clickhouse.py
 ```
 
 - Запуск с 1 000 000 записей и размером батча 50 000:
 
 ```
-python test_clickhouse/benchmark_clickhouse.py --total 1000000 --batch_size 50000
+python benchmark_clickhouse.py --total 1000000 --batch_size 50000
 ```
 
 
