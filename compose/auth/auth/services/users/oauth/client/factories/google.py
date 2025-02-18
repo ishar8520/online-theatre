@@ -66,7 +66,7 @@ class FakeGoogleOAuth2(GoogleOAuth2):
                         },
                         'sourcePrimary': True,
                     },
-                    'value': 'user@gmail.com',
+                    'value': 'user@movies.com',
                 },
             ],
         }

@@ -26,6 +26,9 @@ class YandexOAuth2(BaseOAuth2):
             client_id=client_id,
             client_secret=client_secret,
             name=name,
+            base_scopes=[
+                AuthEndpointsEnum.PROFILE.value
+            ],
             authorize_endpoint=AuthEndpointsEnum.AUTHORIZE.value,
             access_token_endpoint=AuthEndpointsEnum.ACCESS_TOKEN.value,
             revoke_token_endpoint=AuthEndpointsEnum.REVOKE_TOKEN.value,

@@ -36,6 +36,10 @@ class FakeYandexOAuth2(YandexOAuth2):
             'access_token': 'access_token',
             'expires_in': 3600,
             'token_type': 'Bearer',
+            'scope': (
+                'openid ',
+                'https://login.yandex.ru/info',
+            ),
             'id_token': 'id_token',
             'expires_at': int(time.time()),
         })
@@ -52,8 +56,8 @@ class FakeYandexOAuth2(YandexOAuth2):
             'login': 'test',
             'client_id': 'client_id',
             'display_name': 'test.user',
-            'default_email': 'test.user@yandex.ru',
-            'emails': ['test.user@yandex.ru'],
+            'default_email': 'user@movies.com',
+            'emails': ['user@movies.com'],
         }
 
     async def send_request(
