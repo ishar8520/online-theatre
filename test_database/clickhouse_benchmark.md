@@ -1,11 +1,11 @@
 ### Как запустить тестирование
 
-- Поднять Clickhouse используя docker compose из директории test_db/test_clickhouse/clickhouse/docker-compose.yml
+- Поднять Clickhouse используя docker compose из директории test_database/test_clickhouse/clickhouse/docker-compose.yml
 
 ```
 docker compose up
 ```
-- Запустить скрипт проверки из директории test_db/test_clickhouse/
+- Запустить скрипт проверки из директории test_database/test_clickhouse/
 
 Скрипт поддерживает два аргумента:
 
