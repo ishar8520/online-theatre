@@ -25,7 +25,7 @@ services:
     depends_on:
       vertica:
         condition: service_healthy
-    command: [ "sh", "-c", "python benchmark_vertica.py"]
+    command: [ "sh", "-c", "python benchmark_vertica.py --total 100000 --batch_size 1000"]
 
 networks:
   vertica_network:
