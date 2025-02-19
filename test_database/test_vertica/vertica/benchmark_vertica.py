@@ -49,31 +49,14 @@ def get_events(total):
 
 
 @measure_time('Обновление')
-# def update_events(total):
-#     cursor.execute(f"""
-#         MERGE INTO event USING (
-#             SELECT id FROM event ORDER BY id LIMIT {total}
-#         ) AS subquery
-#         ON event.id = subquery.id
-#         WHEN MATCHED THEN UPDATE SET element = 'pic'
-#     """)
-def update_events(total, batch_size=1000):
-    cursor.execute("SELECT MIN(id), MAX(id) FROM event")
-    min_id, max_id = cursor.fetchone()
-
-    for start_id in range(min_id, max_id + 1, batch_size):
-        end_id = start_id + batch_size - 1
-
-        cursor.execute(f"""
-            MERGE INTO event USING (
-                SELECT id FROM event WHERE id BETWEEN {start_id} AND {end_id}
-            ) AS subquery
-            ON event.id = subquery.id
-            WHEN MATCHED THEN UPDATE SET element = 'pic'
-        """)
-        logging.info(f"Updated batch {start_id} - {end_id}")
-
-
+def update_events(total):
+    cursor.execute(f"""
+        MERGE INTO event USING (
+            SELECT id FROM event ORDER BY id LIMIT {total}
+        ) AS subquery
+        ON event.id = subquery.id
+        WHEN MATCHED THEN UPDATE SET element = 'pic'
+    """)
 
 
 def drop_events():
