@@ -9,20 +9,27 @@ services:
     networks:
       - vertica_network
     healthcheck:
-      test: ["CMD", "vsql", "-U", "dbadmin", "-c", "SELECT 1"]
-      interval: 10s   # Проверять состояние каждые 10 секунд
-      retries: 7      # Количество попыток перед тем, как считать сервис незапущенным
-      start_period: 45s
+      test: ["CMD-SHELL", "/opt/vertica/bin/vsql -U dbadmin -c 'SELECT 1' || exit 1"]
+      interval: 10s
+      retries: 7
+      start_period: 50s
 
   vertica_benchmark:
     build: './vertica'
     container_name: 'vertica_benchmark'
+    volumes:
+      - 'benchmark_vertica_data:/opt/vertica/'
+    networks:
+      - vertica_network
+    restart: 'no'
     depends_on:
       vertica:
         condition: service_healthy
+    command: [ "sh", "-c", "python benchmark_vertica.py"]
 
 networks:
   vertica_network:
 
 volumes:
   vertica_data:
+  benchmark_vertica_data:

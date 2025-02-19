@@ -30,7 +30,6 @@ def transform_data(event_generator, insert_events, total):
         insert_events(values)
 
 
-
 def insert_events_copy(values):   
     data_str = "\n".join(["|".join(map(str, row)) for row in values])
     cursor.copy("COPY event (type, timestamp, user_id, fingerprint, element, url) FROM STDIN DELIMITER '|' ", data_str)
@@ -51,10 +50,6 @@ def get_events(total):
 
 @measure_time('Обновление')
 def update_events(total):
-    # cursor.execute(
-    #     f"""ALTER TABLE event UPDATE element = 'pic' 
-    #             WHERE id in (SELECT id FROM event ORDER BY id LIMIT {total})"""
-    # )
     cursor.execute(f"""
         MERGE INTO event USING (
             SELECT id FROM event ORDER BY id LIMIT {total}
@@ -64,14 +59,13 @@ def update_events(total):
     """)
 
 
-
 def drop_events():
     cursor.execute("""DROP TABLE IF EXISTS event""")
 
 
 def main(total=100000, batch_size=100000):
     conn_info = {
-        'host': 'localhost',
+        'host': 'vertica',
         'port': 5433,
         'user': 'dbadmin',
         'password': '',
@@ -99,7 +93,6 @@ def main(total=100000, batch_size=100000):
         logging.warning('Создаю ивенты')
         event_generator = generate_batched_events(count=total, batch_size=batch_size)
         transform_data(event_generator, insert_events_copy, total=total)
-        # transform_data(event_generator, insert_events_executemany, total=total)
         get_events(total=total)
         update_events(total=total)
         drop_events()
@@ -108,4 +101,3 @@ def main(total=100000, batch_size=100000):
 if __name__ == '__main__':
     args = parse_args()
     main(total=args.total, batch_size=args.batch_size)
-
