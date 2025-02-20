@@ -57,7 +57,7 @@ def drop_events():
 
 def main(total=100000, batch_size=100000):
     global client
-    client = Client(host='localhost')
+    client = Client(host='clickhouse-node1')
     logging.warning('Создаю базу данных')
     client.execute('CREATE DATABASE IF NOT EXISTS example ON CLUSTER company_cluster')
     drop_events()
