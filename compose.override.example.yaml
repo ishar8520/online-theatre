@@ -10,3 +10,7 @@ services:
   postgresql:
     ports:
       - '5432:5432'
+
+  kafka-ui:
+    ports:
+      - "9090:8080"
