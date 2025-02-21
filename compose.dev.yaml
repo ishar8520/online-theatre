@@ -345,6 +345,18 @@ services:
       - KAFKA_CLUSTERS_0_NAME=${KAFKA_CLUSTERS_0_NAME}
     networks:
       - movies-network
+  flask_app:
+    build:
+      context: ./compose/ugc/ugc  # Путь к папке с Dockerfile
+      dockerfile: Dockerfile        # Укажите имя Dockerfile, если оно отличается
+    environment:
+      - PYTHONPATH=/opt/app
+    ports:
+      - "5001:5001"
+    depends_on:
+      - kafka-1
+    networks:
+      - movies-network
 
 networks:
   movies-network:
