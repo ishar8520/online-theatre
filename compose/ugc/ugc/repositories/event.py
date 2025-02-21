@@ -35,9 +35,7 @@ class KafkaEventRepo(BaseEventRepo):
 
     async def start(self):
         """Запускаем продюсер."""
-        self.kafka_producer = AIOKafkaProducer(
-            bootstrap_servers=self.kafka_hosts
-        )
+        self.kafka_producer = AIOKafkaProducer(bootstrap_servers=self.kafka_hosts)
         await self.kafka_producer.start()
 
     async def stop(self):

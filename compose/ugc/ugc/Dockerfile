@@ -40,15 +40,14 @@ ENV VIRTUAL_ENV=/venv
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
 COPY --from=venv "$VIRTUAL_ENV" "$VIRTUAL_ENV"
-COPY ./poetry.lock .
-COPY ./pyproject.toml .
+COPY poetry.lock pyproject.toml ./
 COPY ./core ./core
 COPY ./models ./models
 COPY ./repositories ./repositories
 
-
-
+COPY hypercorn_start.sh .
+RUN chmod +x hypercorn_start.sh
 
 EXPOSE 5001
 
-CMD ["python", "repositories/app.py"]
+CMD ["/opt/app/hypercorn_start.sh"]
