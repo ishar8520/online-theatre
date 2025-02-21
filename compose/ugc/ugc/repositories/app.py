@@ -1,3 +1,4 @@
+from core.utils import handle_kafka_errors
 from models.event import ClickEvent, CustomEvent, EventContainer, PageViewEvent
 from quart import Quart, jsonify, request
 
@@ -25,42 +26,29 @@ async def send_event_async(event_container):
     await kafka_producer.send_event(event_container)
 
 
-@app.route("/track_click", methods=["POST"])
-async def track_click():
+async def process_event(event_class, event_type):
     data = await request.get_json()
-    click_event = ClickEvent(**data)
-    event_container = EventContainer(model=click_event)
-    await send_event_async(event_container)
+    event = event_class(**data)
+    event_container = EventContainer(model=event)
+    await kafka_producer.send_event(event_container)
     return jsonify(
-        {"status": "success", "event": "click", "data": click_event.model_dump()}
+        {"status": "success", "event": event_type, "data": event.model_dump()}
     )
+
+
+@app.route("/track_click", methods=["POST"])
+@handle_kafka_errors
+async def track_click():
+    return await process_event(ClickEvent, "click")
 
 
 @app.route("/track_page_view", methods=["POST"])
+@handle_kafka_errors
 async def track_page_view():
-    data = await request.get_json()
-    page_view_event = PageViewEvent(**data)
-    event_container = EventContainer(model=page_view_event)
-    await send_event_async(event_container)
-    return jsonify(
-        {
-            "status": "success",
-            "event": "page_view",
-            "data": page_view_event.model_dump(),
-        }
-    )
+    return await process_event(PageViewEvent, "page_view")
 
 
 @app.route("/track_custom_event", methods=["POST"])
+@handle_kafka_errors
 async def track_custom_event():
-    data = await request.get_json()
-    custom_event = CustomEvent(**data)
-    event_container = EventContainer(model=custom_event)
-    await send_event_async(event_container)
-    return jsonify(
-        {
-            "status": "success",
-            "event": "custom_event",
-            "data": custom_event.model_dump(),
-        }
-    )
+    return await process_event(CustomEvent, "custom_event")
