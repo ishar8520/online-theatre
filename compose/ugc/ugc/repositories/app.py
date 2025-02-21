@@ -1,10 +1,12 @@
 from core.utils import handle_kafka_errors
 from models.event import ClickEvent, CustomEvent, EventContainer, PageViewEvent
 from quart import Quart, jsonify, request
+from quart_schema import QuartSchema
 
 from .event import get_kafka_event_repo
 
 app = Quart(__name__)
+QuartSchema(app)
 
 kafka_producer = None
 

@@ -366,7 +366,8 @@ services:
       - KAFKA_CLUSTERS_0_NAME=${KAFKA_CLUSTERS_0_NAME}
     networks:
       - movies-network
-  flask_app:
+
+  ugc-service:
     build:
       context: ./compose/ugc/ugc
       dockerfile: Dockerfile
