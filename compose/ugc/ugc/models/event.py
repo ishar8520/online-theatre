@@ -18,7 +18,7 @@ class ClickEvent(BaseEvent):
 class PageViewEvent(BaseEvent):
     url: str
     duration: int
-    timestamp: datetime
+    timestamp: str
 
 
 class CustomEvent(BaseEvent):
@@ -26,7 +26,7 @@ class CustomEvent(BaseEvent):
     movie_quality: Optional[str] = None
     movie_id: Optional[str] = None
     filters: Optional[dict] = None
-    timestamp: datetime
+    timestamp: str
 
 
 class EventContainer:

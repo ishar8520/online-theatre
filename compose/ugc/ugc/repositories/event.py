@@ -28,9 +28,8 @@ class BaseEventRepo(ABC):
 class KafkaEventRepo(BaseEventRepo):
     """Репозиторий событий использующий Kafka в качестве брокера."""
 
-    def __init__(self, kafka_hosts: str, topic: str) -> None:
+    def __init__(self, kafka_hosts: str) -> None:
         self.kafka_hosts = kafka_hosts
-        self.topic = topic
         self.kafka_producer = None
 
     async def start(self):
@@ -43,12 +42,12 @@ class KafkaEventRepo(BaseEventRepo):
         if self.kafka_producer:
             await self.kafka_producer.stop()
 
-    async def send_event(self, event: EventContainer) -> None:
+    async def send_event(self, event: EventContainer, topic: str) -> None:
         """Метод для отправки события в хранилище/брокер."""
         message = event.model_dump_json()
         try:
             await self.kafka_producer.send_and_wait(
-                topic=self.topic, value=message.encode()
+                topic=topic, value=message.encode()
             )
         except KafkaError as e:
             logger.exception(
@@ -58,6 +57,4 @@ class KafkaEventRepo(BaseEventRepo):
 
 
 def get_kafka_event_repo() -> KafkaEventRepo:
-    return KafkaEventRepo(
-        kafka_hosts=settings.kafka_hosts_as_list, topic=settings.kafka_topic
-    )
+    return KafkaEventRepo(kafka_hosts=settings.kafka_hosts_as_list)
