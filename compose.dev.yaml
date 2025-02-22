@@ -321,6 +321,19 @@ services:
       - KAFKA_CLUSTERS_0_NAME=${KAFKA_CLUSTERS_0_NAME}
     networks:
       - movies-network
+  flask_app:
+    build:
+      context: ./compose/ugc/ugc
+      dockerfile: Dockerfile
+    environment:
+      - PYTHONPATH=/opt/app
+    ports:
+      - "5001:5001"
+    networks:
+      - movies-network
+    depends_on:
+      kafka-0:
+        condition: service_healthy
 
   clickhouse-node:
     image: clickhouse/clickhouse-server:23

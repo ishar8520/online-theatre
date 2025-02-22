@@ -7,3 +7,6 @@ python = "^3.12"
 aiokafka = "^0.11.0"
 pydantic = { version = "2.10.5"}
 pydantic-settings = "2.7.1"
+gevent = "24.11.1"
+quart = "^0.20.0"
+hypercorn = "^0.17.3"
