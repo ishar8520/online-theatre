@@ -1,0 +1,40 @@
+services:
+  dynamodb-local:
+    command: "-jar DynamoDBLocal.jar -sharedDb -dbPath /home/dynamodblocal"
+    image: "amazon/dynamodb-local:2.5.4"
+    container_name: dynamodb-local
+    networks:
+      - dynamodb_network
+    ports:
+      - "8000:8000"
+    volumes:
+      - "dynamodb-data:/home/dynamodblocal"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          'if [ "$(curl -s -o /dev/null -I -w ''%{http_code}'' http://localhost:8000)" == "400" ]; then exit 0; else exit 1; fi',
+        ]
+      interval: 30s
+      retries: 3
+      start_period: 10s
+
+  dynamodb_benchmark:
+    build: './dynamodb'
+    container_name: 'dynamodb_benchmark'
+    volumes:
+      - 'benchmark_dynamodb_data:/opt/dynamodb/'
+    networks:
+      - dynamodb_network
+    restart: 'no'
+    depends_on:
+      dynamodb-local:
+        condition: service_healthy
+    command: [ "sh", "-c", "python benchmark_dynamodb.py --total 100000"]
+
+volumes:
+  dynamodb-data:
+  benchmark_dynamodb_data:
+
+networks:
+  dynamodb_network:
