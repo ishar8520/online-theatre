@@ -194,7 +194,7 @@ services:
       - POSTGRESQL_PASSWORD=$AUTH_POSTGRESQL_PASSWORD
       - REDIS_HOST=auth-redis
       - REDIS_PORT=6379
-    command: [ '/opt/app/commands/init.sh' ]
+#    command: [ '/opt/app/commands/init.sh' ]
 
   auth-postgresql:
     image: 'bitnami/postgresql:17.2.0-debian-12-r5'
@@ -300,6 +300,8 @@ services:
     ports:
       - "8123:8123"
       - "9000:9000"
+    networks:
+      - movies-network
     volumes:
       - 'clickhouse-node:/etc/clickhouse-server'
       - './compose/clickhouse/create_tables.sql:/docker-entrypoint-initdb.d/init.sql'
