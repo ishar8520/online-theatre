@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from kafka import KafkaConsumer
 
+from .kafka_topics import KafkaTopicEnum
 from ..core.config import settings
 
 
@@ -9,7 +10,11 @@ class KafkaConsumerService:
     _consumer: KafkaConsumer
 
     def __init__(self, ):
-        topics = ['click']
+        topics = [
+            KafkaTopicEnum.CLICK.value,
+            KafkaTopicEnum.PAGE_VIEW.value,
+            KafkaTopicEnum.CUSTOM_EVENT.value,
+        ]
 
         self._consumer = KafkaConsumer(
             *topics,

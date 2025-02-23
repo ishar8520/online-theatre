@@ -5,6 +5,7 @@ from abc import ABC, abstractmethod
 from datetime import datetime
 
 from .exceptions import InvalidTransformData, UnknownTransformerType
+from .kafka_topics import KafkaTopicEnum
 
 
 class TransformerFactory():
@@ -12,6 +13,10 @@ class TransformerFactory():
     def get(event_name: str, data: str):
         if event_name == ClickEventTransformer.get_type():
             return ClickEventTransformer(data=data)
+        elif event_name == PageViewEventTransformer.get_type():
+            return PageViewEventTransformer(data=data)
+        elif event_name == CustomEventTransformer.get_type():
+            return CustomEventTransformer(data=data)
 
         raise UnknownTransformerType
 
@@ -43,7 +48,7 @@ class ClickEventTransformer(AbstractEventTransformer):
 
     @staticmethod
     def get_type() -> str:
-        return 'click'
+        return KafkaTopicEnum.CLICK.value
 
 
 class PageViewEventTransformer(AbstractEventTransformer):
@@ -51,13 +56,13 @@ class PageViewEventTransformer(AbstractEventTransformer):
         return {
             'user_id': self._data_dict['user_id'],
             'url': self._data_dict['url'],
-            'duration': self._data_dict['duration'],
+            'duration': str(self._data_dict['duration']),
             'timestamp': datetime.fromisoformat(self._data_dict['timestamp']),
         }
 
     @staticmethod
     def get_type() -> str:
-        return 'page_view'
+        return KafkaTopicEnum.PAGE_VIEW.value
 
 
 class CustomEventTransformer(AbstractEventTransformer):
@@ -73,4 +78,4 @@ class CustomEventTransformer(AbstractEventTransformer):
 
     @staticmethod
     def get_type() -> str:
-        return 'custom'
+        return KafkaTopicEnum.CUSTOM_EVENT.value
