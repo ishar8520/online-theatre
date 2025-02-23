@@ -338,7 +338,6 @@ services:
 
   clickhouse-node:
     image: clickhouse/clickhouse-server:23
-    container_name: clickhouse-node
     hostname: clickhouse-node
     networks:
       - movies-network

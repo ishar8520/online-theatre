@@ -295,7 +295,6 @@ services:
 
   clickhouse-node:
     image: clickhouse/clickhouse-server:23
-    container_name: clickhouse-node
     hostname: clickhouse-node
     ports:
       - "8123:8123"
