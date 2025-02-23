@@ -264,6 +264,12 @@ services:
       - kafka-0_data:/bitnami/kafka
     networks:
       - movies-network
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-topics.sh --list --bootstrap-server kafka-0:9092"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
 
   kafka-ui:
     image: provectuslabs/kafka-ui:v0.7.2
@@ -274,6 +280,18 @@ services:
       - KAFKA_CLUSTERS_0_NAME=${KAFKA_CLUSTERS_0_NAME}
     networks:
       - movies-network
+
+  ugc-service:
+    build:
+      context: ./compose/ugc/ugc
+      dockerfile: Dockerfile
+    environment:
+      - PYTHONPATH=/opt/app
+    networks:
+      - movies-network
+    depends_on:
+      kafka-0:
+        condition: service_healthy
 
   clickhouse-node:
     image: clickhouse/clickhouse-server:23
@@ -298,3 +316,5 @@ volumes:
   auth-postgresql-data:
   auth-redis-data:
   kafka-0_data:
+  kafka-1_data:
+  kafka-2_data:

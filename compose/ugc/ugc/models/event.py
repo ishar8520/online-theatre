@@ -1,5 +1,6 @@
 from datetime import datetime
 from uuid import UUID
+from typing import Optional
 
 from pydantic import BaseModel
 
@@ -17,15 +18,15 @@ class ClickEvent(BaseEvent):
 class PageViewEvent(BaseEvent):
     url: str
     duration: int
-    timestamp: datetime
+    timestamp: str
 
 
 class CustomEvent(BaseEvent):
     event_type: str
-    movie_quality: str = None
-    movie_id: str = None
-    filters: dict = None
-    timestamp: datetime
+    movie_quality: Optional[str] = None
+    movie_id: Optional[str] = None
+    filters: Optional[dict] = None
+    timestamp: str
 
 
 class EventContainer:
