@@ -31,6 +31,8 @@ def main() -> None:
                     data = transformer.transform()
 
                     clickhouse_client.insert(transformer.get_type(), data)
+                    kafka_service.commit()
+
                     logging.info('Success insert!')
                 except InvalidTransformData:
                     logging.error('Invalid transform data!')
