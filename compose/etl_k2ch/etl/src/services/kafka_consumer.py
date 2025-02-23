@@ -10,9 +10,10 @@ class KafkaConsumerService:
 
     def __init__(self, ):
         topics = ['click']
+
         self._consumer = KafkaConsumer(
             *topics,
-            bootstrap_servers=settings.kafka.hosts,
+            bootstrap_servers=settings.kafka.host,
             auto_offset_reset='earliest',
             group_id='echo-messages-to-stdout',
         )

@@ -8,7 +8,7 @@ from pydantic_settings import (
 class KafkaSettings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="kafka_")
 
-    hosts: str = "localhost:9092"
+    host: str = "localhost:9092"
 
     @property
     def kafka_hosts_as_list(self) -> list[str]:

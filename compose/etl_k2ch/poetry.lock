@@ -134,15 +134,22 @@ numpy = ["numpy (>=1.12.0)", "pandas (>=0.24.0)"]
 zstd = ["clickhouse-cityhash (>=1.0.2.1)", "zstd"]
 
 [[package]]
-name = "kafka"
-version = "1.3.5"
+name = "kafka-python"
+version = "2.0.4"
 description = "Pure Python client for Apache Kafka"
 optional = false
 python-versions = "*"
 files = [
-    {file = "kafka-1.3.5-py2.py3-none-any.whl", hash = "sha256:35a49e9a432f6792aad48b2ab09d03867357aaa06eacba2678b7fd0808156e5c"},
-    {file = "kafka-1.3.5.tar.gz", hash = "sha256:ffb3348cd918c31344b1a2eb61f692cbc423c83b1b06466a86de3db8a3f6a018"},
+    {file = "kafka_python-2.0.4-py2.py3-none-any.whl", hash = "sha256:614ee11e7d659b3cfe162a67a103c60231a336c41911ad89d8c67f74bf43db25"},
+    {file = "kafka_python-2.0.4.tar.gz", hash = "sha256:cd556fdc73ed1e2e72247de234d209f452267d7b2e7289f6e51c50a44f1f48dc"},
 ]
+
+[package.extras]
+crc32c = ["crc32c"]
+lz4 = ["lz4"]
+snappy = ["python-snappy"]
+testing = ["mock", "pytest", "pytest-mock"]
+zstd = ["zstandard"]
 
 [[package]]
 name = "pydantic"
@@ -363,4 +370,4 @@ devenv = ["check-manifest", "pytest (>=4.3)", "pytest-cov", "pytest-mock (>=3.3)
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "8fb4e043da2dd75e71a8c8d55e59f16e4c0294bfd494086468a517a516695d71"
+content-hash = "186e4f6117db447ec1460c17a0038ef878b07bfc5e0eec2f5c0b0a4df789272b"
