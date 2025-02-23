@@ -14,10 +14,13 @@ class KafkaSettings(BaseSettings):
     def kafka_hosts_as_list(self) -> list[str]:
         return self.hosts.split(",")
 
+
 class ClickhouseSettings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="clickhouse_")
 
     host: str = "localhost"
+    batch_size: int = 1000
+    flush_interval: int = 5
 
 
 class Settings(BaseSettings):
