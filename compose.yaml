@@ -248,6 +248,8 @@ services:
     build:
       context: ./compose/ugc/kafka
     environment:
+      - KAFKA_TOPIC=${KAFKA_TOPIC}
+      - KAFKA_HOSTS=${KAFKA_HOSTS}
       - KAFKA_ENABLE_KRAFT=${KAFKA_ENABLE_KRAFT}
       - KAFKA_CFG_PROCESS_ROLES=${KAFKA_CFG_PROCESS_ROLES}
       - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=${KAFKA_CFG_CONTROLLER_LISTENER_NAMES}
@@ -264,57 +266,6 @@ services:
       - movies-network
     healthcheck:
       test: ["CMD-SHELL", "kafka-topics.sh --list --bootstrap-server kafka-0:9092"]
-      interval: 10s
-      timeout: 10s
-      retries: 10
-      start_period: 30s
-
-
-  kafka-1:
-    build:
-      context: ./compose/ugc/kafka
-    environment:
-      - KAFKA_ENABLE_KRAFT=${KAFKA_ENABLE_KRAFT}
-      - ALLOW_PLAINTEXT_LISTENER=${ALLOW_PLAINTEXT_LISTENER}
-      - KAFKA_CFG_NODE_ID=${KAFKA_CFG_NODE_ID_1}
-      - KAFKA_CFG_PROCESS_ROLES=${KAFKA_CFG_PROCESS_ROLES}
-      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=${KAFKA_CFG_CONTROLLER_LISTENER_NAMES}
-      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=${KAFKA_CFG_CONTROLLER_QUORUM_VOTERS_1}
-      - KAFKA_KRAFT_CLUSTER_ID=${KAFKA_KRAFT_CLUSTER_ID}
-      - KAFKA_CFG_LISTENERS=${KAFKA_CFG_LISTENERS_1}
-      - KAFKA_CFG_ADVERTISED_LISTENERS=${KAFKA_CFG_ADVERTISED_LISTENERS_1}
-      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=${KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP}
-    volumes:
-      - kafka-1_data:/bitnami/kafka
-    networks:
-      - movies-network
-    healthcheck:
-      test: ["CMD-SHELL", "kafka-topics.sh --list --bootstrap-server kafka-1:9092"]
-      interval: 10s
-      timeout: 10s
-      retries: 10
-      start_period: 30s
-
-  kafka-2:
-    build:
-      context: ./compose/ugc/kafka
-    environment:
-      - KAFKA_ENABLE_KRAFT=${KAFKA_ENABLE_KRAFT}
-      - ALLOW_PLAINTEXT_LISTENER=${ALLOW_PLAINTEXT_LISTENER}
-      - KAFKA_CFG_NODE_ID=${KAFKA_CFG_NODE_ID_2}
-      - KAFKA_CFG_PROCESS_ROLES=${KAFKA_CFG_PROCESS_ROLES}
-      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=${KAFKA_CFG_CONTROLLER_LISTENER_NAMES}
-      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=${KAFKA_CFG_CONTROLLER_QUORUM_VOTERS_2}
-      - KAFKA_KRAFT_CLUSTER_ID=${KAFKA_KRAFT_CLUSTER_ID}
-      - KAFKA_CFG_LISTENERS=${KAFKA_CFG_LISTENERS_2}
-      - KAFKA_CFG_ADVERTISED_LISTENERS=${KAFKA_CFG_ADVERTISED_LISTENERS_2}
-      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=${KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP}
-    volumes:
-      - kafka-2_data:/bitnami/kafka
-    networks:
-      - movies-network
-    healthcheck:
-      test: ["CMD-SHELL", "kafka-topics.sh --list --bootstrap-server kafka-2:9092"]
       interval: 10s
       timeout: 10s
       retries: 10
@@ -341,10 +292,32 @@ services:
     depends_on:
       kafka-0:
         condition: service_healthy
-      kafka-1:
+
+  clickhouse-node:
+    image: clickhouse/clickhouse-server:23
+    container_name: clickhouse-node
+    hostname: clickhouse-node
+    ports:
+      - "8123:8123"
+      - "9000:9000"
+    volumes:
+      - 'clickhouse-node:/etc/clickhouse-server'
+      - './compose/clickhouse/create_tables.sql:/docker-entrypoint-initdb.d/init.sql'
+
+  etl-k2ch:
+    build:
+      context: ./compose/etl_k2ch
+    depends_on:
+      kafka-0:
         condition: service_healthy
-      kafka-2:
+      clickhouse-node:
         condition: service_healthy
+    networks:
+      - movies-network
+    environment:
+      - KAFKA_HOST=kafka-0:9092
+      - CLICKHOUSE_HOST=clickhouse-node
+    restart: unless-stopped
 
 networks:
   movies-network:

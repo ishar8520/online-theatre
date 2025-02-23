@@ -151,8 +151,8 @@ services:
         condition: service_healthy
       auth-redis:
         condition: service_healthy
-      auth-service-init:
-        condition: service_completed_successfully
+#      auth-service-init:
+#        condition: service_completed_successfully
       jaeger:
         condition: service_healthy
     networks:
@@ -199,37 +199,37 @@ services:
         - action: rebuild
           path: ./compose/auth/poetry.lock
 
-  auth-service-init:
-    build:
-      context: ./compose/auth
-    depends_on:
-      auth-postgresql:
-        condition: service_healthy
-      auth-redis:
-        condition: service_healthy
-      jaeger:
-        condition: service_healthy
-    networks:
-      - movies-network
-    environment:
-      - AUTH_SECRET_KEY=$AUTH_SECRET_KEY
-      - AUTH_ACCESS_JWT_LIFETIME=${AUTH_ACCESS_JWT_LIFETIME:-3600}
-      - AUTH_REFRESH_JWT_LIFETIME=${AUTH_REFRESH_JWT_LIFETIME:-86400}
-      - AUTH_SQL_ECHO=${AUTH_SQL_ECHO:-True}
-      - OTEL_ENABLED=${OTEL_ENABLED:-True}
-      - OTEL_REQUEST_ID_REQUIRED=${OTEL_REQUEST_ID_REQUIRED:-True}
-      - OTEL_EXPORTER_OTLP_HTTP_ENDPOINT=http://jaeger:4318/v1/traces
-      - OTEL_SERVICE_NAME=${AUTH_OTEL_SERVICE_NAME:-auth}
-      - SUPERUSER_LOGIN=$AUTH_SUPERUSER_LOGIN
-      - SUPERUSER_PASSWORD=$AUTH_SUPERUSER_PASSWORD
-      - POSTGRESQL_HOST=auth-postgresql
-      - POSTGRESQL_PORT=5432
-      - POSTGRESQL_DATABASE=$AUTH_POSTGRESQL_DATABASE
-      - POSTGRESQL_USERNAME=$AUTH_POSTGRESQL_USERNAME
-      - POSTGRESQL_PASSWORD=$AUTH_POSTGRESQL_PASSWORD
-      - REDIS_HOST=auth-redis
-      - REDIS_PORT=6379
-    command: [ '/opt/app/commands/init.sh' ]
+#  auth-service-init:
+#    build:
+#      context: ./compose/auth
+#    depends_on:
+#      auth-postgresql:
+#        condition: service_healthy
+#      auth-redis:
+#        condition: service_healthy
+#      jaeger:
+#        condition: service_healthy
+#    networks:
+#      - movies-network
+#    environment:
+#      - AUTH_SECRET_KEY=$AUTH_SECRET_KEY
+#      - AUTH_ACCESS_JWT_LIFETIME=${AUTH_ACCESS_JWT_LIFETIME:-3600}
+#      - AUTH_REFRESH_JWT_LIFETIME=${AUTH_REFRESH_JWT_LIFETIME:-86400}
+#      - AUTH_SQL_ECHO=${AUTH_SQL_ECHO:-True}
+#      - OTEL_ENABLED=${OTEL_ENABLED:-True}
+#      - OTEL_REQUEST_ID_REQUIRED=${OTEL_REQUEST_ID_REQUIRED:-True}
+#      - OTEL_EXPORTER_OTLP_HTTP_ENDPOINT=http://jaeger:4318/v1/traces
+#      - OTEL_SERVICE_NAME=${AUTH_OTEL_SERVICE_NAME:-auth}
+#      - SUPERUSER_LOGIN=$AUTH_SUPERUSER_LOGIN
+#      - SUPERUSER_PASSWORD=$AUTH_SUPERUSER_PASSWORD
+#      - POSTGRESQL_HOST=auth-postgresql
+#      - POSTGRESQL_PORT=5432
+#      - POSTGRESQL_DATABASE=$AUTH_POSTGRESQL_DATABASE
+#      - POSTGRESQL_USERNAME=$AUTH_POSTGRESQL_USERNAME
+#      - POSTGRESQL_PASSWORD=$AUTH_POSTGRESQL_PASSWORD
+#      - REDIS_HOST=auth-redis
+#      - REDIS_PORT=6379
+#    command: [ '/opt/app/commands/init.sh' ]
 
   auth-postgresql:
     image: 'bitnami/postgresql:17.2.0-debian-12-r5'
@@ -283,6 +283,8 @@ services:
     build:
       context: ./compose/ugc/kafka
     environment:
+      - KAFKA_TOPIC=${KAFKA_TOPIC}
+      - KAFKA_HOSTS=${KAFKA_HOSTS}
       - KAFKA_ENABLE_KRAFT=${KAFKA_ENABLE_KRAFT}
       - KAFKA_CFG_PROCESS_ROLES=${KAFKA_CFG_PROCESS_ROLES}
       - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=${KAFKA_CFG_CONTROLLER_LISTENER_NAMES}
@@ -294,7 +296,10 @@ services:
       - KAFKA_CFG_ADVERTISED_LISTENERS=${KAFKA_CFG_ADVERTISED_LISTENERS_0}
       - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=${KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP}
     volumes:
-      - kafka-0_data:/bitnami/kafka
+      - 'kafka-0_data:/bitnami/kafka'
+    ports:
+      - "9092:9092"
+      - "9094:9094"
     networks:
       - movies-network
     healthcheck:
@@ -304,63 +309,13 @@ services:
       retries: 10
       start_period: 30s
 
-
-  kafka-1:
-    build:
-      context: ./compose/ugc/kafka
-    environment:
-      - KAFKA_ENABLE_KRAFT=${KAFKA_ENABLE_KRAFT}
-      - ALLOW_PLAINTEXT_LISTENER=${ALLOW_PLAINTEXT_LISTENER}
-      - KAFKA_CFG_NODE_ID=${KAFKA_CFG_NODE_ID_1}
-      - KAFKA_CFG_PROCESS_ROLES=${KAFKA_CFG_PROCESS_ROLES}
-      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=${KAFKA_CFG_CONTROLLER_LISTENER_NAMES}
-      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=${KAFKA_CFG_CONTROLLER_QUORUM_VOTERS_1}
-      - KAFKA_KRAFT_CLUSTER_ID=${KAFKA_KRAFT_CLUSTER_ID}
-      - KAFKA_CFG_LISTENERS=${KAFKA_CFG_LISTENERS_1}
-      - KAFKA_CFG_ADVERTISED_LISTENERS=${KAFKA_CFG_ADVERTISED_LISTENERS_1}
-      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=${KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP}
-    volumes:
-      - kafka-1_data:/bitnami/kafka
-    networks:
-      - movies-network
-    healthcheck:
-      test: ["CMD-SHELL", "kafka-topics.sh --list --bootstrap-server kafka-1:9092"]
-      interval: 10s
-      timeout: 10s
-      retries: 10
-      start_period: 30s
-
-
-  kafka-2:
-    build:
-      context: ./compose/ugc/kafka
-    environment:
-      - KAFKA_ENABLE_KRAFT=${KAFKA_ENABLE_KRAFT}
-      - ALLOW_PLAINTEXT_LISTENER=${ALLOW_PLAINTEXT_LISTENER}
-      - KAFKA_CFG_NODE_ID=${KAFKA_CFG_NODE_ID_2}
-      - KAFKA_CFG_PROCESS_ROLES=${KAFKA_CFG_PROCESS_ROLES}
-      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=${KAFKA_CFG_CONTROLLER_LISTENER_NAMES}
-      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=${KAFKA_CFG_CONTROLLER_QUORUM_VOTERS_2}
-      - KAFKA_KRAFT_CLUSTER_ID=${KAFKA_KRAFT_CLUSTER_ID}
-      - KAFKA_CFG_LISTENERS=${KAFKA_CFG_LISTENERS_2}
-      - KAFKA_CFG_ADVERTISED_LISTENERS=${KAFKA_CFG_ADVERTISED_LISTENERS_2}
-      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=${KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP}
-    volumes:
-      - kafka-2_data:/bitnami/kafka
-    networks:
-      - movies-network
-    healthcheck:
-      test: ["CMD-SHELL", "kafka-topics.sh --list --bootstrap-server kafka-2:9092"]
-      interval: 10s
-      timeout: 10s
-      retries: 10
-      start_period: 30s
-
-
   kafka-ui:
     image: provectuslabs/kafka-ui:v0.7.2
     ports:
       - "9090:8080"
+    depends_on:
+      kafka-0:
+        condition: service_healthy
     environment:
       - KAFKA_CLUSTERS_0_BOOTSTRAP_SERVERS=${KAFKA_CLUSTERS_0_BOOTSTRAP_SERVERS}
       - KAFKA_CLUSTERS_0_NAME=${KAFKA_CLUSTERS_0_NAME}
@@ -380,10 +335,48 @@ services:
     depends_on:
       kafka-0:
         condition: service_healthy
-      kafka-1:
+
+  clickhouse-node:
+    image: clickhouse/clickhouse-server:23
+    container_name: clickhouse-node
+    hostname: clickhouse-node
+    networks:
+      - movies-network
+    ports:
+      - "8123:8123"
+      - "9000:9000"
+    volumes:
+      - 'clickhouse-node:/etc/clickhouse-server'
+      - './compose/clickhouse/create_tables.sql:/docker-entrypoint-initdb.d/init.sql'
+    healthcheck:
+      test: 'wget --no-verbose --tries=1 --spider http://localhost:8123/ping || exit 1'
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  etl-k2ch:
+    build:
+      context: ./compose/etl_k2ch
+    depends_on:
+      kafka-0:
         condition: service_healthy
-      kafka-2:
+      clickhouse-node:
         condition: service_healthy
+    networks:
+      - movies-network
+    environment:
+      - KAFKA_HOST=kafka-0:9092
+      - CLICKHOUSE_HOST=clickhouse-node
+    restart: unless-stopped
+    develop:
+      watch:
+        - action: sync+restart
+          path: ./compose/etl_k2ch/etl
+          target: /opt/app/etl
+        - action: rebuild
+          path: ./compose/etl_k2ch/pyproject.toml
+        - action: rebuild
+          path: ./compose/etl_k2ch/poetry.lock
 
 networks:
   movies-network:
@@ -397,6 +390,5 @@ volumes:
   auth-postgresql-data:
   auth-redis-data:
   kafka-0_data:
-  kafka-1_data:
-  kafka-2_data:
+  clickhouse-node:
 

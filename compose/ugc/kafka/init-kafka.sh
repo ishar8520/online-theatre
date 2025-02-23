@@ -8,7 +8,7 @@ done
 
 # Получаем имя топика из переменной окружения
 echo "Creating Kafka topic: ${KAFKA_TOPIC}"
-kafka-topics.sh --bootstrap-server kafka-0:9092 --create --if-not-exists --topic ${KAFKA_TOPIC} --replication-factor 3 --partitions 1
+kafka-topics.sh --bootstrap-server kafka-0:9092 --create --if-not-exists --topic ${KAFKA_TOPIC} --partitions 1
 
 # Выводим список топиков
 echo "Successfully created the following topics:"
