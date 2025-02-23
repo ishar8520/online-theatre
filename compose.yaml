@@ -331,5 +331,4 @@ volumes:
   auth-postgresql-data:
   auth-redis-data:
   kafka-0_data:
-  kafka-1_data:
-  kafka-2_data:
+  clickhouse-node:
