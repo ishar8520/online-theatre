@@ -304,6 +304,21 @@ services:
       - 'clickhouse-node:/etc/clickhouse-server'
       - './compose/clickhouse/create_tables.sql:/docker-entrypoint-initdb.d/init.sql'
 
+  etl-k2ch:
+    build:
+      context: ./compose/etl_k2ch
+    depends_on:
+      kafka-0:
+        condition: service_healthy
+      clickhouse-node:
+        condition: service_healthy
+    networks:
+      - movies-network
+    environment:
+      - KAFKA_HOST=kafka-0:9092
+      - CLICKHOUSE_HOST=clickhouse-node
+    restart: unless-stopped
+
 networks:
   movies-network:
 
