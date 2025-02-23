@@ -21,7 +21,11 @@ class KafkaConsumerService:
             bootstrap_servers=settings.kafka.host,
             auto_offset_reset='earliest',
             group_id='echo-messages-to-stdout',
+            enable_auto_commit=False,
         )
 
     def poll(self):
         return self._consumer.poll(timeout_ms=100)
+
+    def commit(self):
+        self._consumer.commit()
