@@ -1,7 +1,10 @@
 import json
 from time import sleep
 
-from src.services.data_transformer import ClickEventTransformer, TransformerFactory
+from src.services.data_transformer import (
+    ClickEventTransformer,
+    TransformerFactory
+)
 from src.services.kafka_topics import KafkaTopicEnum
 from src.services.exceptions import (
     InvalidTransformData,
@@ -25,16 +28,15 @@ def main() -> None:
                 continue
 
             try:
-                transformer = TransformerFactory.get(topic.value)
-
                 for _, messages in message_pack.items():
                     batch = []
                     for message in messages:
-                        data = json.loads(message.value.decode("utf-8"))
-
-                        batch.append(transformer.transform(data))
+                        data = message.value.decode("utf-8")
+                        transformer = TransformerFactory.get(topic.value, data)
+                        batch.append(transformer.transform())
 
                     if batch:
+                        print(batch)
                         clickhouse_client.insert(
                             ClickEventTransformer.get_type(),
                             batch[0].keys(),
@@ -43,7 +45,6 @@ def main() -> None:
                         kafka_service.commit()
 
                         need_sleep = False
-
                         logging.info('Success insert!')
             except InvalidTransformData:
                 logging.error('Invalid transform data!')
@@ -51,7 +52,7 @@ def main() -> None:
                 continue
 
         if need_sleep:
-            sleep(20)
+            sleep(0)
 
 
 if __name__ == '__main__':

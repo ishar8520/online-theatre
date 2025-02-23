@@ -10,21 +10,28 @@ from .kafka_topics import KafkaTopicEnum
 
 class TransformerFactory():
     @staticmethod
-    def get(event_name: str):
+    def get(event_name: str, data: str):
         if event_name == ClickEventTransformer.get_type():
-            return ClickEventTransformer()
+            return ClickEventTransformer(data=data)
         elif event_name == PageViewEventTransformer.get_type():
-            return PageViewEventTransformer()
+            return PageViewEventTransformer(data=data)
         elif event_name == CustomEventTransformer.get_type():
-            return CustomEventTransformer()
+            return CustomEventTransformer(data=data)
 
         raise UnknownTransformerType
 
 
 class AbstractEventTransformer(ABC):
-    @staticmethod
+    _data_dict: dict
+
+    def __init__(self, data: str):
+        try:
+            self._data_dict = json.loads(data)
+        except json.JSONDecodeError:
+            raise InvalidTransformData
+
     @abstractmethod
-    def transform(data: list) -> dict: ...
+    def transform(self) -> dict: ...
 
     @staticmethod
     @abstractmethod
@@ -32,12 +39,11 @@ class AbstractEventTransformer(ABC):
 
 
 class ClickEventTransformer(AbstractEventTransformer):
-    @staticmethod
-    def transform(data: dict) -> dict:
+    def transform(self) -> dict:
         return {
-            'user_id': data['user_id'],
-            'element': data['element'],
-            'timestamp': datetime.fromisoformat(data['timestamp']),
+            'user_id': self._data_dict['user_id'],
+            'element': self._data_dict['element'],
+            'timestamp': datetime.fromisoformat(self._data_dict['timestamp']),
         }
 
     @staticmethod
@@ -46,13 +52,12 @@ class ClickEventTransformer(AbstractEventTransformer):
 
 
 class PageViewEventTransformer(AbstractEventTransformer):
-    @staticmethod
-    def transform(data: dict) -> dict:
+    def transform(self) -> dict:
         return {
-            'user_id': data['user_id'],
-            'url': data['url'],
-            'duration': str(data['duration']),
-            'timestamp': datetime.fromisoformat(data['timestamp']),
+            'user_id': self._data_dict['user_id'],
+            'url': self._data_dict['url'],
+            'duration': str(self._data_dict['duration']),
+            'timestamp': datetime.fromisoformat(self._data_dict['timestamp']),
         }
 
     @staticmethod
@@ -61,15 +66,14 @@ class PageViewEventTransformer(AbstractEventTransformer):
 
 
 class CustomEventTransformer(AbstractEventTransformer):
-    @staticmethod
-    def transform(data: dict) -> dict:
+    def transform(self) -> dict:
         return {
-            'user_id': data['user_id'],
-            'event_type': data['event_type'],
-            'movie_quality': data['movie_quality'],
-            'movie_id': data['movie_id'],
-            'filters': data['filters'],
-            'timestamp': datetime.fromisoformat(data['timestamp']),
+            'user_id': self._data_dict['user_id'],
+            'event_type': self._data_dict['event_type'],
+            'movie_quality': self._data_dict['movie_quality'],
+            'movie_id': self._data_dict['movie_id'],
+            'filters': self._data_dict['filters'],
+            'timestamp': datetime.fromisoformat(self._data_dict['timestamp']),
         }
 
     @staticmethod
