@@ -12,11 +12,10 @@ class ClickhouseService:
     def __init__(self, ):
         self._client = Client(host=settings.clickhouse.host)
 
-    def insert(self, table_name: str, data: dict[str, Any]):
-        keys_string = ', '.join(data.keys())
-        values_list = list(data.values())
+    def insert(self, table_name: str, table_columns: list, values: list):
+        keys_string = ', '.join(table_columns)
 
         return self._client.execute(
             f'INSERT INTO ugc.{table_name} ({keys_string}) VALUES',
-            [values_list]
+            values
         )
