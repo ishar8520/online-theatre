@@ -36,7 +36,6 @@ def main() -> None:
                         batch.append(transformer.transform())
 
                     if batch:
-                        print(batch)
                         clickhouse_client.insert(
                             ClickEventTransformer.get_type(),
                             batch[0].keys(),
