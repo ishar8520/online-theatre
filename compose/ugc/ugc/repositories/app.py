@@ -6,7 +6,10 @@ from quart_schema import QuartSchema, validate_request
 from .event import get_kafka_event_repo
 
 app = Quart(__name__)
-QuartSchema(app)
+QuartSchema(app,
+    openapi_path="/ugc/openapi.json",
+    servers=[{"url": "/ugc", "description": "Base URL for UGC Service"}],
+)
 
 kafka_producer = None
 
