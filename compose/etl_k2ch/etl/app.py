@@ -18,8 +18,12 @@ def main() -> None:
         flush_interval=settings.clickhouse.flush_interval
     )
 
+    need_flush = False
+
     while True:
-        clickhouse_client.check_auto_flush()
+        if clickhouse_client.need_auto_flush():
+            clickhouse_client.flush()
+            kafka_service.commit()
 
         message_pack = kafka_service.poll()
         if not message_pack:
@@ -38,8 +42,7 @@ def main() -> None:
 
                     clickhouse_client.add_to_batch(table_name, transformed_data)
                     if clickhouse_client.is_batch_full(table_name):
-                        clickhouse_client.flush_table(table_name)
-                        kafka_service.commit()
+                        need_flush = True
 
                     logging.info('Success insert!')
                 except InvalidTransformData:
@@ -48,6 +51,11 @@ def main() -> None:
                     logging.error('Unknown transformer type!')
                 finally:
                     continue
+
+        if need_flush:
+            clickhouse_client.flush()
+            kafka_service.commit()
+            need_flush = False
 
 
 if __name__ == '__main__':
