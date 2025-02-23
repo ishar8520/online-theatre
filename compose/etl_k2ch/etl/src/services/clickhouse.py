@@ -18,15 +18,16 @@ class ClickhouseService:
     def add_to_batch(self, table_name: str, data: dict):
         """Добавляет данные в батч для указанной таблицы."""
         self.batches[table_name].append(data)
-        if len(self.batches[table_name]) >= self.batch_size:
-            self._flush_table(table_name)
+
+    def is_batch_full(self, table_name: str) -> bool:
+        return len(self.batches[table_name]) >= self.batch_size
 
     def flush(self):
         """Принудительно отправляет все накопленные данные в ClickHouse."""
         for table_name in list(self.batches.keys()):
-            self._flush_table(table_name)
+            self.flush_table(table_name)
 
-    def _flush_table(self, table_name: str):
+    def flush_table(self, table_name: str):
         """Отправляет данные для конкретной таблицы в ClickHouse."""
         if not self.batches[table_name]:
             return

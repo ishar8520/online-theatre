@@ -25,7 +25,7 @@ class KafkaConsumerService:
         )
 
     def poll(self):
-        return self._consumer.poll(timeout_ms=100)
+        return self._consumer.poll(timeout_ms=1000)
 
     def commit(self):
         self._consumer.commit()

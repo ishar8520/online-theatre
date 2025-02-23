@@ -13,17 +13,17 @@ from src.services.kafka_consumer import KafkaConsumerService
 
 def main() -> None:
     kafka_service = KafkaConsumerService()
-    clickhouse_client = ClickhouseService(batch_size=settings.batch_size, flush_interval=settings.flush_interval)
+    clickhouse_client = ClickhouseService(
+        batch_size=settings.clickhouse.batch_size,
+        flush_interval=settings.clickhouse.flush_interval
+    )
 
     while True:
+        clickhouse_client.check_auto_flush()
+
         message_pack = kafka_service.poll()
         if not message_pack:
             sleep(2)
-
-        clickhouse_client.check_auto_flush()
-
-        if not message_pack:
-            continue
 
         for topic, messages in message_pack.items():
             for message in messages:
@@ -34,7 +34,13 @@ def main() -> None:
                         data=data_json
                     )
                     transformed_data = transformer.transform()
-                    clickhouse_client.add_to_batch(transformer.get_type(), transformed_data)
+                    table_name = transformer.get_type()
+
+                    clickhouse_client.add_to_batch(table_name, transformed_data)
+                    if clickhouse_client.is_batch_full(table_name):
+                        clickhouse_client.flush_table(table_name)
+                        kafka_service.commit()
+
                     logging.info('Success insert!')
                 except InvalidTransformData:
                     logging.error('Invalid transform data!')
