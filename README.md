@@ -46,8 +46,8 @@ $ ./run_tests.sh tests
 ### Результаты тестирования по выбору хранилища UGC представлены в папке test_database
 
 
-Над проектом работали:
-Шаров Илья (ЯП: @i.sh.8520, github: @ishar8520) - тимлид
-Мария Пирогова (ЯП: @miss.yefimenko, github: @Maliarda) - разработчик
-Лашков Максим (ЯП: @maxim.lashkov, github: @maximlashkov) - разработчик
-Максим Павленков (ЯП: @edmpeople0, github: @maks-pavlenkov) - разработчик
+# Над проектом работали:
+## Шаров Илья (ЯП: @i.sh.8520, github: @ishar8520) - тимлид
+## Мария Пирогова (ЯП: @miss.yefimenko, github: @Maliarda) - разработчик
+## Лашков Максим (ЯП: @maxim.lashkov, github: @maximlashkov) - разработчик
+## Максим Павленков (ЯП: @edmpeople0, github: @maks-pavlenkov) - разработчик
