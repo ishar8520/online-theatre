@@ -7,6 +7,7 @@ from src.services.exceptions import (
 from src.services.kafka_consumer import KafkaConsumerService
 from src.services.clickhouse import ClickhouseService
 from src.services.data_transformer import TransformerFactory
+import logging
 
 
 def main() -> None:
@@ -30,11 +31,11 @@ def main() -> None:
                     data = transformer.transform()
 
                     clickhouse_client.insert(transformer.get_type(), data)
-                    print('Success insert!')
+                    logging.info('Success insert!')
                 except InvalidTransformData:
-                    print('Invalid transform data!')
+                    logging.error('Invalid transform data!')
                 except UnknownTransformerType:
-                    print('Unknown transformer type!')
+                    logging.error('Unknown transformer type!')
                 finally:
                     continue
 
