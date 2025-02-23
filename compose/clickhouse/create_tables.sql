@@ -19,8 +19,8 @@ CREATE TABLE IF NOT EXISTS ugc.custom_event(
     id UUID DEFAULT generateUUIDv4(),
     user_id UUID,
     event_type String,
-    movie_quality String,
-    movie_id String,
-    filters String,
+    movie_quality Nullable(String),
+    movie_id Nullable(String),
+    filters Nullable(String),
     timestamp DateTime
 ) Engine=MergeTree() ORDER BY id;
