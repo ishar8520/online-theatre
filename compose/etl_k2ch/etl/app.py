@@ -51,7 +51,7 @@ def main() -> None:
                 continue
 
         if need_sleep:
-            sleep(0)
+            sleep(20)
 
 
 if __name__ == '__main__':
