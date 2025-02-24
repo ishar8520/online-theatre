@@ -25,9 +25,11 @@ class ClickhouseService:
     def flush(self):
         """Принудительно отправляет все накопленные данные в ClickHouse."""
         for table_name in list(self.batches.keys()):
-            self.flush_table(table_name)
+            self._flush_table(table_name)
 
-    def flush_table(self, table_name: str):
+        self.last_flush_time = time()
+
+    def _flush_table(self, table_name: str):
         """Отправляет данные для конкретной таблицы в ClickHouse."""
         if not self.batches[table_name]:
             return
@@ -40,9 +42,6 @@ class ClickhouseService:
         )
         self.batches[table_name].clear()
 
-    def check_auto_flush(self):
+    def need_auto_flush(self):
         """Проверяет, требуется ли автоматическая отправка накопленных данных."""
-        current_time = time()
-        if current_time - self.last_flush_time > self.flush_interval:
-            self.flush()
-            self.last_flush_time = current_time
+        return time() - self.last_flush_time > self.flush_interval
