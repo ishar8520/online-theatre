@@ -11,6 +11,8 @@ from src.services.exceptions import (
 from src.services.kafka_consumer import KafkaConsumerService
 
 
+logging.basicConfig(level=logging.INFO)
+
 def main() -> None:
     kafka_service = KafkaConsumerService()
     clickhouse_client = ClickhouseService(
