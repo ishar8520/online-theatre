@@ -26,9 +26,6 @@ class GenerateData:
 
     def generate_data(self, data_type: str) -> Iterator[list[Union[Like, Review, Bookmark]]]:
         seen = set()
-        # movie_id = random.choice(self.__generate_base_movies())
-        # user_id = random.choice(self.__generate_base_movies())
-        # print(self.__generate_base_users())
         for _ in range(0, self.records_num, BATCH_SIZE):
             batch = []
             for _ in range(BATCH_SIZE):
