@@ -28,6 +28,12 @@ $ ./run_server.sh dev
 $ ./run_tests.sh
 ```
 
+### Запуск тестов с указанием версии Python
+
+```shell
+$ PYTHON_VERSION=3.12 ./run_tests.sh
+```
+
 ### Запуск тестов с использованием Docker Compose Watch
 
 В одном окне терминала стартуем сервисы в watch mode:

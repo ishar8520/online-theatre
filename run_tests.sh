@@ -2,11 +2,32 @@
 
 set -e
 
+PYTHON_VERSION=${PYTHON_VERSION:-3.13}
+
 docker_compose() {
     docker compose -f compose.tests.yaml "$@"
 }
 
+docker_compose_build() {
+    local docker_compose_args=()
+
+    if [[ "$PULL_POLICY" && "$PULL_POLICY" != "never" ]]; then
+        docker_compose_args+=(--pull)
+    fi
+
+    local build_args=(
+        "PYTHON_VERSION=$PYTHON_VERSION"
+    )
+
+    for build_arg in "${build_args[@]}"; do
+        docker_compose_args+=(--build-arg "$build_arg")
+    done
+
+    docker_compose build "${docker_compose_args[@]}"
+}
+
 docker_compose_up() {
+    docker_compose_build
     docker_compose up --remove-orphans "$@"
 }
 
@@ -17,15 +38,11 @@ start_services() {
         docker_compose_args+=(--pull "$PULL_POLICY")
     fi
 
-    if [[ ! "$SKIP_BUILD" ]]; then
-        docker_compose_args+=(--build)
-    fi
-
     docker_compose_up "${docker_compose_args[@]}"
 }
 
 watch_services() {
-    docker_compose_up --watch --pull always --build --force-recreate
+    docker_compose_up --watch --force-recreate
 }
 
 run_tests() {
