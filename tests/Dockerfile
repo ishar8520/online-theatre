@@ -14,7 +14,7 @@ ENV PATH="/root/.local/bin:$PATH"
 
 RUN --mount=type=cache,target=/root/.cache/pip \
     pip install --user pipx==1.7.1
-RUN pipx install poetry==2.0.1
+RUN pipx install poetry==2.1.1
 
 ENV VIRTUAL_ENV=/venv
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
@@ -25,10 +25,31 @@ RUN --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
     --mount=type=cache,target=/root/.cache/pypoetry \
     poetry install --no-ansi --no-interaction
 
-FROM base
+FROM venv AS venv-dev
+
+RUN --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
+    --mount=type=bind,source=poetry.lock,target=poetry.lock \
+    --mount=type=cache,target=/root/.cache/pypoetry \
+    poetry install --no-ansi --no-interaction --only dev
+
+FROM base AS common
 
 ENV VIRTUAL_ENV=/venv
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+
+FROM common AS lint
+
+COPY --from=venv-dev "$VIRTUAL_ENV" "$VIRTUAL_ENV"
+COPY ./pyproject.toml .
+COPY ./tests/ ./tests/
+
+COPY ./commands/ ./commands/
+RUN chmod +x ./commands/*.sh
+
+COPY ./docker-entrypoint.sh .
+RUN chmod +x docker-entrypoint.sh
+
+FROM common
 
 COPY --from=venv "$VIRTUAL_ENV" "$VIRTUAL_ENV"
 COPY ./pyproject.toml .

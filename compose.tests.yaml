@@ -43,7 +43,7 @@ services:
     build:
       context: ./src
       args:
-        - PYTHON_VERSION=$PYTHON_VERSION
+        - PYTHON_VERSION
     depends_on:
       redis:
         condition: service_healthy
@@ -115,7 +115,7 @@ services:
     build:
       context: ./compose/auth
       args:
-        - PYTHON_VERSION=$PYTHON_VERSION
+        - PYTHON_VERSION
     depends_on:
       auth-postgresql:
         condition: service_healthy
@@ -165,7 +165,7 @@ services:
     build:
       context: ./compose/auth
       args:
-        - PYTHON_VERSION=$PYTHON_VERSION
+        - PYTHON_VERSION
     depends_on:
       auth-postgresql:
         condition: service_healthy
