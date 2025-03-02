@@ -1,0 +1,51 @@
+name: online-theatre-lint
+
+services:
+  movies:
+    build:
+      context: ./src
+      target: lint
+    networks:
+      - movies-network
+    volumes:
+      - 'movies-mypy-cache:/opt/app/.mypy_cache'
+    command: [ 'sleep', 'infinity' ]
+    develop:
+      watch:
+        - action: sync
+          path: ./src/movies
+          target: /opt/app/movies
+        - action: rebuild
+          path: ./src/commands
+        - action: rebuild
+          path: ./src/pyproject.toml
+        - action: rebuild
+          path: ./src/poetry.lock
+
+  tests:
+    build:
+      context: ./tests
+      target: lint
+    networks:
+      - movies-network
+    volumes:
+      - 'tests-mypy-cache:/opt/app/.mypy_cache'
+    command: [ 'sleep', 'infinity' ]
+    develop:
+      watch:
+        - action: sync
+          path: ./tests/tests
+          target: /opt/app/tests
+        - action: rebuild
+          path: ./tests/commands
+        - action: rebuild
+          path: ./tests/pyproject.toml
+        - action: rebuild
+          path: ./tests/poetry.lock
+
+networks:
+  movies-network:
+
+volumes:
+  movies-mypy-cache:
+  tests-mypy-cache:

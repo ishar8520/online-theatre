@@ -23,7 +23,7 @@ docker_compose_build() {
         docker_compose_args+=(--build-arg "$build_arg")
     done
 
-    docker_compose build "${docker_compose_args[@]}"
+    COMPOSE_BAKE=true docker_compose build "${docker_compose_args[@]}"
 }
 
 docker_compose_up() {

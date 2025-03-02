@@ -18,6 +18,12 @@ pydantic-settings = "2.6.1"
 redis = { version = "5.2.1", extras = ["hiredis"] }
 uvicorn-worker = "0.2.0"
 
+[tool.poetry.group.dev]
+optional = true
+
+[tool.poetry.group.dev.dependencies]
+mypy = "1.15.0"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
