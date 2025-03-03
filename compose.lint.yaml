@@ -9,6 +9,7 @@ services:
       - movies-network
     volumes:
       - 'movies-mypy-cache:/opt/app/.mypy_cache'
+      - './src/.lint:/opt/app/.lint'
     command: [ 'sleep', 'infinity' ]
     develop:
       watch:
@@ -30,6 +31,7 @@ services:
       - movies-network
     volumes:
       - 'tests-mypy-cache:/opt/app/.mypy_cache'
+      - './tests/.lint:/opt/app/.lint'
     command: [ 'sleep', 'infinity' ]
     develop:
       watch:

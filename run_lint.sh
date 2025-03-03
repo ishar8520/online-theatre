@@ -32,6 +32,7 @@ run_command() {
     declare -A commands
     local commands=(
         [mypy]=/opt/app/commands/mypy.sh
+        [ruff]=/opt/app/commands/ruff.sh
     )
 
     local services=(
