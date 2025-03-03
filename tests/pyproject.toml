@@ -18,7 +18,18 @@ SQLAlchemy = { version = "2.0.37", extras = ["asyncio"] }
 optional = true
 
 [tool.poetry.group.dev.dependencies]
+ciqar = "1.0.0"
 mypy = "1.15.0"
+ruff = "0.9.9"
+
+[tool.ruff]
+target-version = "py312"
+line-length = 120
+
+[tool.ruff.lint]
+select = [
+    "E",
+]
 
 [build-system]
 requires = ["poetry-core"]

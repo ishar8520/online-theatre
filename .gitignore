@@ -3,6 +3,7 @@
 *.log
 *.pyc
 .env
+.lint
 !.gitkeep
 
 compose.override.yaml
