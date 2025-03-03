@@ -1,0 +1,38 @@
+services: 
+  postgresql:
+    image: 'bitnami/postgresql:17.2.0-debian-12-r5'
+    networks:
+      - psql-network
+    environment:
+      - POSTGRESQL_DATABASE=test_db
+      - POSTGRESQL_USERNAME=test_user
+      - POSTGRESQL_PASSWORD=test_password
+    ports:
+      - '5432:5432'
+    volumes:
+      - './postgresql/data/init.sql:/docker-entrypoint-initdb.d/init.sql'
+    healthcheck:
+      test: [ 'CMD-SHELL', 'pg_isready --username=test_user --dbname=test_db' ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+  
+  benchmark:
+    build: './postgresql'
+    environment:
+      - POSTGRES_DB=test_db
+      - POSTGRES_USER=test_user
+      - POSTGRES_PASSWORD=test_password
+      - POSTGRES_HOST=postgresql
+      - POSTGRES_PORT=5432
+    restart: "no"
+    networks:
+      - psql-network
+    depends_on:
+      postgresql:
+        condition: service_healthy
+    command: ["sh", "-c", "python benchmark_postgresql.py"]
+
+networks:
+  psql-network:
