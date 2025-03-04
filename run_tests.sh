@@ -5,6 +5,15 @@ set -e
 PYTHON_VERSION=${PYTHON_VERSION:-3.13}
 
 docker_compose() {
+    PROJECT_NAME=movies \
+    AUTH_SECRET_KEY=secret \
+    AUTH_SUPERUSER_LOGIN=admin \
+    AUTH_SUPERUSER_PASSWORD=secret \
+    AUTH_POSTGRESQL_DATABASE=auth \
+    AUTH_POSTGRESQL_USERNAME=auth \
+    AUTH_POSTGRESQL_PASSWORD=secret \
+    RATELIMITER_TIMES=5 \
+    RATELIMITER_SECONDS=60 \
     docker compose -f compose.tests.yaml "$@"
 }
 
