@@ -12,11 +12,12 @@ on:
 jobs:
   lint:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        lint-command: [ 'ruff', 'mypy' ]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Run Ruff
-        run: ./run_lint.sh ruff
-      - name: Run mypy
-        if: ${{ !cancelled() }}
-        run: ./run_lint.sh mypy
+      - name: Run lint command '${{ matrix.lint-command }}'
+        run: ./run_lint.sh ${{ matrix.lint-command }}
