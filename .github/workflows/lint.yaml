@@ -1,0 +1,22 @@
+name: Lint
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types:
+      - opened
+      - synchronize
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Run Ruff
+        run: ./run_lint.sh ruff
+      - name: Run mypy
+        if: ${{ !cancelled() }}
+        run: ./run_lint.sh mypy
