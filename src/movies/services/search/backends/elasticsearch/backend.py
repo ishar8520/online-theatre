@@ -27,7 +27,7 @@ class ElasticsearchSearchBackend(AbstractSearchBackend):
             elasticsearch.exceptions.ConnectionError,
             elasticsearch.exceptions.ConnectionTimeout,
     ))
-    async def get(self, *, query: CompiledElasticsearchGetQuery) -> dict | None:
+    async def get(self, *, query: CompiledElasticsearchGetQuery) -> dict | None:  # type: ignore[override]
         try:
             response = await self.elasticsearch_client.get(index=query.index, id=query.id)
         except elasticsearch.NotFoundError:
@@ -39,7 +39,7 @@ class ElasticsearchSearchBackend(AbstractSearchBackend):
             elasticsearch.exceptions.ConnectionError,
             elasticsearch.exceptions.ConnectionTimeout,
     ))
-    async def search(self, *, query: CompiledElasticsearchSearchQuery) -> list[dict] | None:
+    async def search(self, *, query: CompiledElasticsearchSearchQuery) -> list[dict] | None:  # type: ignore[override]
         try:
             response = await self.elasticsearch_client.search(index=query.index, body=query.body)
         except elasticsearch.NotFoundError:

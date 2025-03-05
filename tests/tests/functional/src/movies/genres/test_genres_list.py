@@ -130,7 +130,7 @@ class GenresListMultiplePagesTestCase(BaseGenresListTestCase):
         super().__init__(**kwargs)
         self.page_size = page_size
 
-    async def get_genres_results(self) -> Iterable[dict]:
+    async def get_genres_results(self) -> list[dict]:
         pages_count = math.ceil(self.genres_count / self.page_size)
         genres_results: list[dict] = []
 

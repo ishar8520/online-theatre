@@ -32,9 +32,10 @@ class ElasticsearchSettings(BaseSettings):
     def url(self) -> str:
         return f'{self.scheme}://{self.host}:{self.port}'
 
-class AutPostgresqlSettings(BaseSettings):
+
+class AuthPostgresqlSettings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix='auth_postgresql_')
-    
+
     database: str = Field(default='auth')
     username: str = Field(default='auth')
     password: str = Field()
@@ -55,6 +56,7 @@ class RateLimiterConfig(BaseSettings):
     times: int = 5
     seconds: int = 60
 
+
 class AutRedisConfig(BaseSettings):
     model_config = SettingsConfigDict(env_prefix='auth_redis_')
 
@@ -65,8 +67,8 @@ class AutRedisConfig(BaseSettings):
 class Settings(BaseSettings):
     redis: RedisSettings = RedisSettings()
     elasticsearch: ElasticsearchSettings = ElasticsearchSettings()
-    auth_postgresql: AutPostgresqlSettings = AutPostgresqlSettings()
-    superuser: SuperUserSettings = SuperUserSettings()
+    auth_postgresql: AuthPostgresqlSettings = AuthPostgresqlSettings()  # type: ignore[call-arg]
+    superuser: SuperUserSettings = SuperUserSettings()  # type: ignore[call-arg]
     ratelimiter: RateLimiterConfig = RateLimiterConfig()
     auth_redis: AutRedisConfig = AutRedisConfig()
 
@@ -80,11 +82,11 @@ class Settings(BaseSettings):
     @property
     def movies_api_v1_url(self) -> str:
         return urljoin(self.movies_url, '/api/v1/')
-    
+
     @property
     def auth_api_url(self) -> str:
         return urljoin(self.auth_url, '/auth/api/')
-    
+
     @property
     def auth_api_v1_url(self) -> str:
         return urljoin(self.auth_url, '/auth/api/v1/')

@@ -18,10 +18,7 @@ class FilmService:
     def __init__(self, *, search_service: AbstractSearchService) -> None:
         self.search_service = search_service
 
-    async def get_list_by_person(
-            self,
-            person_uuid: uuid.UUID = None,
-    ) -> list[Film]:
+    async def get_list_by_person(self, person_uuid: uuid.UUID) -> list[Film]:
         search_query = self.search_service.create_query().films_by_person(person_id=person_uuid)
         result = await self.search_service.search(query=search_query)
 
