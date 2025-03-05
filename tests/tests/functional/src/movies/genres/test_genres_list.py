@@ -154,7 +154,10 @@ class GenresListMultiplePagesTestCase(BaseGenresListTestCase):
                 'page_number': 'invalid',
             },
         ]:
-            await self._get_genres_list_response_data(params=invalid_params, expected_status=http.HTTPStatus.UNPROCESSABLE_ENTITY)
+            await self._get_genres_list_response_data(
+                params=invalid_params,
+                expected_status=http.HTTPStatus.UNPROCESSABLE_ENTITY,
+            )
 
         return genres_results
 

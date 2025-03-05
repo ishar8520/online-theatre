@@ -77,7 +77,10 @@ class BaseGenreByIdTestCase:
 
         return genres[0]
 
-    async def get_genre_result(self, *, genre_id: uuid.UUID | None, expected_status: int = http.HTTPStatus.OK) -> dict | None:
+    async def get_genre_result(self,
+                               *,
+                               genre_id: uuid.UUID | None,
+                               expected_status: int = http.HTTPStatus.OK) -> dict | None:
         if genre_id is None:
             return None
 
@@ -125,7 +128,10 @@ class GenreDoesNotExistTestCase(BaseGenreByIdTestCase):
     def get_genre(self, *, genres: list[Genre]) -> Genre | None:
         return None
 
-    async def get_genre_result(self, *, genre_id: uuid.UUID | None, expected_status: int = http.HTTPStatus.OK) -> dict | None:
+    async def get_genre_result(self,
+                               *,
+                               genre_id: uuid.UUID | None,
+                               expected_status: int = http.HTTPStatus.OK) -> dict | None:
         await self._download_genre(
             genre_id=uuid.uuid4(),
             expected_status=http.HTTPStatus.NOT_FOUND,

@@ -187,7 +187,10 @@ class PersonFilmsTestCase(BasePersonFilmsTestCase):
 class PersonFilmsNotFoundTestCase(BasePersonFilmsTestCase):
     async def get_person_films_results(self, *, person_id: uuid.UUID | None) -> list[dict]:
         assert await self._download_person_films(person_id=uuid.uuid4()) == []
-        await self._get_person_films_response_data(person_id='invalid', expected_status=http.HTTPStatus.UNPROCESSABLE_ENTITY)
+        await self._get_person_films_response_data(
+            person_id='invalid',
+            expected_status=http.HTTPStatus.UNPROCESSABLE_ENTITY,
+        )
 
         return []
 
