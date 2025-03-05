@@ -75,4 +75,4 @@ async def test_oauth_success(aiohttp_session) -> None:
     }
     assert response_data['login'] is None
     assert response_data['email'] == 'user@gmail.com'
-    assert response_data['is_superuser'] == False
+    assert response_data['is_superuser'] is False

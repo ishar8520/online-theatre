@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import http
 import uuid
-from collections.abc import Iterable
-from typing import Any
+from collections.abc import Iterable, Sequence
+from typing import Any, cast
 from urllib.parse import urljoin
 
 import aiohttp
@@ -103,9 +103,9 @@ class BasePersonFilmsTestCase:
         await self.films_index.load_documents(documents=films)
 
     def get_film_person(self, *, films: Iterable[Film], role: str) -> FilmPerson | None:
-        film_person = None
-
         for film in films:
+            film_persons_list: Sequence[FilmPerson]
+
             if role == 'director':
                 film_persons_list = film.directors
             elif role == 'actor':
@@ -118,7 +118,7 @@ class BasePersonFilmsTestCase:
             if film_persons_list:
                 return film_persons_list[0]
 
-        return film_person
+        return None
 
     async def get_person_films_results(self, *, person_id: uuid.UUID | None) -> list[dict]:
         if person_id is None:
@@ -146,11 +146,11 @@ class BasePersonFilmsTestCase:
             return
 
         for film in films:
-            for film_persons_list in [
+            for film_persons_list in cast(Iterable[Iterable[FilmPerson]], [
                 film.directors,
                 film.actors,
                 film.writers,
-            ]:
+            ]):
                 if any(film_person.id == person_id for film_person in film_persons_list):
                     yield film
 
@@ -187,7 +187,10 @@ class PersonFilmsTestCase(BasePersonFilmsTestCase):
 class PersonFilmsNotFoundTestCase(BasePersonFilmsTestCase):
     async def get_person_films_results(self, *, person_id: uuid.UUID | None) -> list[dict]:
         assert await self._download_person_films(person_id=uuid.uuid4()) == []
-        await self._get_person_films_response_data(person_id='invalid', expected_status=http.HTTPStatus.UNPROCESSABLE_ENTITY)
+        await self._get_person_films_response_data(
+            person_id='invalid',
+            expected_status=http.HTTPStatus.UNPROCESSABLE_ENTITY,
+        )
 
         return []
 

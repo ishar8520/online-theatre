@@ -6,7 +6,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class ProjectConfig(BaseSettings):
     model_config = SettingsConfigDict(env_prefix='project_')
 
-    name: str | None = None
+    name: str = 'movies'
 
 
 class OpenTelemetryConfig(BaseSettings):

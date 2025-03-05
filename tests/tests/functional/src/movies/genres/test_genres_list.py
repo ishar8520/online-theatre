@@ -130,7 +130,7 @@ class GenresListMultiplePagesTestCase(BaseGenresListTestCase):
         super().__init__(**kwargs)
         self.page_size = page_size
 
-    async def get_genres_results(self) -> Iterable[dict]:
+    async def get_genres_results(self) -> list[dict]:
         pages_count = math.ceil(self.genres_count / self.page_size)
         genres_results: list[dict] = []
 
@@ -154,7 +154,10 @@ class GenresListMultiplePagesTestCase(BaseGenresListTestCase):
                 'page_number': 'invalid',
             },
         ]:
-            await self._get_genres_list_response_data(params=invalid_params, expected_status=http.HTTPStatus.UNPROCESSABLE_ENTITY)
+            await self._get_genres_list_response_data(
+                params=invalid_params,
+                expected_status=http.HTTPStatus.UNPROCESSABLE_ENTITY,
+            )
 
         return genres_results
 

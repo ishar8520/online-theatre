@@ -58,7 +58,10 @@ async def get_by_id_with_films(
     '/search/',
     response_model=list[Person],
     summary='Search persons',
-    description='Search persons with list of films and roles by their full name with pagination. The maximum count of items on one page are 150.'
+    description=(
+            'Search persons with list of films and roles by their full name with pagination. '
+            'The maximum count of items on one page are 150.'
+    )
 )
 async def search(
         *,

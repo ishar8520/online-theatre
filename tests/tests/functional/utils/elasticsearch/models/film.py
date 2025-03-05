@@ -21,22 +21,22 @@ class Film(Document):
     # noinspection PyDataclass
     writers: list[FilmWriter] = []
 
-    @computed_field
+    @computed_field  # type: ignore[prop-decorator]
     @property
     def genres_names(self) -> list[str]:
         return [genre.name for genre in self.genres]
 
-    @computed_field
+    @computed_field  # type: ignore[prop-decorator]
     @property
     def directors_names(self) -> list[str]:
         return [person.full_name for person in self.directors]
 
-    @computed_field
+    @computed_field  # type: ignore[prop-decorator]
     @property
     def actors_names(self) -> list[str]:
         return [person.full_name for person in self.actors]
 
-    @computed_field
+    @computed_field  # type: ignore[prop-decorator]
     @property
     def writers_names(self) -> list[str]:
         return [person.full_name for person in self.writers]
