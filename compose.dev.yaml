@@ -41,6 +41,11 @@ services:
       - ELASTIC_HOST=elasticsearch
       - ELASTIC_PORT=9200
       - AUTH_HOST=auth-service
+      - SENTRY_ENABLE_SDK=${SENTRY_ENABLE_SDK}
+      - SENTRY_ENABLE_TRACING=${SENTRY_ENABLE_TRACING}
+      - SENTRY_DSN=${SENTRY_DSN}
+      - SENTRY_TRACES_SAMPLE_RATE=${SENTRY_TRACES_SAMPLE_RATE}
+      - SENTRY_PROFILES_SAMPLE_RATE=${SENTRY_PROFILES_SAMPLE_RATE}
     command: [ '/opt/app/commands/fastapi.sh', 'dev' ]
     healthcheck:
       test: [ 'CMD-SHELL', 'curl -s -H "X-Request-Id: healthcheck" http://localhost:8000/api/_health' ]
@@ -179,6 +184,11 @@ services:
       - RATELIMITER_SECONDS=$RATELIMITER_SECONDS
       - REDIS_HOST=auth-redis
       - REDIS_PORT=6379
+      - SENTRY_ENABLE_SDK=${SENTRY_ENABLE_SDK}
+      - SENTRY_ENABLE_TRACING=${SENTRY_ENABLE_TRACING}
+      - SENTRY_DSN=${SENTRY_DSN}
+      - SENTRY_TRACES_SAMPLE_RATE=${SENTRY_TRACES_SAMPLE_RATE}
+      - SENTRY_PROFILES_SAMPLE_RATE=${SENTRY_PROFILES_SAMPLE_RATE}
     command: [ '/opt/app/commands/fastapi.sh', 'dev' ]
     restart: unless-stopped
     healthcheck:
@@ -331,6 +341,11 @@ services:
       dockerfile: Dockerfile
     environment:
       - PYTHONPATH=/opt/app
+      - SENTRY_ENABLE_SDK=${SENTRY_ENABLE_SDK}
+      - SENTRY_ENABLE_TRACING=${SENTRY_ENABLE_TRACING}
+      - SENTRY_DSN=${SENTRY_DSN}
+      - SENTRY_TRACES_SAMPLE_RATE=${SENTRY_TRACES_SAMPLE_RATE}
+      - SENTRY_PROFILES_SAMPLE_RATE=${SENTRY_PROFILES_SAMPLE_RATE}
     ports:
       - "5001:5001"
     networks:
@@ -380,143 +395,6 @@ services:
         - action: rebuild
           path: ./compose/etl_k2ch/poetry.lock
 
-  sentry-init:
-    build:
-      context: ./compose/sentry
-      dockerfile: Dockerfile
-    environment:
-      - SENTRY_SECRET_KEY=${SENTRY_SECRET_KEY}
-      - SENTRY_DB_USER=${SENTRY_DB_USER}
-      - SENTRY_DB_PASSWORD=${SENTRY_DB_PASSWORD}
-      - SENTRY_DB_NAME=${SENTRY_DB_NAME}
-      - SENTRY_POSTGRES_HOST=${SENTRY_POSTGRES_HOST}
-      - SENTRY_POSTGRES_PORT=${SENTRY_POSTGRES_PORT}
-      - SENTRY_REDIS_HOST=${SENTRY_REDIS_HOST}
-      - SENTRY_REDIS_PORT=${SENTRY_REDIS_PORT}
-      - SENTRY_REDIS_DB=${SENTRY_REDIS_DB}
-      - SENTRY_ADMIN_EMAIL=${SENTRY_ADMIN_EMAIL}
-      - SENTRY_ADMIN_PASSWORD=${SENTRY_ADMIN_PASSWORD}
-      - SENTRY_REDIS_URL=redis://redis-sentry:6379/1
-      - SENTRY_USE_REDIS_RB=0
-    depends_on:
-      db-sentry:
-        condition: service_healthy
-      redis-sentry:
-        condition: service_healthy
-    networks:
-      - movies-network
-    restart: "no"
-
-
-  sentry-api:
-    image: getsentry/sentry:latest
-    environment:
-      - SENTRY_SECRET_KEY=${SENTRY_SECRET_KEY}
-      - SENTRY_DB_USER=${SENTRY_DB_USER}
-      - SENTRY_DB_PASSWORD=${SENTRY_DB_PASSWORD}
-      - SENTRY_DB_NAME=${SENTRY_DB_NAME}
-      - SENTRY_POSTGRES_HOST=${SENTRY_POSTGRES_HOST}
-      - SENTRY_POSTGRES_PORT=${SENTRY_POSTGRES_PORT}
-      - SENTRY_REDIS_HOST=${SENTRY_REDIS_HOST}
-      - SENTRY_REDIS_PORT=${SENTRY_REDIS_PORT}
-      - SENTRY_REDIS_DB=${SENTRY_REDIS_DB}
-      - SENTRY_ADMIN_EMAIL=${SENTRY_ADMIN_EMAIL}
-      - SENTRY_ADMIN_PASSWORD=${SENTRY_ADMIN_PASSWORD}
-      - SENTRY_REDIS_URL=redis://redis-sentry:6379/1
-      - SENTRY_USE_REDIS_RB=0
-    depends_on:
-      db-sentry:
-        condition: service_healthy
-      redis-sentry:
-        condition: service_healthy
-    networks:
-      - movies-network
-    ports:
-      - "9010:9000"
-
-  sentry-worker:
-    image: getsentry/sentry:latest
-    environment:
-      - SENTRY_SECRET_KEY=${SENTRY_SECRET_KEY}
-      - SENTRY_DB_USER=${SENTRY_DB_USER}
-      - SENTRY_DB_PASSWORD=${SENTRY_DB_PASSWORD}
-      - SENTRY_DB_NAME=${SENTRY_DB_NAME}
-      - SENTRY_POSTGRES_HOST=${SENTRY_POSTGRES_HOST}
-      - SENTRY_POSTGRES_PORT=${SENTRY_POSTGRES_PORT}
-      - SENTRY_REDIS_HOST=${SENTRY_REDIS_HOST}
-      - SENTRY_REDIS_PORT=${SENTRY_REDIS_PORT}
-      - SENTRY_REDIS_DB=${SENTRY_REDIS_DB}
-      - SENTRY_REDIS_URL=redis://redis-sentry:6379/1
-      - SENTRY_USE_REDIS_RB=0
-    depends_on:
-      db-sentry:
-        condition: service_healthy
-      redis-sentry:
-        condition: service_healthy
-    networks:
-      - movies-network
-    command: sentry run worker
-
-  sentry-cron:
-    image: getsentry/sentry:latest
-    environment:
-      - SENTRY_SECRET_KEY=${SENTRY_SECRET_KEY}
-      - SENTRY_DB_USER=${SENTRY_DB_USER}
-      - SENTRY_DB_PASSWORD=${SENTRY_DB_PASSWORD}
-      - SENTRY_DB_NAME=${SENTRY_DB_NAME}
-      - SENTRY_POSTGRES_HOST=${SENTRY_POSTGRES_HOST}
-      - SENTRY_POSTGRES_PORT=${SENTRY_POSTGRES_PORT}
-      - SENTRY_REDIS_HOST=${SENTRY_REDIS_HOST}
-      - SENTRY_REDIS_PORT=${SENTRY_REDIS_PORT}
-      - SENTRY_REDIS_DB=${SENTRY_REDIS_DB}
-      - SENTRY_REDIS_URL=redis://redis-sentry:6379/1
-      - SENTRY_USE_REDIS_RB=0
-    depends_on:
-      db-sentry:
-        condition: service_healthy
-      redis-sentry:
-        condition: service_healthy
-    networks:
-      - movies-network
-    command: sentry run cron
-
-  db-sentry:
-    image: postgres:latest
-    environment:
-      - POSTGRES_USER=sentry
-      - POSTGRES_PASSWORD=sentry
-      - POSTGRES_DB=sentry
-    volumes:
-      - postgres-sentry-data:/var/lib/postgresql/data
-    networks:
-      - movies-network
-    ports:
-      - "5433:5432"
-    healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U sentry -d sentry" ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  redis-sentry:
-    image: 'bitnami/redis:7.4.2-debian-12-r0'
-    ports:
-      - "6380:6379"
-    networks:
-      - movies-network
-    volumes:
-      - 'redis-sentry-data:/bitnami/redis/data'
-    environment:
-      - ALLOW_EMPTY_PASSWORD=yes
-    command: [ '/opt/bitnami/scripts/redis/run.sh', '--maxmemory', '${REDIS_SENTRY_MAXMEMORY:-200mb}' ]
-    healthcheck:
-      test: [ 'CMD', '/bin/bash', '-c', '[[ $(redis-cli ping) == "PONG" ]]' ]
-      interval: 10s
-      timeout: 10s
-      retries: 5
-      start_period: 10s
-
-
 networks:
   movies-network:
 
@@ -530,6 +408,3 @@ volumes:
   auth-redis-data:
   kafka-0_data:
   clickhouse-node:
-  redis-sentry-data:
-  postgres-sentry-data:
-

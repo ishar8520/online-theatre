@@ -36,6 +36,11 @@ services:
       - ELASTIC_HOST=elasticsearch
       - ELASTIC_PORT=9200
       - AUTH_HOST=auth-service
+      - SENTRY_ENABLE_SDK=${SENTRY_ENABLE_SDK}
+      - SENTRY_ENABLE_TRACING=${SENTRY_ENABLE_TRACING}
+      - SENTRY_DSN=${SENTRY_DSN}
+      - SENTRY_TRACES_SAMPLE_RATE=${SENTRY_TRACES_SAMPLE_RATE}
+      - SENTRY_PROFILES_SAMPLE_RATE=${SENTRY_PROFILES_SAMPLE_RATE}
     command: [ '/opt/app/commands/gunicorn.sh' ]
     healthcheck:
       test: [ 'CMD-SHELL', 'curl -s -H "X-Request-Id: healthcheck" http://localhost:8000/api/_health' ]
@@ -155,6 +160,11 @@ services:
       - REDIS_PORT=6379
       - RATELIMITER_TIMES=$RATELIMITER_TIMES
       - RATELIMITER_SECONDS=$RATELIMITER_SECONDS
+      - SENTRY_ENABLE_SDK=${SENTRY_ENABLE_SDK}
+      - SENTRY_ENABLE_TRACING=${SENTRY_ENABLE_TRACING}
+      - SENTRY_DSN=${SENTRY_DSN}
+      - SENTRY_TRACES_SAMPLE_RATE=${SENTRY_TRACES_SAMPLE_RATE}
+      - SENTRY_PROFILES_SAMPLE_RATE=${SENTRY_PROFILES_SAMPLE_RATE}
     command: [ '/opt/app/commands/gunicorn.sh' ]
     restart: unless-stopped
     healthcheck:
@@ -287,6 +297,11 @@ services:
       dockerfile: Dockerfile
     environment:
       - PYTHONPATH=/opt/app
+      - SENTRY_ENABLE_SDK=${SENTRY_ENABLE_SDK}
+      - SENTRY_ENABLE_TRACING=${SENTRY_ENABLE_TRACING}
+      - SENTRY_DSN=${SENTRY_DSN}
+      - SENTRY_TRACES_SAMPLE_RATE=${SENTRY_TRACES_SAMPLE_RATE}
+      - SENTRY_PROFILES_SAMPLE_RATE=${SENTRY_PROFILES_SAMPLE_RATE}
     networks:
       - movies-network
     depends_on:
