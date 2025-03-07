@@ -16,13 +16,7 @@ class PermissionInDb(BaseModel):
     role_id: uuid.UUID
     created: datetime
 
-    class Config:
-        from_attributes = True
-
 
 class DeletePermission(BaseModel):
     id: uuid.UUID
     role_id: uuid.UUID
-
-    class Config:
-        from_attributes = True

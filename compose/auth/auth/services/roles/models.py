@@ -31,12 +31,6 @@ class RoleInDB(BaseModel):
     created: datetime
     modified: datetime
 
-    class Config:
-        from_attributes = True
-
 
 class RoleDelete(BaseModel):
     id: uuid.UUID
-
-    class Config:
-        from_attributes = True

@@ -3,16 +3,16 @@ from __future__ import annotations
 from typing import Any
 
 import backoff
-import redis.asyncio as redis
+import redis.asyncio as async_redis
 import redis.exceptions
 
 from ..base import BaseCache
 
 
 class RedisCache(BaseCache):
-    redis_client: redis.Redis
+    redis_client: async_redis.Redis
 
-    def __init__(self, *, redis_client: redis.Redis, **kwargs: Any) -> None:
+    def __init__(self, *, redis_client: async_redis.Redis, **kwargs: Any) -> None:
         super().__init__(**kwargs)
         self.redis_client = redis_client
 
