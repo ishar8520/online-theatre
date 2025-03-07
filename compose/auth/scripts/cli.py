@@ -11,9 +11,9 @@ from typer import Typer
 BASE_DIR = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(BASE_DIR))
 
-from auth.db.sqlalchemy import engine
-from auth.models.sqlalchemy import User
-from auth.services.users.password import PasswordHelper
+from auth.db.sqlalchemy import engine  # noqa: E402
+from auth.models.sqlalchemy import User  # noqa: E402
+from auth.services.users.password import PasswordHelper  # noqa: E402
 
 app = Typer()
 
