@@ -63,7 +63,16 @@ jobs:
 
       - name: Get message params
         run: |
-          echo "commit_subject=$(git log -n 1 --format=%s)" >>"$GITHUB_ENV"
+          pr_head_sha=${{ github.event.pull_request.head.sha }}
+          
+          if [[ "$pr_head_sha" ]]; then
+              commit_sha=$pr_head_sha
+          else
+              commit_sha=${{ github.sha }}
+          fi
+          
+          echo "commit_sha=$commit_sha" >>"$GITHUB_ENV"
+          echo "commit_subject=$(git log -n 1 --format=%s $commit_sha)" >>"$GITHUB_ENV"
 
       - name: Send Telegram notification
         uses: appleboy/telegram-action@master
@@ -73,6 +82,6 @@ jobs:
           format: markdown
           message: |
             *Repository*: [${{ github.repository }}](https://github.com/${{ github.repository }})
-            *Commit*: [${{ github.sha }}](https://github.com/${{ github.repository }}/commit/${{ github.sha }})
+            *Commit*: [${{ env.commit_sha }}](https://github.com/${{ github.repository }}/commit/${{ env.commit_sha }})
             *Author*: ${{ github.actor }}
             *Message*: ${{ env.commit_subject }}
