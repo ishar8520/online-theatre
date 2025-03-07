@@ -82,4 +82,8 @@ async def get_login_history(
         page: PageDep,
         user: CurrentUserDep,
 ):
-    return await login_history_service.get_list(user.id, page)
+    login_history_list = await login_history_service.get_list(user.id, page)
+    return [
+        LoginHistoryInDb.model_validate(login_history, from_attributes=True)
+        for login_history in login_history_list
+    ]

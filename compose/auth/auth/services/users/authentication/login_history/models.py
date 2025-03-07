@@ -15,6 +15,3 @@ class LoginHistoryInDb(BaseModel):
     id: uuid.UUID
     user_agent: str
     created: datetime
-
-    class Config:
-        from_attributes = True
