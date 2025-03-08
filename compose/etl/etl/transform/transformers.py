@@ -141,7 +141,7 @@ class PersonTransformState:
 
 @dataclasses.dataclass(kw_only=True)
 class PersonsTransformResult:
-    persons: list[Film] = dataclasses.field(default_factory=list)
+    persons: list[Person] = dataclasses.field(default_factory=list)
     last_modified: LastModified = dataclasses.field(default_factory=lambda: LastModified())
 
 
