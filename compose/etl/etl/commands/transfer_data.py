@@ -47,7 +47,7 @@ def main() -> None:
         elasticsearch.Elasticsearch(settings.elasticsearch.url) as elasticsearch_client,
     ):
         etl_pipelines: list[ETLPipeline[Document]] = [
-            ETLPipeline[Film](
+            ETLPipeline[Film](  # type: ignore[list-item]
                 extractor=FilmWorksExtractor(connection_params=postgresql_connection_params),
                 extractor_state=state.extractors.film_works,
                 transform_executor=FilmsTransformExecutor(),
@@ -58,7 +58,7 @@ def main() -> None:
                 ),
             ),
 
-            ETLPipeline[Genre](
+            ETLPipeline[Genre](  # type: ignore[list-item]
                 extractor=GenresExtractor(connection_params=postgresql_connection_params),
                 extractor_state=state.extractors.genres,
                 transform_executor=GenresTransformExecutor(),
@@ -69,7 +69,7 @@ def main() -> None:
                 ),
             ),
 
-            ETLPipeline[Person](
+            ETLPipeline[Person](  # type: ignore[list-item]
                 extractor=PersonsExtractor(connection_params=postgresql_connection_params),
                 extractor_state=state.extractors.persons,
                 transform_executor=PersonsTransformExecutor(),
