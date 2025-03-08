@@ -19,13 +19,13 @@ class BaseUserDatabase:
     async def get_by_email(self, email: str) -> User | None:
         raise NotImplementedError
 
-    async def get_by_oauth_account(self, *, oauth_name: str, account_id: str) -> User:
+    async def get_by_oauth_account(self, *, oauth_name: str, account_id: str) -> User | None:
         raise NotImplementedError
 
-    async def create(self, create_dict: dict[str, Any]) -> User | None:
+    async def create(self, create_dict: dict[str, Any]) -> User:
         raise NotImplementedError
 
-    async def update(self, user: User | None, update_dict: dict[str, Any]) -> User:
+    async def update(self, user: User, update_dict: dict[str, Any]) -> User:
         raise NotImplementedError
 
     async def delete(self, user: User) -> None:

@@ -88,6 +88,9 @@ class OAuthService(AbstractOAuthService):
                         error: str | None = None) -> OAuthAuthorizeResult:
         oauth_client = self._create_oauth_client(provider_name=provider_name)
 
+        if not state:
+            raise InvalidStateToken(state='')
+
         audience = self._get_state_token_audience(provider_name=provider_name)
         try:
             decode_jwt(state, secret=settings.auth.secret_key, audience=[audience])
