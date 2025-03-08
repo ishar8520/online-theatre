@@ -386,6 +386,8 @@ services:
       - movies-network
     ports:
       - "27017:27017"
+    volumes:
+      - "mongodb:/etc/mongodb/data"
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
@@ -435,4 +437,4 @@ volumes:
   auth-redis-data:
   kafka-0_data:
   clickhouse-node:
-
+  mongodb:
