@@ -76,31 +76,32 @@ jobs:
           github_sha: ${{ github.sha }}
           pull_request_number: ${{ github.event.pull_request.number }}
           pull_request_title: ${{ github.event.pull_request.title }}
+          pull_request_head_sha: ${{ github.event.pull_request.head.sha }}
         run: |
           {
-              author_name=$github_actor
-              author_url=https://github.com/$author_name
-              author_part="*Author*: [$author_name]($author_url)"
-          
               repository_name=$github_repository
               repository_url=https://github.com/$repository_name
               echo "*Repository*: [$repository_name]($repository_url)"
 
               if [[ "$pull_request_number" ]]; then
                   pull_request_url=$repository_url/pull/$pull_request_number
-          
                   echo "*Pull request*: [$pull_request_title]($pull_request_url)"
-                  echo "$author_part"
+          
+                  commit_sha=$pull_request_head_sha
               else
                   commit_sha=$github_sha
-                  commit_url=https://github.com/$github_repository/commit/$commit_sha
-
-                  echo "*Commit*: [$commit_sha]($commit_url)"
-                  echo "$author_part"
-          
-                  echo
-                  git log -n 1 --format=%B "$commit_sha"
               fi
+          
+              commit_url=https://github.com/$github_repository/commit/$commit_sha
+              echo "*Commit*: [$commit_sha]($commit_url)"
+
+              author_name=$github_actor
+              author_url=https://github.com/$author_name
+              echo  "*Author*: [$author_name]($author_url)"
+
+              echo '```'
+              git log -n 1 --format=%B "$commit_sha"
+              echo '```'
           } >./.github/.message_file.md
 
       - name: Send Telegram notification
