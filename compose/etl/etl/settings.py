@@ -1,9 +1,6 @@
 from __future__ import annotations
 
 from dotenv import load_dotenv
-from pydantic import (
-    Field,
-)
 from pydantic_settings import (
     BaseSettings,
     SettingsConfigDict,
@@ -15,13 +12,14 @@ load_dotenv()
 class PostgreSQLSettings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix='postgresql_')
 
-    host: str | None = Field(default='localhost')
-    port: int | None = Field(default=5432)
-    database: str = Field()
-    username: str | None = Field(default=None)
-    password: str | None = Field(default=None)
+    host: str | None = 'localhost'
+    port: int | None = 5432
+    database: str
+    username: str | None = None
+    password: str | None = None
 
-    def get_connection_params(self) -> dict:
+    @property
+    def connection_params(self) -> dict:
         return {
             'host': self.host,
             'port': self.port,
@@ -34,12 +32,17 @@ class PostgreSQLSettings(BaseSettings):
 class ElasticsearchSettings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix='elastic_')
 
-    host: str | None = Field(default='localhost')
-    port: int | None = Field(default=9200)
+    scheme: str = 'http'
+    host: str | None = 'localhost'
+    port: int | None = 9200
+
+    @property
+    def url(self) -> str:
+        return f'{self.scheme}://{self.host}:{self.port}'
 
 
 class Settings(BaseSettings):
-    postgresql: PostgreSQLSettings = PostgreSQLSettings()
+    postgresql: PostgreSQLSettings = PostgreSQLSettings()  # type: ignore[call-arg]
     elasticsearch: ElasticsearchSettings = ElasticsearchSettings()
 
 

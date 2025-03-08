@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import uuid
+from collections.abc import Sequence
 from typing import Annotated
+
 from fastapi import Depends
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy import (
@@ -11,7 +13,6 @@ from sqlalchemy import (
 from sqlalchemy.exc import SQLAlchemyError
 
 from .models import (
-    PermissionInDb,
     CreatePermissionDto
 )
 from ..base.exceptions import (
@@ -31,10 +32,10 @@ class PermissionRepository:
     def __init__(self, db: AsyncSession):
         self._db = db
 
-    async def add(self, permission_dto: CreatePermissionDto) -> PermissionInDb:
-        permission_dto = jsonable_encoder(permission_dto)
+    async def add(self, permission_dto: CreatePermissionDto) -> UserRole:
+        permission_dto_dict = jsonable_encoder(permission_dto)
 
-        user_role = UserRole(**permission_dto)
+        user_role = UserRole(**permission_dto_dict)
         self._db.add(user_role)
 
         try:
@@ -49,7 +50,7 @@ class PermissionRepository:
     async def get_by_user_role(
             self, user_id: uuid.UUID,
             role_id: uuid.UUID
-    ) -> PermissionInDb | None:
+    ) -> UserRole | None:
         statement = select(UserRole).where(
             UserRole.role_id == role_id,
             UserRole.user_id == user_id
@@ -57,12 +58,12 @@ class PermissionRepository:
         result = await self._db.execute(statement)
         return result.scalar_one_or_none()
 
-    async def get_by_user(self, user_id: uuid.UUID) -> [PermissionInDb]:
+    async def get_by_user(self, user_id: uuid.UUID) -> Sequence[UserRole]:
         statement = select(UserRole).where(UserRole.user_id == user_id)
         result = await self._db.execute(statement)
         return result.scalars().all()
 
-    async def get(self, id: uuid.UUID) -> PermissionInDb | None:
+    async def get(self, id: uuid.UUID) -> UserRole | None:
         statement = select(UserRole).where(UserRole.id == id)
         result = await self._db.execute(statement)
         return result.scalar_one_or_none()
@@ -80,6 +81,7 @@ class PermissionRepository:
 
 async def get_permission_repository(db: AsyncSessionDep):
     return PermissionRepository(db)
+
 
 PermissionRepositoryDep = Annotated[
     PermissionRepository,

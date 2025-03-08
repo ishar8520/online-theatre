@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import uuid
+from collections.abc import Sequence
 from typing import Annotated
+
 from fastapi import Depends
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy import select
@@ -10,7 +12,6 @@ from sqlalchemy.exc import SQLAlchemyError
 from .dependencies import Page
 from .models import (
     LoginHistoryCreate,
-    LoginHistoryInDb
 )
 from .....db.sqlalchemy import (
     AsyncSessionDep,
@@ -28,7 +29,7 @@ class LoginHistoryRepository:
     async def create(
             self,
             login_history_create: LoginHistoryCreate
-    ) -> LoginHistoryInDb:
+    ) -> LoginHistory:
         login_history_create_dto = jsonable_encoder(login_history_create)
         login_history_row = LoginHistory(**login_history_create_dto)
         self._db.add(login_history_row)
@@ -45,7 +46,7 @@ class LoginHistoryRepository:
             self,
             user_id: uuid.UUID,
             page: Page
-    ) -> list[LoginHistoryInDb]:
+    ) -> Sequence[LoginHistory]:
         statement = (
             select(LoginHistory)
             .where(LoginHistory.user_id == user_id)
@@ -61,6 +62,7 @@ async def get_login_history_repository(
         db: AsyncSessionDep
 ) -> LoginHistoryRepository:
     return LoginHistoryRepository(db)
+
 
 LoginHistoryRepositoryDep = Annotated[
     LoginHistoryRepository,

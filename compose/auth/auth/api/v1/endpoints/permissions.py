@@ -26,17 +26,18 @@ router = APIRouter()
 
 @router.post(
     '/assign',
+    response_model=PermissionInDb,
     status_code=HTTPStatus.CREATED,
     summary='Assign permission',
     description='Addition user into role'
 )
 async def assign(
-    permission: CreatePermissionDto,
-    permission_service: PermissionServiceDep,
-    superuser: CurrentSuperuserDep
-):
+        permission: CreatePermissionDto,
+        permission_service: PermissionServiceDep,
+        _superuser: CurrentSuperuserDep
+) -> PermissionInDb:
     try:
-        permission = await permission_service.assign(permission)
+        user_role = await permission_service.assign(permission)
     except DuplicateUserPermissionError:
         raise HTTPException(
             status_code=HTTPStatus.BAD_REQUEST,
@@ -48,46 +49,52 @@ async def assign(
             detail='Add error'
         )
 
-    return permission
+    return PermissionInDb.model_validate(user_role, from_attributes=True)
 
 
 @router.get(
     '/get_by_user/{user_id}',
+    response_model=list[PermissionInDb],
     status_code=HTTPStatus.OK,
     summary='Get permissions',
     description='Get list of roles for user'
 )
 async def get_by_user(
-    user_id: uuid.UUID,
-    permission_service: PermissionServiceDep,
-    superuser: CurrentSuperuserDep
+        user_id: uuid.UUID,
+        permission_service: PermissionServiceDep,
+        _superuser: CurrentSuperuserDep
 ) -> list[PermissionInDb]:
-    return await permission_service.get_by_user(user_id)
+    user_roles_list = await permission_service.get_by_user(user_id)
+    return [
+        PermissionInDb.model_validate(user_role, from_attributes=True)
+        for user_role in user_roles_list
+    ]
 
 
 @router.delete(
     '/revoke/{id}',
+    response_model=DeletePermission,
     status_code=HTTPStatus.OK,
     summary='Revoke permissions',
     description='Deleting user from role'
 )
 async def revoke(
-    id: uuid.UUID,
-    permission_service: PermissionServiceDep,
-    superuser: CurrentSuperuserDep
-) -> DeletePermission | None:
+        id: uuid.UUID,
+        permission_service: PermissionServiceDep,
+        _superuser: CurrentSuperuserDep
+) -> DeletePermission:
     try:
-        permission = await permission_service.revoke(id)
+        user_role = await permission_service.revoke(id)
     except DeleteError:
         raise HTTPException(
             status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
             detail='Delete error'
         )
 
-    if permission is None:
+    if user_role is None:
         raise HTTPException(
             status_code=HTTPStatus.NOT_FOUND,
             detail='Permission not found'
         )
 
-    return permission
+    return DeletePermission.model_validate(user_role, from_attributes=True)

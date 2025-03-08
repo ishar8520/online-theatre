@@ -8,4 +8,4 @@ export PYTHONPATH=/opt/app:$PYTHONPATH
 
 cli_script_path=/opt/app/scripts/cli.py
 
-python "$cli_script_path" $SUPERUSER_LOGIN $SUPERUSER_PASSWORD
+python "$cli_script_path" "$SUPERUSER_LOGIN" "$SUPERUSER_PASSWORD"

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import uuid
-from typing import Any, Optional
+from typing import Any
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -40,7 +40,7 @@ class SQLAlchemyUserDatabase(BaseUserDatabase):
         statement = select(self.user_table).where(self.user_table.email == email)
         return await self._get_user(statement)
 
-    async def get_by_oauth_account(self, *, oauth_name: str, account_id: str) -> User:
+    async def get_by_oauth_account(self, *, oauth_name: str, account_id: str) -> User | None:
         statement = (
             select(self.user_table)
             .join(self.oauth_account_table)
@@ -92,6 +92,6 @@ class SQLAlchemyUserDatabase(BaseUserDatabase):
 
         return user
 
-    async def _get_user(self, statement: Select) -> Optional[User]:
+    async def _get_user(self, statement: Select) -> User | None:
         results = await self.session.execute(statement)
         return results.unique().scalar_one_or_none()

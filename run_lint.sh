@@ -38,6 +38,8 @@ run_command() {
     local services=(
         movies
         tests
+        auth
+        etl
     )
 
     declare -A services_set

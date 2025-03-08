@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+
   pull_request:
     types:
       - opened
@@ -12,15 +13,19 @@ on:
 jobs:
   lint:
     runs-on: ubuntu-latest
+
     strategy:
       fail-fast: false
       matrix:
         lint-command: [ 'ruff', 'mypy' ]
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
       - name: Run lint command '${{ matrix.lint-command }}'
         run: ./run_lint.sh ${{ matrix.lint-command }}
+
       - name: Upload lint results
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v4
@@ -29,16 +34,56 @@ jobs:
           path: |
             ./src/.lint/
             ./tests/.lint/
+            ./compose/auth/.lint/
+            ./compose/etl/.lint/
           include-hidden-files: true
 
   tests:
     runs-on: ubuntu-latest
+
     strategy:
       fail-fast: false
       matrix:
         python-version: [ '3.12', '3.13' ]
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
       - name: Run tests
         run: PYTHON_VERSION=${{ matrix.python-version }} ./run_tests.sh
+
+  telegram:
+    runs-on: ubuntu-latest
+    needs: [ 'lint', 'tests' ]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get message params
+        run: |
+          pr_head_sha=${{ github.event.pull_request.head.sha }}
+          
+          if [[ "$pr_head_sha" ]]; then
+              commit_sha=$pr_head_sha
+          else
+              commit_sha=${{ github.sha }}
+          fi
+          
+          echo "commit_sha=$commit_sha" >>"$GITHUB_ENV"
+          echo "commit_subject=$(git log -n 1 --format=%s $commit_sha)" >>"$GITHUB_ENV"
+
+      - name: Send Telegram notification
+        uses: appleboy/telegram-action@master
+        with:
+          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          to: ${{ secrets.TELEGRAM_CHANNEL_ID }}
+          format: markdown
+          message: |
+            *Repository*: [${{ github.repository }}](https://github.com/${{ github.repository }})
+            *Commit*: [${{ env.commit_sha }}](https://github.com/${{ github.repository }}/commit/${{ env.commit_sha }})
+            *Author*: ${{ github.actor }}
+            *Message*: ${{ env.commit_subject }}
