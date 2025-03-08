@@ -39,6 +39,7 @@ run_command() {
         movies
         tests
         auth
+        etl
     )
 
     declare -A services_set

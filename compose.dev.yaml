@@ -119,6 +119,11 @@ services:
         - action: sync+restart
           path: ./compose/etl/etl
           target: /opt/app/etl
+        - action: sync+restart
+          path: ./compose/etl/schema
+          target: /opt/app/schema
+        - action: rebuild
+          path: ./compose/etl/commands
         - action: rebuild
           path: ./compose/etl/pyproject.toml
         - action: rebuild

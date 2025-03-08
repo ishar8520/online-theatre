@@ -34,6 +34,8 @@ jobs:
           path: |
             ./src/.lint/
             ./tests/.lint/
+            ./compose/auth/.lint/
+            ./compose/etl/.lint/
           include-hidden-files: true
 
   tests:
