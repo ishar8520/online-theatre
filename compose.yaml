@@ -325,6 +325,37 @@ services:
       - CLICKHOUSE_HOST=clickhouse-node
     restart: unless-stopped
 
+  mongodb:
+    image: mongo:8.0.5
+    networks:
+      - movies-network
+    ports:
+      - "27017:27017"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+
+  ugc-mongo-service:
+    build:
+      context: ./compose/ugc_mongo/
+      dockerfile: Dockerfile
+    environment:
+      - PYTHONPATH=/opt/app
+      - MONGO_HOST=mongodb
+      - MONGO_PORT=27017
+      - MONGO_DB=ugc_mongo
+    ports:
+      - "5002:5002"
+    networks:
+      - movies-network
+    depends_on:
+      mongodb:
+        condition: service_healthy
+
 networks:
   movies-network:
 
