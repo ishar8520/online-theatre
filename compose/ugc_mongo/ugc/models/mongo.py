@@ -10,7 +10,6 @@ from pydantic import Field
 
 
 class Bookmark(Document):
-    id: uuid.UUID = Field(default_factory=uuid.uuid4)
     user_id: uuid.UUID
     film_id: uuid.UUID
     created_at: datetime = Field(
@@ -32,7 +31,6 @@ class Bookmark(Document):
 
 
 class Rate(Document):
-    id: uuid.UUID = Field(default_factory=uuid.uuid4)
     user_id: uuid.UUID
     film_id: uuid.UUID
     rate: int
@@ -55,7 +53,6 @@ class Rate(Document):
 
 
 class Review(Document):
-    id: uuid.UUID = Field(default_factory=uuid.uuid4)
     user_id: uuid.UUID
     film_id: uuid.UUID
     text: str

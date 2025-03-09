@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import uuid
 
+from beanie import PydanticObjectId
 from quart import Blueprint, jsonify, Response, abort
 from quart_schema import validate_request
 
@@ -16,7 +17,12 @@ bookmark_blueprint = Blueprint('bookmark', __name__)
 async def get_list(user_id: uuid.UUID) -> Response:
     service = BookmarkService()
     bookmark_list = await service.get_list(user_id)
-    result = [item.dict() for item in bookmark_list]
+
+    result = []
+    for item in bookmark_list:
+        bookmark = item.dict()
+        bookmark['id'] = str(bookmark['id'])
+        result.append(bookmark)
 
     return jsonify(result)
 
@@ -26,18 +32,19 @@ async def get_list(user_id: uuid.UUID) -> Response:
 async def add(data: BookmarkAdd) -> Response:
     service = BookmarkService()
     try:
-        new_uuid = await service.add(**data.model_dump())
+        new_id = await service.add(**data.model_dump())
     except DuplicateKeyException:
         abort(400)
 
-    return jsonify({"uuid": str(new_uuid)})
+    return jsonify({"id": str(new_id)})
 
 
-@bookmark_blueprint.route('/delete/<uuid:uuid>', methods=["DELETE"])
-async def delete(uuid: uuid.UUID) -> Response:
+@bookmark_blueprint.route('/delete/<id>', methods=["DELETE"])
+async def delete(id: str) -> Response:
     service = BookmarkService()
     try:
-        await service.delete(uuid)
+        object_id = PydanticObjectId(id)
+        await service.delete(object_id)
     except NotFoundException:
         abort(404)
 

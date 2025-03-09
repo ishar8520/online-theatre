@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import uuid
 
+from beanie import PydanticObjectId
 from pymongo.errors import DuplicateKeyError
 
 from .exceptions import NotFoundException, DuplicateKeyException
@@ -13,7 +14,7 @@ class BookmarkService:
             self,
             user_id: uuid.UUID,
             film_id: uuid.UUID
-    ) -> uuid.UUID:
+    ) -> PydanticObjectId | None:
         try:
             new_bookmark = Bookmark(
                 user_id=user_id, film_id=film_id
@@ -30,8 +31,8 @@ class BookmarkService:
     ) -> list:
         return await Bookmark.find(Bookmark.user_id == user_id).to_list()
 
-    async def delete(self, uuid: uuid.UUID) -> None:
-        bookmark = await Bookmark.get(uuid)
+    async def delete(self, id: PydanticObjectId) -> None:
+        bookmark = await Bookmark.get(id)
         if bookmark is None:
             raise NotFoundException()
 

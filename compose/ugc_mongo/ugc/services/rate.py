@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import uuid
 
+from beanie import PydanticObjectId
+
 from .exceptions import NotFoundException
 from ..models.mongo import Rate
 
@@ -12,7 +14,7 @@ class RateService:
             user_id: uuid.UUID,
             film_id: uuid.UUID,
             rate: int
-    ) -> uuid.UUID:
+    ) -> PydanticObjectId | None:
         new_rate = Rate(
             user_id=user_id, film_id=film_id, rate=rate
         )
@@ -24,9 +26,9 @@ class RateService:
 
     async def delete(
             self,
-            uuid: uuid.UUID
+            id: PydanticObjectId
     ) -> None:
-        rate = await Rate.get(uuid)
+        rate = await Rate.get(id)
         if rate is None:
             raise NotFoundException()
 

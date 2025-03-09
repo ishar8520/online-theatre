@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import uuid
 
+from beanie import PydanticObjectId
 from quart import Blueprint, jsonify, Response, abort
 from quart_schema import validate_request
 
@@ -16,7 +17,12 @@ review_blueprint = Blueprint('review', __name__)
 async def get_list(user_id: uuid.UUID) -> Response:
     service = ReviewService()
     review_list = await service.get_list(user_id)
-    result = [item.dict() for item in review_list]
+
+    result = []
+    for item in review_list:
+        review = item.dict()
+        review['id'] = str(review['id'])
+        result.append(review)
 
     return jsonify(result)
 
@@ -30,34 +36,34 @@ async def add(data: ReviewAdd) -> Response:
     return jsonify({"uuid": str(new_uuid)})
 
 
-@review_blueprint.route('/publish/<uuid:uuid>', methods=["POST"])
-async def publish(uuid: uuid.UUID) -> Response:
+@review_blueprint.route('/publish/<id>', methods=["POST"])
+async def publish(id: PydanticObjectId) -> Response:
     service = ReviewService()
     try:
-        updated_uuid = await service.publish(uuid)
+        updated_uuid = await service.publish(id)
     except NotFoundException:
         abort(404)
 
     return jsonify({"uuid": str(updated_uuid)})
 
 
-@review_blueprint.route('/update/<uuid:uuid>', methods=["POST"])
+@review_blueprint.route('/update/<id>', methods=["POST"])
 @validate_request(ReviewUpdate)
-async def update(uuid: uuid.UUID, data: ReviewUpdate):
+async def update(id: PydanticObjectId, data: ReviewUpdate):
     service = ReviewService()
     try:
-        updated_uuid = await service.update(uuid, **data.model_dump())
+        updated_uuid = await service.update(id, **data.model_dump())
     except NotFoundException:
         abort(404)
 
     return jsonify({"uuid": str(updated_uuid)})
 
 
-@review_blueprint.route('/delete/<uuid:uuid>', methods=["DELETE"])
-async def delete(uuid: uuid.UUID) -> Response:
+@review_blueprint.route('/delete/<id>', methods=["DELETE"])
+async def delete(id: PydanticObjectId) -> Response:
     service = ReviewService()
     try:
-        await service.delete(uuid)
+        await service.delete(id)
     except NotFoundException:
         abort(404)
 

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import uuid
 
+from beanie import PydanticObjectId
 from quart import Blueprint, jsonify, Response, abort
 from quart_schema import validate_request
 
@@ -16,7 +17,12 @@ rate_blueprint = Blueprint('rate', __name__)
 async def get_list(user_id: uuid.UUID) -> Response:
     service = RateService()
     rate_list = await service.get_list(user_id)
-    result = [item.dict() for item in rate_list]
+
+    result = []
+    for item in rate_list:
+        rate = item.dict()
+        rate['id'] = str(rate['id'])
+        result.append(rate)
 
     return jsonify(result)
 
@@ -25,16 +31,16 @@ async def get_list(user_id: uuid.UUID) -> Response:
 @validate_request(RateAdd)
 async def add(data: RateAdd) -> Response:
     service = RateService()
-    new_uuid = await service.add(**data.model_dump())
+    new_id = await service.add(**data.model_dump())
 
-    return jsonify({"uuid": str(new_uuid)})
+    return jsonify({"id": str(new_id)})
 
 
-@rate_blueprint.route('/delete/<uuid:uuid>', methods=["DELETE"])
-async def delete(uuid: uuid.UUID) -> Response:
+@rate_blueprint.route('/delete/<id>', methods=["DELETE"])
+async def delete(id: PydanticObjectId) -> Response:
     service = RateService()
     try:
-        await service.delete(uuid)
+        await service.delete(id)
     except NotFoundException:
         abort(404)
 
