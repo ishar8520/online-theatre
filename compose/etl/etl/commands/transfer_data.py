@@ -9,27 +9,27 @@ import elasticsearch
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(BASE_DIR))
 
-from etl.extract import (
+from etl.extract import (  # noqa: E402
     FilmWorksExtractor,
     GenresExtractor,
     PersonsExtractor,
 )
-from etl.load import ElasticsearchLoader
-from etl.pipelines import (
+from etl.load import ElasticsearchLoader  # noqa: E402
+from etl.pipelines import (  # noqa: E402
     ETLPipeline,
     FilmsTransformExecutor,
     GenresTransformExecutor,
     PersonsTransformExecutor,
 )
-from etl.settings import settings
-from etl.state import JsonFileStorage
-from etl.transform import (
+from etl.settings import settings  # noqa: E402
+from etl.state import JsonFileStorage  # noqa: E402
+from etl.transform import (  # noqa: E402
     Document,
     Film,
     Genre,
     Person,
 )
-from etl.utils import (
+from etl.utils import (  # noqa: E402
     setup_logging,
     load_index_file,
 )
@@ -37,17 +37,17 @@ from etl.utils import (
 
 def main() -> None:
     setup_logging(file_path=BASE_DIR / 'logs' / 'transfer_data.log')
-    postgresql_connection_params = settings.postgresql.get_connection_params()
+    postgresql_connection_params = settings.postgresql.connection_params
     schema_dir = BASE_DIR / 'schema'
 
     storage = JsonFileStorage(file_path=BASE_DIR / 'data' / 'state.json')
     state = storage.load()
 
     with (
-        elasticsearch.Elasticsearch(f'http://{settings.elasticsearch.host}:{settings.elasticsearch.port}') as elasticsearch_client,
+        elasticsearch.Elasticsearch(settings.elasticsearch.url) as elasticsearch_client,
     ):
         etl_pipelines: list[ETLPipeline[Document]] = [
-            ETLPipeline[Film](
+            ETLPipeline[Film](  # type: ignore[list-item]
                 extractor=FilmWorksExtractor(connection_params=postgresql_connection_params),
                 extractor_state=state.extractors.film_works,
                 transform_executor=FilmsTransformExecutor(),
@@ -58,7 +58,7 @@ def main() -> None:
                 ),
             ),
 
-            ETLPipeline[Genre](
+            ETLPipeline[Genre](  # type: ignore[list-item]
                 extractor=GenresExtractor(connection_params=postgresql_connection_params),
                 extractor_state=state.extractors.genres,
                 transform_executor=GenresTransformExecutor(),
@@ -69,7 +69,7 @@ def main() -> None:
                 ),
             ),
 
-            ETLPipeline[Person](
+            ETLPipeline[Person](  # type: ignore[list-item]
                 extractor=PersonsExtractor(connection_params=postgresql_connection_params),
                 extractor_state=state.extractors.persons,
                 transform_executor=PersonsTransformExecutor(),

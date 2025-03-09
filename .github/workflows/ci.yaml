@@ -17,23 +17,28 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        lint-command: [ 'ruff', 'mypy' ]
+        lint_command: [ 'ruff', 'mypy' ]
+
+    env:
+      lint_command: ${{ matrix.lint_command }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Run lint command '${{ matrix.lint-command }}'
-        run: ./run_lint.sh ${{ matrix.lint-command }}
+      - name: Run lint command '${{ matrix.lint_command }}'
+        run: ./run_lint.sh "$lint_command"
 
       - name: Upload lint results
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v4
         with:
-          name: lint-${{ matrix.lint-command }}
+          name: lint-${{ matrix.lint_command }}
           path: |
             ./src/.lint/
             ./tests/.lint/
+            ./compose/auth/.lint/
+            ./compose/etl/.lint/
           include-hidden-files: true
 
   tests:
@@ -42,14 +47,17 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: [ '3.12', '3.13' ]
+        python_version: [ '3.12', '3.13' ]
+
+    env:
+      python_version: ${{ matrix.python_version }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Run tests
-        run: PYTHON_VERSION=${{ matrix.python-version }} ./run_tests.sh
+        run: PYTHON_VERSION="$python_version" ./run_tests.sh
 
   telegram:
     runs-on: ubuntu-latest
@@ -61,18 +69,40 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Get message params
+      - name: Generate message file
+        env:
+          github_repository: ${{ github.repository }}
+          github_actor: ${{ github.actor }}
+          github_sha: ${{ github.sha }}
+          pull_request_number: ${{ github.event.pull_request.number }}
+          pull_request_title: ${{ github.event.pull_request.title }}
+          pull_request_head_sha: ${{ github.event.pull_request.head.sha }}
         run: |
-          pr_head_sha=${{ github.event.pull_request.head.sha }}
+          {
+              repository_name=$github_repository
+              repository_url=https://github.com/$repository_name
+              echo "*Repository*: [$repository_name]($repository_url)"
+
+              if [[ "$pull_request_number" ]]; then
+                  pull_request_url=$repository_url/pull/$pull_request_number
+                  echo "*Pull request*: [$pull_request_title]($pull_request_url)"
           
-          if [[ "$pr_head_sha" ]]; then
-              commit_sha=$pr_head_sha
-          else
-              commit_sha=${{ github.sha }}
-          fi
+                  commit_sha=$pull_request_head_sha
+              else
+                  commit_sha=$github_sha
+              fi
           
-          echo "commit_sha=$commit_sha" >>"$GITHUB_ENV"
-          echo "commit_subject=$(git log -n 1 --format=%s $commit_sha)" >>"$GITHUB_ENV"
+              commit_url=https://github.com/$github_repository/commit/$commit_sha
+              echo "*Commit*: [$commit_sha]($commit_url)"
+
+              author_name=$github_actor
+              author_url=https://github.com/$author_name
+              echo  "*Author*: [$author_name]($author_url)"
+
+              echo '```'
+              git log -n 1 --format=%B "$commit_sha"
+              echo '```'
+          } >./.github/.message_file.md
 
       - name: Send Telegram notification
         uses: appleboy/telegram-action@master
@@ -80,8 +110,4 @@ jobs:
           token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           to: ${{ secrets.TELEGRAM_CHANNEL_ID }}
           format: markdown
-          message: |
-            *Repository*: [${{ github.repository }}](https://github.com/${{ github.repository }})
-            *Commit*: [${{ env.commit_sha }}](https://github.com/${{ github.repository }}/commit/${{ env.commit_sha }})
-            *Author*: ${{ github.actor }}
-            *Message*: ${{ env.commit_subject }}
+          message_file: ./.github/.message_file.md
