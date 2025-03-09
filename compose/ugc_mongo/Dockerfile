@@ -33,11 +33,12 @@ RUN --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
     --mount=type=cache,target=/root/.cache/pypoetry \
     poetry install --no-ansi --no-interaction
 
-FROM base
-
+FROM base AS common
 
 ENV VIRTUAL_ENV=/venv
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+
+FROM common AS lint
 
 COPY --from=venv "$VIRTUAL_ENV" "$VIRTUAL_ENV"
 COPY poetry.lock pyproject.toml ./
