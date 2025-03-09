@@ -17,6 +17,7 @@ pydantic = "2.10.3"
 pydantic-settings = "2.6.1"
 redis = { version = "5.2.1", extras = ["hiredis"] }
 uvicorn-worker = "0.2.0"
+sentry-sdk = {extras = ["fastapi"], version = "^2.22.0"}
 
 [tool.poetry.group.dev]
 optional = true

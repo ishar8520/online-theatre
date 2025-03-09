@@ -45,6 +45,11 @@ services:
       - ELASTIC_HOST=elasticsearch
       - ELASTIC_PORT=9200
       - AUTH_HOST=auth-service
+      - SENTRY_ENABLE_SDK=${SENTRY_ENABLE_SDK}
+      - SENTRY_ENABLE_TRACING=${SENTRY_ENABLE_TRACING}
+      - SENTRY_DSN=${SENTRY_DSN}
+      - SENTRY_TRACES_SAMPLE_RATE=${SENTRY_TRACES_SAMPLE_RATE}
+      - SENTRY_PROFILES_SAMPLE_RATE=${SENTRY_PROFILES_SAMPLE_RATE}
     command: [ '/opt/app/commands/fastapi.sh', 'dev' ]
     healthcheck:
       test: [ 'CMD-SHELL', 'curl -s -H "X-Request-Id: healthcheck" http://localhost:8000/api/_health' ]
@@ -188,6 +193,11 @@ services:
       - RATELIMITER_SECONDS=$RATELIMITER_SECONDS
       - REDIS_HOST=auth-redis
       - REDIS_PORT=6379
+      - SENTRY_ENABLE_SDK=${SENTRY_ENABLE_SDK}
+      - SENTRY_ENABLE_TRACING=${SENTRY_ENABLE_TRACING}
+      - SENTRY_DSN=${SENTRY_DSN}
+      - SENTRY_TRACES_SAMPLE_RATE=${SENTRY_TRACES_SAMPLE_RATE}
+      - SENTRY_PROFILES_SAMPLE_RATE=${SENTRY_PROFILES_SAMPLE_RATE}
     command: [ '/opt/app/commands/fastapi.sh', 'dev' ]
     restart: unless-stopped
     healthcheck:
@@ -340,6 +350,11 @@ services:
       dockerfile: Dockerfile
     environment:
       - PYTHONPATH=/opt/app
+      - SENTRY_ENABLE_SDK=${SENTRY_ENABLE_SDK}
+      - SENTRY_ENABLE_TRACING=${SENTRY_ENABLE_TRACING}
+      - SENTRY_DSN=${SENTRY_DSN}
+      - SENTRY_TRACES_SAMPLE_RATE=${SENTRY_TRACES_SAMPLE_RATE}
+      - SENTRY_PROFILES_SAMPLE_RATE=${SENTRY_PROFILES_SAMPLE_RATE}
     ports:
       - "5001:5001"
     networks:
@@ -449,5 +464,4 @@ volumes:
   auth-redis-data:
   kafka-0_data:
   clickhouse-node:
-  elk-elastic-data:
   nginx_logs_data:
