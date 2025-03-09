@@ -3,11 +3,10 @@ from datetime import datetime, timedelta
 from typing import Iterator, Union
 from uuid import UUID, uuid4
 
-from .constants import (BATCH_SIZE, MAX_REVIEW_LEN, QUANTITY_MOVIES,
-                        QUANTITY_USERS)
-from .data_models import Bookmark, Like, Review
-
 from faker import Faker
+
+from .constants import BATCH_SIZE, MAX_REVIEW_LEN, QUANTITY_MOVIES, QUANTITY_USERS
+from .data_models import Bookmark, Like, Review
 
 fake = Faker()
 
@@ -26,10 +25,11 @@ class GenerateData:
 
     def generate_data(self, data_type: str) -> Iterator[list[Union[Like, Review, Bookmark]]]:
         seen = set()
-        movie_titles = self.__generate_base_movies()
-        user_ids = self.__generate_base_users()
         for _ in range(0, self.records_num, BATCH_SIZE):
             batch = []
+            movie_titles = self.__generate_base_movies()
+            user_ids = self.__generate_base_users()
+
             for _ in range(BATCH_SIZE):
                 user_id = random.choice(user_ids)
                 movie_title = random.choice(movie_titles)

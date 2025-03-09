@@ -11,22 +11,17 @@ from helpers import measure_time, output_result
 logging.basicConfig(level=logging.DEBUG)
 
 
-def get_film(connection, table):
+def get_film(pg_reader, table):
     """Получить случайное название фильма из БД"""
-    pg_reader = PostgresConnector(connection)
-    try:
-        query = f'SELECT * FROM {table};'
-        rows = pg_reader.fetch_data(query)
-        return random.choice(rows)[2]
-    finally:
-        pg_reader.close_cursor()
+    query = f'SELECT * FROM {table};'
+    rows = pg_reader.fetch_data(query)
+    return random.choice(rows)[2]
 
 
-def load_data(connection):
+def load_data(pg_reader):
     """
     Генерация данных для базы данных в таблицах likes, reviews, bokkmarks
     """
-    pg_loader = PostgresConnector(connection)
     data_generator = GenerateData(TOTAL_GENERATE_DATA)
     data_types = ('likes', 'reviews', 'bookmarks')
     try:
@@ -36,113 +31,77 @@ def load_data(connection):
             for batch in data_generator.generate_data(data):
                 b += len(batch)
                 logging.debug(f'Insert data {b}/{TOTAL_GENERATE_DATA}')
-                pg_loader.insert_data(batch, table_name=data)
-    finally:
-        pg_loader.close_cursor()
+                pg_reader.insert_data(batch, table_name=data)
+    except Exception as err:
+        pg_reader.close_cursor()
+        logging.debug(f'Error while inserting data!')
 
 
-@measure_time('Чтение списка лайков')
-def read_data_likes(connection):
-    """
-    Чтение списка лайков и измерение времени исполнения запроса
-    """
-    pg_reader = PostgresConnector(connection)
-    try:
+class DataProcessor:
+    def __init__(self, db_manager):
+        self.db_manager = db_manager
+
+    @measure_time('Чтение списка лайков')
+    def read_data_likes(self):
+        """Чтение списка лайков и измерение времени исполнения запроса."""
         query = 'SELECT * FROM likes WHERE rating=0;'
-        likes_rows = pg_reader.fetch_data(query)
+        likes_rows = self.db_manager.fetch_data(query)
         logging.info(f'Лайки: {len(likes_rows)}')
-    finally:
-        pg_reader.close_cursor()
 
-
-@measure_time('Чтение списка дизлайков')
-def read_data_dislikes(connection):
-    """
-    Чтение списка дизлайков и измерение времени исполнения запроса
-    """
-    pg_reader = PostgresConnector(connection)
-    try:
+    @measure_time('Чтение списка дизлайков')
+    def read_data_dislikes(self):
+        """Чтение списка дизлайков и измерение времени исполнения запроса."""
         query = 'SELECT * FROM likes WHERE rating=10;'
-        dislikes_rows = pg_reader.fetch_data(query)
+        dislikes_rows = self.db_manager.fetch_data(query)
         logging.info(f'Дизлайки: {len(dislikes_rows)}')
-    finally:
-        pg_reader.close_cursor()
 
-
-@measure_time('Чтение списка лайков и дизлайков у определенного фильма')
-def read_data_film_likes(connection, select_film):
-    """
-    Чтение списка лайков и дизлайков у определенного фильма и измерение времени исполнения запроса
-    """
-    pg_reader = PostgresConnector(connection)
-    try:
+    @measure_time('Чтение списка лайков и дизлайков у определенного фильма')
+    def read_data_film_likes(self, select_film):
+        """Чтение списка лайков и дизлайков у определенного фильма."""
         query = f"SELECT * FROM likes where movie_id='{select_film}'"
-        rows = pg_reader.fetch_data(query)
+        rows = self.db_manager.fetch_data(query)
         likes = [row for row in rows if row[3] == 0]
         dislikes = [row for row in rows if row[3] == 10]
 
         logging.info(f'Дизлайки фильма "{select_film}": {len(dislikes)}')
         logging.info(f'Лайки фильма "{select_film}": {len(likes)}')
-    finally:
-        pg_reader.close_cursor()
 
-
-@measure_time('Чтение списка ревью у определенного фильма')
-def read_data_film_reviews(connection, select_film):
-    """
-    Чтение списка ревью у определенного фильма и измерение времени исполнения запроса
-    """
-    pg_reader = PostgresConnector(connection)
-    try:
+    @measure_time('Чтение списка ревью у определенного фильма')
+    def read_data_film_reviews(self, select_film):
+        """Чтение списка ревью у определенного фильма."""
         query = f"SELECT * FROM reviews where movie_id='{select_film}'"
-        rows = pg_reader.fetch_data(query)
-
+        rows = self.db_manager.fetch_data(query)
         logging.info(f'Количество ревью фильма "{select_film}": {len(rows)}')
-    finally:
-        pg_reader.close_cursor()
 
-
-@measure_time('Чтение средней оценки определенного фильма')
-def read_data_film_avg_rating(connection, select_film):
-    """
-    Чтение средней оценки фильма и измерение времени исполнения запроса
-    """
-    pg_reader = PostgresConnector(connection)
-    try:
+    @measure_time('Чтение средней оценки определенного фильма')
+    def read_data_film_avg_rating(self, select_film):
+        """Чтение средней оценки фильма."""
         query = f"SELECT * FROM likes where movie_id='{select_film}'"
-        rows = pg_reader.fetch_data(query)
+        rows = self.db_manager.fetch_data(query)
         rating = [row[3] for row in rows]
 
-        avg_rating = round(sum(rating)/len(rating), 2)
+        avg_rating = round(sum(rating) / len(rating), 2)
         logging.info(f'Средняя оценка фильма "{select_film}": {avg_rating}')
-    finally:
-        pg_reader.close_cursor()
 
-
-@measure_time('Чтение списка закладок определенного фильма')
-def read_data_film_bookmarks(connection, select_film):
-    """
-    Чтение списка закладок фильма и измерение времени исполнения запроса
-    """
-    pg_reader = PostgresConnector(connection)
-    try:
+    @measure_time('Чтение списка закладок определенного фильма')
+    def read_data_film_bookmarks(self, select_film):
+        """Чтение списка закладок фильма."""
         query = f"SELECT * FROM bookmarks where movie_id='{select_film}'"
-        rows = pg_reader.fetch_data(query)
-
+        rows = self.db_manager.fetch_data(query)
         logging.info(f'Количество закладок фильма "{select_film}": {len(rows)}')
-    finally:
-        pg_reader.close_cursor()
 
 
 if __name__ == '__main__':
     logging.debug(f'Подключение к базе данных: {DSL}')
     with psycopg2.connect(**DSL) as connection:
-        load_data(connection)
-        read_data_likes(connection)
-        read_data_dislikes(connection)
-        read_data_film_likes(connection, get_film(connection, 'likes'))
-        read_data_film_reviews(connection, get_film(connection, 'reviews'))
-        read_data_film_avg_rating(connection, get_film(connection, 'likes'))
-        read_data_film_bookmarks(connection, get_film(connection, 'bookmarks'))
+        pg_reader = PostgresConnector(connection)
+        data_process = DataProcessor(pg_reader)
+        load_data(pg_reader)
+        data_process.read_data_likes()
+        data_process.read_data_dislikes()
+        data_process.read_data_film_likes(get_film(pg_reader, 'likes'))
+        data_process.read_data_film_reviews(get_film(pg_reader, 'reviews'))
+        data_process.read_data_film_avg_rating(get_film(pg_reader, 'likes'))
+        data_process.read_data_film_bookmarks(get_film(pg_reader, 'bookmarks'))
         for result in output_result():
             logging.info(result)
