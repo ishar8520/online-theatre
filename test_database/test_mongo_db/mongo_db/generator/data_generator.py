@@ -24,12 +24,10 @@ class GenerateData:
         return [str(uuid4()) for _ in range(quantity)]
 
     def generate_data(self, data_type: str) -> Iterator[list[Union[Like, Review, Bookmark]]]:
-        seen = set()
+        movie_titles = self.__generate_base_movies()
+        user_ids = self.__generate_base_users()
         for _ in range(0, self.records_num, BATCH_SIZE):
             batch = []
-            movie_titles = self.__generate_base_movies()
-            user_ids = self.__generate_base_users()
-
             for _ in range(BATCH_SIZE):
                 user_id = random.choice(user_ids)
                 movie_title = random.choice(movie_titles)
@@ -42,7 +40,6 @@ class GenerateData:
                 else:
                     raise ValueError("Invalid data_type. Use 'likes', 'reviews' or 'bookmarks'.")
                 batch.append(record)
-                seen.add((user_id, movie_title))
             yield batch
 
     @staticmethod

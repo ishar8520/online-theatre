@@ -9,13 +9,6 @@ from pymongo import MongoClient
 
 logging.basicConfig(level=logging.DEBUG)
 
-
-def get_film(mongo_connector: MongoConnector, collection_name: str) -> str:
-    """Получить случайное название фильма из коллекции"""
-    films = mongo_connector.fetch_data({}, collection_name)
-    return random.choice(films)["movie_id"]
-
-
 def load_data(mongo_connector: MongoConnector) -> None:
     """
     Генерация данных для базы данных в коллекциях likes, reviews, bookmarks
@@ -74,6 +67,10 @@ class DataProcessor:
         bookmarks = self.mongo_connector.fetch_data({"movie_id": select_film}, "bookmarks")
         logging.info(f'Количество закладок фильма "{select_film}": {len(bookmarks)}')
 
+    def get_film(self, collection_name: str) -> str: #mongo_connector: MongoConnector, ) -> str:
+        """Получить случайное название фильма из коллекции"""
+        films = self.mongo_connector.fetch_data({}, collection_name)
+        return random.choice(films)["movie_id"]
 
 if __name__ == "__main__":
     logging.debug(f"Подключение к базе данных: {MONGO_DSL}")
@@ -86,9 +83,9 @@ if __name__ == "__main__":
     load_data(mongo_connector)
     data_process.read_data_likes()
     data_process.read_data_dislikes()
-    data_process.read_data_film_likes(get_film(mongo_connector, "likes"))
-    data_process.read_data_film_reviews(get_film(mongo_connector, "reviews"))
-    data_process.read_data_film_avg_rating(get_film(mongo_connector, "likes"))
-    data_process.read_data_film_bookmarks(get_film(mongo_connector, "bookmarks"))
+    data_process.read_data_film_likes(data_process.get_film("likes"))
+    data_process.read_data_film_reviews(data_process.get_film("reviews"))
+    data_process.read_data_film_avg_rating(data_process.get_film("likes"))
+    data_process.read_data_film_bookmarks(data_process.get_film("bookmarks"))
     for result in output_result():
         logging.info(result)

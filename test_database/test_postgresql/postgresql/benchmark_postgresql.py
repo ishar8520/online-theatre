@@ -11,13 +11,6 @@ from helpers import measure_time, output_result
 logging.basicConfig(level=logging.DEBUG)
 
 
-def get_film(pg_reader, table):
-    """Получить случайное название фильма из БД"""
-    query = f'SELECT * FROM {table};'
-    rows = pg_reader.fetch_data(query)
-    return random.choice(rows)[2]
-
-
 def load_data(pg_reader):
     """
     Генерация данных для базы данных в таблицах likes, reviews, bokkmarks
@@ -89,7 +82,12 @@ class DataProcessor:
         query = f"SELECT * FROM bookmarks where movie_id='{select_film}'"
         rows = self.db_manager.fetch_data(query)
         logging.info(f'Количество закладок фильма "{select_film}": {len(rows)}')
-
+        
+    def get_film(self, table):
+        """Получить случайное название фильма из БД"""
+        query = f'SELECT * FROM {table};'
+        rows = self.db_manager.fetch_data(query)
+        return random.choice(rows)[2]
 
 if __name__ == '__main__':
     logging.debug(f'Подключение к базе данных: {DSL}')
@@ -99,9 +97,9 @@ if __name__ == '__main__':
         load_data(pg_reader)
         data_process.read_data_likes()
         data_process.read_data_dislikes()
-        data_process.read_data_film_likes(get_film(pg_reader, 'likes'))
-        data_process.read_data_film_reviews(get_film(pg_reader, 'reviews'))
-        data_process.read_data_film_avg_rating(get_film(pg_reader, 'likes'))
-        data_process.read_data_film_bookmarks(get_film(pg_reader, 'bookmarks'))
+        data_process.read_data_film_likes(data_process.get_film('likes'))
+        data_process.read_data_film_reviews(data_process.get_film('reviews'))
+        data_process.read_data_film_avg_rating(data_process.get_film('likes'))
+        data_process.read_data_film_bookmarks(data_process.get_film('bookmarks'))
         for result in output_result():
             logging.info(result)
