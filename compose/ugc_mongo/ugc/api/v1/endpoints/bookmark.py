@@ -40,11 +40,10 @@ async def add(data: BookmarkAdd) -> Response:
 
 
 @bookmark_blueprint.route('/delete/<id>', methods=["DELETE"])
-async def delete(id: str) -> Response:
+async def delete(id: PydanticObjectId) -> Response:
     service = BookmarkService()
     try:
-        object_id = PydanticObjectId(id)
-        await service.delete(object_id)
+        await service.delete(id)
     except NotFoundException:
         abort(404)
 

@@ -31,20 +31,20 @@ async def get_list(user_id: uuid.UUID) -> Response:
 @validate_request(ReviewAdd)
 async def add(data: ReviewAdd) -> Response:
     service = ReviewService()
-    new_uuid = await service.add(**data.model_dump())
+    new_id = await service.add(**data.model_dump())
 
-    return jsonify({"uuid": str(new_uuid)})
+    return jsonify({"id": str(new_id)})
 
 
 @review_blueprint.route('/publish/<id>', methods=["POST"])
 async def publish(id: PydanticObjectId) -> Response:
     service = ReviewService()
     try:
-        updated_uuid = await service.publish(id)
+        updated_id = await service.publish(id)
     except NotFoundException:
         abort(404)
 
-    return jsonify({"uuid": str(updated_uuid)})
+    return jsonify({"id": str(updated_id)})
 
 
 @review_blueprint.route('/update/<id>', methods=["POST"])
@@ -52,11 +52,11 @@ async def publish(id: PydanticObjectId) -> Response:
 async def update(id: PydanticObjectId, data: ReviewUpdate):
     service = ReviewService()
     try:
-        updated_uuid = await service.update(id, **data.model_dump())
+        updated_id = await service.update(id, **data.model_dump())
     except NotFoundException:
         abort(404)
 
-    return jsonify({"uuid": str(updated_uuid)})
+    return jsonify({"id": str(updated_id)})
 
 
 @review_blueprint.route('/delete/<id>', methods=["DELETE"])
