@@ -5,10 +5,14 @@ services:
     depends_on:
       movies:
         condition: service_healthy
+      logstash:
+        condition: service_healthy
     ports:
       - '8000:8080'
     networks:
       - movies-network
+    volumes:
+      - nginx_logs_data:/opt/bitnami/nginx/logs/
 
   movies:
     build:
@@ -340,6 +344,52 @@ services:
       - CLICKHOUSE_HOST=clickhouse-node
     restart: unless-stopped
 
+  elk-elastic:
+    image: 'bitnami/elasticsearch:8.16.1-debian-12-r1'
+    networks:
+      - movies-network
+    environment:
+      - ELASTICSEARCH_HEAP_SIZE=${ELASTICSEARCH_HEAP_SIZE:-200m}
+      - discovery.type=single-node
+    healthcheck:
+      test: [ 'CMD-SHELL', '/opt/bitnami/scripts/elasticsearch/healthcheck.sh' ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  logstash:
+    image: logstash:8.10.2
+    networks:
+      - movies-network
+    depends_on:
+      elk-elastic:
+        condition: service_healthy
+    environment:
+      XPACK_MONITORING_ENABLED: "false"
+      ES_HOST: "elk-elastic:9200"
+    volumes:
+      - ./compose/elk/logstash.conf:/config/logstash.conf:ro
+      - nginx_logs_data:/opt/logs/nginx/:ro
+    command: logstash -f /config/logstash.conf
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9600"]
+      interval: 10s
+      retries: 5
+      start_period: 30s
+
+  kibana:
+    image: kibana:8.10.2
+    networks:
+      - movies-network
+    depends_on:
+      elk-elastic:
+        condition: service_healthy
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elk-elastic:9200
+      - SERVER_BASEPATH=/kibana
+      - SERVER_REWRITE_BASEPATH=true
+
 networks:
   movies-network:
 
@@ -353,3 +403,4 @@ volumes:
   auth-redis-data:
   kafka-0_data:
   clickhouse-node:
+  nginx_logs_data:
