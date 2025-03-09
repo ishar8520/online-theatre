@@ -11,3 +11,4 @@ gevent = "24.11.1"
 quart = "^0.20.0"
 hypercorn = "^0.17.3"
 quart-schema = "0.21.0"
+sentry-sdk = {extras = ["quart"], version = "^2.22.0"}

@@ -7,6 +7,8 @@ services:
     depends_on:
       movies:
         condition: service_healthy
+      auth-service:
+        condition: service_healthy
     networks:
       - movies-network
     environment:
@@ -40,6 +42,8 @@ services:
   movies:
     build:
       context: ./src
+      args:
+        - PYTHON_VERSION
     depends_on:
       redis:
         condition: service_healthy
@@ -59,7 +63,7 @@ services:
       - ELASTIC_PORT=9200
       - AUTH_HOST=auth-service
     healthcheck:
-      test: [ 'CMD-SHELL', 'curl -s http://localhost:8000/api/openapi.json' ]
+      test: [ 'CMD-SHELL', 'curl -s http://localhost:8000/api/_health' ]
       interval: 10s
       timeout: 10s
       retries: 5
@@ -110,6 +114,8 @@ services:
   auth-service:
     build:
       context: ./compose/auth
+      args:
+        - PYTHON_VERSION
     depends_on:
       auth-postgresql:
         condition: service_healthy
@@ -138,7 +144,7 @@ services:
       - REDIS_HOST=auth-redis
       - REDIS_PORT=6379
     healthcheck:
-      test: [ 'CMD-SHELL', 'curl -s http://localhost:8000/auth/api/openapi.json' ]
+      test: [ 'CMD-SHELL', 'curl -s http://localhost:8000/auth/api/_health' ]
       interval: 10s
       timeout: 10s
       retries: 5
@@ -148,6 +154,9 @@ services:
         - action: sync+restart
           path: ./compose/auth/auth
           target: /opt/app/auth
+        - action: sync+restart
+          path: ./compose/auth/scripts
+          target: /opt/app/scripts
         - action: rebuild
           path: ./compose/auth/commands
         - action: rebuild
@@ -158,6 +167,8 @@ services:
   auth-service-init:
     build:
       context: ./compose/auth
+      args:
+        - PYTHON_VERSION
     depends_on:
       auth-postgresql:
         condition: service_healthy

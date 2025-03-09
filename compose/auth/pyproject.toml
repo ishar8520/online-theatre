@@ -24,6 +24,24 @@ redis = { version = "5.2.1", extras = ["hiredis"] }
 SQLAlchemy = { version = "2.0.37", extras = ["asyncio"] }
 typer = "0.15.1"
 uvicorn-worker = "0.2.0"
+sentry-sdk = {extras = ["fastapi"], version = "^2.22.0"}
+
+[tool.poetry.group.dev]
+optional = true
+
+[tool.poetry.group.dev.dependencies]
+ciqar = "1.0.0"
+mypy = "1.15.0"
+ruff = "0.9.9"
+
+[tool.ruff]
+target-version = "py312"
+line-length = 120
+
+[tool.ruff.lint]
+select = [
+    "E",
+]
 
 [build-system]
 requires = ["poetry-core"]

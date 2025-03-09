@@ -18,11 +18,15 @@ class SortOrderEnum(str, Enum):
     asc = "asc"
     desc = "desc"
 
+
 @router.get(
     '/',
     response_model=list[Film],
     summary='Get list of films',
-    description='Get list of films with sorting, pagination and filter by concrete genre. The maximum count of films on one page are 150.'
+    description=(
+            'Get list of films with sorting, pagination and filter by concrete genre. '
+            'The maximum count of films on one page are 150.'
+    )
 )
 async def get_list(
         *,

@@ -47,7 +47,7 @@ class SearchService(AbstractSearchService):
     async def search(self, *, query: AbstractSearchQuery) -> list[dict] | None:
         return await self._execute_query(query=query)
 
-    async def _execute_query[TResult](self, *, query: AbstractQuery[TResult]) -> TResult:
+    async def _execute_query[TResult](self, *, query: AbstractQuery[TResult]) -> TResult | None:
         cache = ParameterizedCache[AbstractCompiledQuery[TResult], TResult](cache=self.cache)
         compiled_query = query.compile()
         result = await cache.get(params=compiled_query)

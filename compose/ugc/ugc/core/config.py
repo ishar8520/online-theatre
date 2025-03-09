@@ -3,6 +3,7 @@ from __future__ import annotations
 from pydantic import Field
 from pydantic_settings import (
     BaseSettings,
+    SettingsConfigDict
 )
 
 
@@ -15,4 +16,15 @@ class KafkaSettings(BaseSettings):
         return self.kafka_hosts.split(",")
 
 
+class SentrySettings(BaseSettings):
+    model_config = SettingsConfigDict(env_prefix='sentry_')
+
+    dsn: str = ''
+    enable_sdk: bool = False
+    enable_tracing: bool = False
+    traces_sample_rate: float = 1.0
+    profiles_sample_rate: float = 1.0
+
+
 settings = KafkaSettings()
+sentry_settings = SentrySettings()

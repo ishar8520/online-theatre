@@ -164,10 +164,10 @@ class UserManager:
 
         return user
 
-    async def _record_user_login(self, user: User, request: Request):
+    async def _record_user_login(self, user: User, request: Request) -> None:
         row = LoginHistoryCreate(
             user_id=user.id,
-            user_agent=request.headers.get('User-Agent')
+            user_agent=request.headers.get('User-Agent') or '',
         )
 
         try:

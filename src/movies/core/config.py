@@ -6,7 +6,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class ProjectConfig(BaseSettings):
     model_config = SettingsConfigDict(env_prefix='project_')
 
-    name: str | None = None
+    name: str = 'movies'
 
 
 class OpenTelemetryConfig(BaseSettings):
@@ -58,12 +58,23 @@ class AuthConfig(BaseSettings):
         return f'{self.scheme}://{self.host}:{self.port}/auth/api/v1/users/me'
 
 
+class SentryConfig(BaseSettings):
+    model_config = SettingsConfigDict(env_prefix='sentry_')
+
+    dsn: str = ''
+    enable_sdk: bool = False
+    enable_tracing: bool = False
+    traces_sample_rate: float = 1.0
+    profiles_sample_rate: float = 1.0
+
+
 class Settings(BaseSettings):
     project: ProjectConfig = ProjectConfig()
     redis: RedisConfig = RedisConfig()
     elasticsearch: ElasticConfig = ElasticConfig()
     auth: AuthConfig = AuthConfig()
     otel: OpenTelemetryConfig = OpenTelemetryConfig()
+    sentry: SentryConfig = SentryConfig()
 
 
 settings = Settings()
