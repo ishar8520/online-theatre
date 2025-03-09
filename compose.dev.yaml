@@ -6,10 +6,14 @@ services:
     depends_on:
       movies:
         condition: service_healthy
+      logstash:
+        condition: service_healthy
     ports:
       - '8000:8080'
     networks:
       - movies-network
+    volumes:
+      - nginx_logs_data:/opt/bitnami/nginx/logs/
     develop:
       watch:
         - action: sync+restart
@@ -41,6 +45,11 @@ services:
       - ELASTIC_HOST=elasticsearch
       - ELASTIC_PORT=9200
       - AUTH_HOST=auth-service
+      - SENTRY_ENABLE_SDK=${SENTRY_ENABLE_SDK}
+      - SENTRY_ENABLE_TRACING=${SENTRY_ENABLE_TRACING}
+      - SENTRY_DSN=${SENTRY_DSN}
+      - SENTRY_TRACES_SAMPLE_RATE=${SENTRY_TRACES_SAMPLE_RATE}
+      - SENTRY_PROFILES_SAMPLE_RATE=${SENTRY_PROFILES_SAMPLE_RATE}
     command: [ '/opt/app/commands/fastapi.sh', 'dev' ]
     healthcheck:
       test: [ 'CMD-SHELL', 'curl -s -H "X-Request-Id: healthcheck" http://localhost:8000/api/_health' ]
@@ -184,6 +193,11 @@ services:
       - RATELIMITER_SECONDS=$RATELIMITER_SECONDS
       - REDIS_HOST=auth-redis
       - REDIS_PORT=6379
+      - SENTRY_ENABLE_SDK=${SENTRY_ENABLE_SDK}
+      - SENTRY_ENABLE_TRACING=${SENTRY_ENABLE_TRACING}
+      - SENTRY_DSN=${SENTRY_DSN}
+      - SENTRY_TRACES_SAMPLE_RATE=${SENTRY_TRACES_SAMPLE_RATE}
+      - SENTRY_PROFILES_SAMPLE_RATE=${SENTRY_PROFILES_SAMPLE_RATE}
     command: [ '/opt/app/commands/fastapi.sh', 'dev' ]
     restart: unless-stopped
     healthcheck:
@@ -336,6 +350,11 @@ services:
       dockerfile: Dockerfile
     environment:
       - PYTHONPATH=/opt/app
+      - SENTRY_ENABLE_SDK=${SENTRY_ENABLE_SDK}
+      - SENTRY_ENABLE_TRACING=${SENTRY_ENABLE_TRACING}
+      - SENTRY_DSN=${SENTRY_DSN}
+      - SENTRY_TRACES_SAMPLE_RATE=${SENTRY_TRACES_SAMPLE_RATE}
+      - SENTRY_PROFILES_SAMPLE_RATE=${SENTRY_PROFILES_SAMPLE_RATE}
     ports:
       - "5001:5001"
     networks:
@@ -384,6 +403,53 @@ services:
           path: ./compose/etl_k2ch/pyproject.toml
         - action: rebuild
           path: ./compose/etl_k2ch/poetry.lock
+
+  elk-elastic:
+    image: 'bitnami/elasticsearch:8.16.1-debian-12-r1'
+    networks:
+      - movies-network
+    environment:
+      - ELASTICSEARCH_HEAP_SIZE=${ELASTICSEARCH_HEAP_SIZE:-200m}
+      - discovery.type=single-node
+    healthcheck:
+      test: [ 'CMD-SHELL', '/opt/bitnami/scripts/elasticsearch/healthcheck.sh' ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+
+  logstash:
+    image: logstash:8.10.2
+    networks:
+      - movies-network
+    depends_on:
+      elk-elastic:
+        condition: service_healthy
+    environment:
+      XPACK_MONITORING_ENABLED: "false"
+      ES_HOST: "elk-elastic:9200"
+    volumes:
+      - ./compose/elk/logstash.conf:/config/logstash.conf:ro
+      - nginx_logs_data:/opt/logs/nginx/:ro
+    command: logstash -f /config/logstash.conf
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9600"]
+      interval: 10s
+      retries: 5
+      start_period: 30s
+
+  kibana:
+    image: kibana:8.10.2
+    networks:
+      - movies-network
+    depends_on:
+      elk-elastic:
+        condition: service_healthy
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elk-elastic:9200
+      - SERVER_BASEPATH=/kibana
+      - SERVER_REWRITE_BASEPATH=true
 
   mongodb:
     image: mongo:8.0.5
@@ -440,4 +506,5 @@ volumes:
   auth-redis-data:
   kafka-0_data:
   clickhouse-node:
+  nginx_logs_data:
   mongodb:

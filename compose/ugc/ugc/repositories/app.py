@@ -1,3 +1,5 @@
+import sentry_sdk
+from core.config import sentry_settings
 from core.utils import handle_kafka_errors
 from models.event import ClickEvent, CustomEvent, EventContainer, PageViewEvent
 from quart import Quart, jsonify, request
@@ -5,13 +7,25 @@ from quart_schema import QuartSchema, validate_request
 
 from .event import get_kafka_event_repo
 
+if sentry_settings.enable_sdk:
+
+    sentry_sdk.init(
+        dsn=sentry_settings.dsn,
+        traces_sample_rate=sentry_settings.traces_sample_rate,
+        profiles_sample_rate=sentry_settings.profiles_sample_rate,
+        enable_tracing=sentry_settings.enable_tracing,
+    )
+    sentry_sdk.set_tag("service_name", "ugc-service")
+
 app = Quart(__name__)
-QuartSchema(app,
+QuartSchema(
+    app,
     openapi_path="/ugc/openapi.json",
     servers=[{"url": "/ugc", "description": "Base URL for UGC Service"}],
 )
 
 kafka_producer = None
+
 
 @app.before_serving
 async def startup():
@@ -38,6 +52,7 @@ async def process_event(event_class, event_type, topic):
     return jsonify(
         {"status": "success", "event": event_type, "data": event.model_dump()}
     )
+
 
 @app.route("/track_click", methods=["POST"])
 @validate_request(ClickEvent)
