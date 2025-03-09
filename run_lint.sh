@@ -40,6 +40,7 @@ run_command() {
         tests
         auth
         etl
+        ugc
     )
 
     declare -A services_set

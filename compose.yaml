@@ -390,6 +390,37 @@ services:
       - SERVER_BASEPATH=/kibana
       - SERVER_REWRITE_BASEPATH=true
 
+  mongodb:
+    image: mongo:8.0.5
+    networks:
+      - movies-network
+    ports:
+      - "27017:27017"
+    volumes:
+      - "mongodb:/etc/mongodb/data"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+
+  ugc-mongo-service:
+    build:
+      context: ./compose/ugc_mongo/
+      dockerfile: Dockerfile
+    environment:
+      - PYTHONPATH=/opt/app
+      - MONGO_HOST=mongodb
+      - MONGO_PORT=27017
+      - MONGO_DB=ugc_mongo
+    networks:
+      - movies-network
+    depends_on:
+      mongodb:
+        condition: service_healthy
+
 networks:
   movies-network:
 
@@ -404,3 +435,4 @@ volumes:
   kafka-0_data:
   clickhouse-node:
   nginx_logs_data:
+  mongodb:

@@ -95,6 +95,29 @@ services:
         - action: rebuild
           path: ./compose/etl/poetry.lock
 
+  ugc:
+    build:
+      context: ./compose/ugc_mongo
+      target: lint
+    networks:
+      - movies-network
+    volumes:
+      - 'ugc-mypy-cache:/opt/app/.mypy_cache'
+      - './compose/ugc_mongo/.lint:/opt/app/.lint'
+    command: [ 'sleep', 'infinity' ]
+    develop:
+      watch:
+        - action: sync
+          path: ./compose/ugc_mongo/ugc
+          target: /opt/app/ugc
+        - action: rebuild
+          path: ./compose/ugc_mongo/commands
+        - action: rebuild
+          path: ./compose/ugc_mongo/pyproject.toml
+        - action: rebuild
+          path: ./compose/ugc_mongo/poetry.lock
+
+
 networks:
   movies-network:
 
@@ -103,3 +126,4 @@ volumes:
   tests-mypy-cache:
   auth-mypy-cache:
   etl-mypy-cache:
+  ugc-mypy-cache:
