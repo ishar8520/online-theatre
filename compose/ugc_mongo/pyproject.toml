@@ -12,3 +12,8 @@ hypercorn = "^0.17.3"
 quart-schema = "^0.21.0"
 motor = "3.7.0"
 beanie = "1.29.0"
+
+[tool.poetry.group.dev.dependencies]
+ciqar = "1.0.0"
+mypy = "1.15.0"
+ruff = "0.9.9"
