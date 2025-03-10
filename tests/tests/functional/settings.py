@@ -61,6 +61,16 @@ class RateLimiterConfig(BaseSettings):
     seconds: int = 60
 
 
+class MongoSettings(BaseSettings):
+    model_config = SettingsConfigDict(env_prefix='mongo_')
+
+    db: str = ''
+
+    host: str = 'localhost'
+    port: int = 27017
+
+
+
 class Settings(BaseSettings):
     redis: RedisSettings = RedisSettings()
     elasticsearch: ElasticsearchSettings = ElasticsearchSettings()
@@ -68,9 +78,11 @@ class Settings(BaseSettings):
     auth_redis: AuthRedisConfig = AuthRedisConfig()
     superuser: SuperUserSettings = SuperUserSettings()  # type: ignore[call-arg]
     ratelimiter: RateLimiterConfig = RateLimiterConfig()
+    mongo: MongoSettings = MongoSettings()
 
     movies_url: str = 'http://localhost:8000'
     auth_service_url: str = 'http://localhost:8000'
+    ugc_url: str = 'http://localhost:8000/ugc-mongo'
 
     @property
     def movies_api_url(self) -> str:
@@ -87,6 +99,10 @@ class Settings(BaseSettings):
     @property
     def auth_api_v1_url(self) -> str:
         return urljoin(self.auth_api_url, 'v1/')
+
+    @property
+    def ugc_api_v1_url(self) -> str:
+        return urljoin(self.ugc_url, '/v1/')
 
 
 settings = Settings()

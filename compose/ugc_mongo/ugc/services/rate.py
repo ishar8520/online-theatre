@@ -3,8 +3,12 @@ from __future__ import annotations
 import uuid
 
 from beanie import PydanticObjectId
+from pymongo.errors import DuplicateKeyError
 
-from .exceptions import NotFoundException
+from .exceptions import (
+    NotFoundException,
+    DuplicateKeyException
+)
 from ..models.mongo import Rate
 
 
@@ -14,12 +18,16 @@ class RateService:
             user_id: uuid.UUID,
             film_id: uuid.UUID,
             rate: int
-    ) -> PydanticObjectId | None:
-        new_rate = Rate(
-            user_id=user_id, film_id=film_id, rate=rate
-        )
-        await new_rate.insert()
-        return new_rate.id
+    ) -> Rate:
+        try:
+            new_rate = Rate(
+                user_id=user_id, film_id=film_id, rate=rate
+            )
+            await new_rate.insert()
+        except DuplicateKeyError:
+            raise DuplicateKeyException
+
+        return new_rate
 
     async def get_list(self, user_id: uuid.UUID) -> list:
         return await Rate.find(Rate.user_id == user_id).to_list()

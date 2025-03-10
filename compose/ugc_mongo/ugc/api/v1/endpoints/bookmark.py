@@ -13,7 +13,7 @@ from ....services.exceptions import NotFoundException, DuplicateKeyException
 bookmark_blueprint = Blueprint('bookmark', __name__)
 
 
-@bookmark_blueprint.route('/get_list/<uuid:user_id>', methods=["GET"])
+@bookmark_blueprint.route("/get_list/<uuid:user_id>", methods=["GET"])
 async def get_list(user_id: uuid.UUID) -> Response:
     service = BookmarkService()
     bookmark_list = await service.get_list(user_id)
@@ -21,25 +21,28 @@ async def get_list(user_id: uuid.UUID) -> Response:
     result = []
     for item in bookmark_list:
         bookmark = item.dict()
-        bookmark['id'] = str(bookmark['id'])
+        bookmark["id"] = str(bookmark["id"])
         result.append(bookmark)
 
-    return jsonify(result)
+    return jsonify({"result": result})
 
 
-@bookmark_blueprint.route('/add', methods=["PUT"])
+@bookmark_blueprint.route("/add", methods=["PUT"])
 @validate_request(BookmarkAdd)
 async def add(data: BookmarkAdd) -> Response:
     service = BookmarkService()
     try:
-        new_id = await service.add(**data.model_dump())
+        bookmark = await service.add(**data.model_dump())
     except DuplicateKeyException:
         abort(400)
 
-    return jsonify({"id": str(new_id)})
+    item = bookmark.model_dump()
+    item["id"] = str(item["id"])
+
+    return jsonify({"result": item})
 
 
-@bookmark_blueprint.route('/delete/<id>', methods=["DELETE"])
+@bookmark_blueprint.route("/delete/<id>", methods=["DELETE"])
 async def delete(id: PydanticObjectId) -> Response:
     service = BookmarkService()
     try:

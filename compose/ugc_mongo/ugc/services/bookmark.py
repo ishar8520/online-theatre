@@ -14,7 +14,7 @@ class BookmarkService:
             self,
             user_id: uuid.UUID,
             film_id: uuid.UUID
-    ) -> PydanticObjectId | None:
+    ) -> Bookmark:
         try:
             new_bookmark = Bookmark(
                 user_id=user_id, film_id=film_id
@@ -23,7 +23,7 @@ class BookmarkService:
         except DuplicateKeyError:
             raise DuplicateKeyException
 
-        return new_bookmark.id
+        return new_bookmark
 
     async def get_list(
             self,
