@@ -8,7 +8,10 @@ from quart_schema import validate_request
 
 from ..models.rate import RateAdd
 from ....services.rate import RateService
-from ....services.exceptions import NotFoundException
+from ....services.exceptions import (
+    NotFoundException,
+    DuplicateKeyException
+)
 
 rate_blueprint = Blueprint('rate', __name__)
 
@@ -31,7 +34,10 @@ async def get_list(user_id: uuid.UUID) -> Response:
 @validate_request(RateAdd)
 async def add(data: RateAdd) -> Response:
     service = RateService()
-    new_id = await service.add(**data.model_dump())
+    try:
+        new_id = await service.add(**data.model_dump())
+    except DuplicateKeyException:
+        abort(400)
 
     return jsonify({"id": str(new_id)})
 
