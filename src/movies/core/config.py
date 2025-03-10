@@ -50,11 +50,11 @@ class AuthConfig(BaseSettings):
     port: int = 8000
 
     @property
-    def url_token(self) -> str:
-        return f'{self.scheme}://{self.host}:{self.port}/auth/api/v1/jwt/login'
+    def oauth2_token_url(self) -> str:
+        return '/auth/api/v1/jwt/login'
 
     @property
-    def url_me(self) -> str:
+    def user_profile_url(self) -> str:
         return f'{self.scheme}://{self.host}:{self.port}/auth/api/v1/users/me'
 
 

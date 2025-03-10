@@ -17,7 +17,7 @@ class AuthConfig(BaseSettings):
 
     @property
     def oauth2_token_url(self) -> str:
-        return 'v1/jwt/login'
+        return '/auth/api/v1/jwt/login'
 
 
 class OAuthConfig(BaseSettings):

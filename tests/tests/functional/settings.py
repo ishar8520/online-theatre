@@ -3,9 +3,6 @@ from __future__ import annotations
 from urllib.parse import urljoin
 
 from dotenv import load_dotenv
-from pydantic import (
-    Field,
-)
 from pydantic_settings import (
     BaseSettings,
     SettingsConfigDict,
@@ -17,16 +14,16 @@ load_dotenv()
 class RedisSettings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix='redis_')
 
-    host: str = Field(default='localhost')
-    port: int = Field(default=6379)
+    host: str = 'localhost'
+    port: int = 6379
 
 
 class ElasticsearchSettings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix='elastic_')
 
-    scheme: str = Field(default='http')
-    host: str = Field(default='localhost')
-    port: int = Field(default=9200)
+    scheme: str = 'http'
+    host: str = 'localhost'
+    port: int = 9200
 
     @property
     def url(self) -> str:
@@ -36,18 +33,25 @@ class ElasticsearchSettings(BaseSettings):
 class AuthPostgresqlSettings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix='auth_postgresql_')
 
-    database: str = Field(default='auth')
-    username: str = Field(default='auth')
-    password: str = Field()
-    host: str = Field(default='localhost')
-    port: int = Field(default=5432)
+    database: str = 'auth'
+    username: str = 'auth'
+    password: str
+    host: str = 'localhost'
+    port: int = 5432
+
+
+class AuthRedisConfig(BaseSettings):
+    model_config = SettingsConfigDict(env_prefix='auth_redis_')
+
+    host: str = 'localhost'
+    port: int = 6379
 
 
 class SuperUserSettings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix='auth_superuser_')
 
-    login: str = Field()
-    password: str = Field()
+    login: str
+    password: str
 
 
 class RateLimiterConfig(BaseSettings):
@@ -57,23 +61,16 @@ class RateLimiterConfig(BaseSettings):
     seconds: int = 60
 
 
-class AutRedisConfig(BaseSettings):
-    model_config = SettingsConfigDict(env_prefix='auth_redis_')
-
-    host: str = Field(default='localhost')
-    port: int = Field(default=6379)
-
-
 class Settings(BaseSettings):
     redis: RedisSettings = RedisSettings()
     elasticsearch: ElasticsearchSettings = ElasticsearchSettings()
     auth_postgresql: AuthPostgresqlSettings = AuthPostgresqlSettings()  # type: ignore[call-arg]
+    auth_redis: AuthRedisConfig = AuthRedisConfig()
     superuser: SuperUserSettings = SuperUserSettings()  # type: ignore[call-arg]
     ratelimiter: RateLimiterConfig = RateLimiterConfig()
-    auth_redis: AutRedisConfig = AutRedisConfig()
 
-    movies_url: str = Field(default='http://localhost:8000')
-    auth_url: str = Field(default='http://localhost:8000')
+    movies_url: str = 'http://localhost:8000'
+    auth_service_url: str = 'http://localhost:8000'
 
     @property
     def movies_api_url(self) -> str:
@@ -81,15 +78,15 @@ class Settings(BaseSettings):
 
     @property
     def movies_api_v1_url(self) -> str:
-        return urljoin(self.movies_url, '/api/v1/')
+        return urljoin(self.movies_api_url, 'v1/')
 
     @property
     def auth_api_url(self) -> str:
-        return urljoin(self.auth_url, '/auth/api/')
+        return urljoin(self.auth_service_url, '/auth/api/')
 
     @property
     def auth_api_v1_url(self) -> str:
-        return urljoin(self.auth_url, '/auth/api/v1/')
+        return urljoin(self.auth_api_url, 'v1/')
 
 
 settings = Settings()

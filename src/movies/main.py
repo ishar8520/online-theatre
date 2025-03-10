@@ -5,6 +5,7 @@ from collections.abc import AsyncGenerator, Awaitable, Callable
 from contextlib import asynccontextmanager
 
 import elasticsearch
+import httpx
 import redis.asyncio as redis
 import sentry_sdk
 from fastapi import FastAPI, Request, Response, status
@@ -26,9 +27,7 @@ from .core import LOGGING, settings
 
 logging.config.dictConfig(LOGGING)
 
-
 if settings.sentry.enable_sdk:
-
     sentry_sdk.init(
         dsn=settings.sentry.dsn,
         traces_sample_rate=settings.sentry.traces_sample_rate,
@@ -64,10 +63,12 @@ async def lifespan(_app) -> AsyncGenerator[dict]:
     configure_otel()
 
     async with (
+        httpx.AsyncClient() as httpx_client,
         redis.Redis(host=settings.redis.host, port=settings.redis.port) as redis_client,
         elasticsearch.AsyncElasticsearch(settings.elasticsearch.url) as elasticsearch_client,
     ):
         yield {
+            'httpx_client': httpx_client,
             'redis_client': redis_client,
             'elasticsearch_client': elasticsearch_client,
         }

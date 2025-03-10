@@ -7,4 +7,6 @@ from pydantic import BaseModel
 
 class User(BaseModel):
     id: uuid.UUID
-    is_superuser: bool
+    login: str | None = None
+    email: str | None = None
+    is_superuser: bool = False
