@@ -2,8 +2,13 @@ from __future__ import annotations
 
 import uuid
 from http import HTTPStatus
+from typing import Annotated
 
-from fastapi import APIRouter, HTTPException
+from fastapi import (
+    Path,
+    APIRouter,
+    HTTPException,
+)
 
 from ..dependencies import PageDep
 from ..models.persons import Person, PersonFilm
@@ -11,7 +16,7 @@ from ....services import (
     PersonServiceDep,
     FilmServiceDep,
 )
-from ....services.auth.user import AuthUserDep
+from ....services.auth import AuthUserDep
 
 router = APIRouter()
 
@@ -24,11 +29,11 @@ router = APIRouter()
 )
 async def get_by_id(
         *,
-        uuid: uuid.UUID,
+        person_uuid: Annotated[uuid.UUID, Path(alias='uuid')],
         person_service: PersonServiceDep,
-        auth_user: AuthUserDep
+        _user: AuthUserDep,
 ) -> Person:
-    person = await person_service.get_by_id(uuid)
+    person = await person_service.get_by_id(person_uuid)
     if not person:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail='Person not found')
 
@@ -43,11 +48,11 @@ async def get_by_id(
 )
 async def get_by_id_with_films(
         *,
-        uuid: uuid.UUID,
+        person_uuid: Annotated[uuid.UUID, Path(alias='uuid')],
         film_service: FilmServiceDep,
-        auth_user: AuthUserDep
+        _user: AuthUserDep,
 ) -> list[PersonFilm]:
-    films_person = await film_service.get_list_by_person(uuid)
+    films_person = await film_service.get_list_by_person(person_uuid)
     if not films_person:
         return []
 
@@ -61,14 +66,14 @@ async def get_by_id_with_films(
     description=(
             'Search persons with list of films and roles by their full name with pagination. '
             'The maximum count of items on one page are 150.'
-    )
+    ),
 )
 async def search(
         *,
         query: str = '',
         page: PageDep,
         person_service: PersonServiceDep,
-        auth_user: AuthUserDep
+        _user: AuthUserDep,
 ) -> list[Person]:
     person_list = await person_service.search(query=query, page_number=page.number, page_size=page.size)
     if not person_list:

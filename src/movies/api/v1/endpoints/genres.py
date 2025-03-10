@@ -2,13 +2,18 @@ from __future__ import annotations
 
 import uuid
 from http import HTTPStatus
+from typing import Annotated
 
-from fastapi import APIRouter, HTTPException
+from fastapi import (
+    Path,
+    APIRouter,
+    HTTPException,
+)
 
 from ..dependencies import PageDep
 from ..models.genres import Genre
 from ....services import GenreServiceDep
-from ....services.auth.user import AuthUserDep
+from ....services.auth import AuthUserDep
 
 router = APIRouter()
 
@@ -23,7 +28,7 @@ async def get_list(
         *,
         page: PageDep,
         genre_service: GenreServiceDep,
-        auth_user: AuthUserDep
+        _user: AuthUserDep,
 ) -> list[Genre]:
     genre_list = await genre_service.get_list(
         page_number=page.number,
@@ -43,11 +48,11 @@ async def get_list(
 )
 async def get_by_id(
         *,
-        uuid: uuid.UUID,
+        genre_uuid: Annotated[uuid.UUID, Path(alias='uuid')],
         genre_service: GenreServiceDep,
-        auth_user: AuthUserDep
+        _user: AuthUserDep,
 ) -> Genre:
-    genre = await genre_service.get_by_id(uuid)
+    genre = await genre_service.get_by_id(genre_uuid)
     if not genre:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail='Genre not found')
 

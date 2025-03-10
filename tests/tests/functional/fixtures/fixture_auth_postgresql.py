@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 import uuid
+from urllib.parse import urljoin
 
 import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.sql import text
-from urllib.parse import urljoin
 
 from ..settings import settings
 
@@ -40,7 +40,7 @@ async def clean_all_tables(async_session):
         )
     await async_session.commit()
 
- 
+
 @pytest_asyncio.fixture(scope='module')
 async def clean_all_tables_before(async_session):
     for table in TABLES:
@@ -54,6 +54,7 @@ async def clean_all_tables_before(async_session):
     await async_session.commit()
     yield
 
+
 @pytest_asyncio.fixture(scope='module')
 async def clean_all_tables_after(async_session):
     yield
@@ -66,6 +67,7 @@ async def clean_all_tables_after(async_session):
             text(query)
         )
     await async_session.commit()
+
 
 @pytest_asyncio.fixture(scope='module')
 async def auth_headers(aiohttp_session):

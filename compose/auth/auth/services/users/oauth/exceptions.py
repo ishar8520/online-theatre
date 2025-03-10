@@ -22,6 +22,7 @@ class InvalidStateToken(OAuthServiceException):
     state: str
 
     def __init__(self, *, state: str) -> None:
+        super().__init__()
         self.state = state
 
     def __str__(self) -> str:

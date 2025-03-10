@@ -36,7 +36,6 @@ from .core import settings, LOGGING
 logging.config.dictConfig(LOGGING)
 
 if settings.sentry.enable_sdk:
-
     sentry_sdk.init(
         dsn=settings.sentry.dsn,
         traces_sample_rate=settings.sentry.traces_sample_rate,
@@ -67,9 +66,8 @@ def configure_otel() -> None:
     ]))
 
 
-# noinspection PyUnusedLocal,PyShadowingNames
 @asynccontextmanager
-async def lifespan(app: FastAPI) -> AsyncGenerator[dict]:
+async def lifespan(_app: FastAPI) -> AsyncGenerator[dict]:
     configure_otel()
 
     async with (

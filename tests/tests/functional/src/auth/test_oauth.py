@@ -9,7 +9,7 @@ from ...settings import settings
 
 
 @pytest.mark.asyncio(loop_scope='session')
-async def test_oauth_success(aiohttp_session) -> None:
+async def test_oauth_success(aiohttp_session, clean_all_tables_before) -> None:
     authorize_url = urljoin(settings.auth_api_v1_url, 'oauth/google/authorize/')
 
     async with aiohttp_session.get(authorize_url) as response:

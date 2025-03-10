@@ -1,2 +1,2 @@
 from .config import settings
-from .logger import LOGGING
+from .logging import LOGGING
