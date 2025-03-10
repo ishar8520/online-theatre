@@ -1,30 +1,28 @@
 from __future__ import annotations
 
-from http import HTTPStatus
-from fastapi import HTTPException
 from typing import Annotated
-from fastapi import Depends
 
-from .model.user import User
-from .transport.exceptions import ResponseJsonError, RequestError
+import httpx
+from fastapi import HTTPException, Depends, status
 
-from ...core import settings
-from .transport.http_async import HttpAsyncDep
+from .client import AuthClientDep
+from ...models import User
 
 
-async def get_auth_user(http_async: HttpAsyncDep):
+async def get_auth_user(auth_client: AuthClientDep) -> User:
     try:
-        json = await http_async.get(settings.auth.url_me)
-        if 'detail' in json:
-            if json['detail'] == 'Unauthorized':
-                raise HTTPException(HTTPStatus.UNAUTHORIZED)
-            elif json['detail'] == 'Forbidden':
-                raise HTTPException(HTTPStatus.FORBIDDEN)
+        user_data = await auth_client.get_user_profile()
 
-        return User(**json)
-    except ResponseJsonError:
-        raise HTTPException(HTTPStatus.FORBIDDEN)
-    except RequestError:
-        raise HTTPException(HTTPStatus.SERVICE_UNAVAILABLE)
+    except httpx.HTTPStatusError as e:
+        if e.response.status_code == status.HTTP_403_FORBIDDEN:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
+        else:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+
+    except httpx.HTTPError:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+    return User(**user_data)
+
 
 AuthUserDep = Annotated[User, Depends(get_auth_user)]

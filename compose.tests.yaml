@@ -13,21 +13,20 @@ services:
       - movies-network
     environment:
       - MOVIES_URL=http://movies:8000
-      - AUTH_URL=http://auth-service:8000
+      - AUTH_SERVICE_URL=http://auth-service:8000
       - UGC_URL=http://ugc-mongo-service:5002
       - AUTH_POSTGRESQL_HOST=auth-postgresql
       - AUTH_POSTGRESQL_PASSWORD=$AUTH_POSTGRESQL_PASSWORD
+      - AUTH_REDIS_HOST=auth-redis
+      - AUTH_REDIS_PORT=6379
       - AUTH_SUPERUSER_LOGIN=$AUTH_SUPERUSER_LOGIN
       - AUTH_SUPERUSER_PASSWORD=$AUTH_SUPERUSER_PASSWORD
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - ELASTIC_HOST=elasticsearch
       - ELASTIC_PORT=9200
-      - AUTH_HOST=auth-service
       - RATELIMITER_TIMES=$RATELIMITER_TIMES
       - RATELIMITER_SECONDS=$RATELIMITER_SECONDS
-      - AUTH_REDIS_HOST=auth-redis
-      - AUTH_REDIS_PORT=6379
       - MONGO_HOST=mongodb
       - MONGO_PORT=27017
       - MONGO_DB=ugc_mongo
@@ -60,12 +59,13 @@ services:
     environment:
       - PROJECT_NAME=$PROJECT_NAME
       - FASTAPI_WORKERS=${FASTAPI_WORKERS:-}
+      - AUTH_HOST=auth-service
+      - AUTH_PORT=8000
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - REDIS_CACHE_EXPIRE_IN_SECONDS=3600
       - ELASTIC_HOST=elasticsearch
       - ELASTIC_PORT=9200
-      - AUTH_HOST=auth-service
     healthcheck:
       test: [ 'CMD-SHELL', 'curl -s http://localhost:8000/api/_health' ]
       interval: 10s

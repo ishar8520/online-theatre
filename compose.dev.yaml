@@ -6,6 +6,8 @@ services:
     depends_on:
       movies:
         condition: service_healthy
+      auth-service:
+        condition: service_healthy
       logstash:
         condition: service_healthy
     ports:
@@ -36,6 +38,8 @@ services:
       - movies-network
     environment:
       - PROJECT_NAME=$PROJECT_NAME
+      - AUTH_HOST=auth-service
+      - AUTH_PORT=8000
       - OTEL_ENABLED=${OTEL_ENABLED:-True}
       - OTEL_REQUEST_ID_REQUIRED=${OTEL_REQUEST_ID_REQUIRED:-True}
       - OTEL_EXPORTER_OTLP_HTTP_ENDPOINT=http://jaeger:4318/v1/traces
@@ -44,7 +48,6 @@ services:
       - REDIS_PORT=6379
       - ELASTIC_HOST=elasticsearch
       - ELASTIC_PORT=9200
-      - AUTH_HOST=auth-service
       - SENTRY_ENABLE_SDK=${SENTRY_ENABLE_SDK}
       - SENTRY_ENABLE_TRACING=${SENTRY_ENABLE_TRACING}
       - SENTRY_DSN=${SENTRY_DSN}
@@ -99,7 +102,7 @@ services:
       interval: 10s
       timeout: 10s
       retries: 5
-      start_period: 30s
+      start_period: 60s
 
   etl:
     build:

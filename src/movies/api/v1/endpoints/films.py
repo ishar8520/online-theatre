@@ -3,13 +3,18 @@ from __future__ import annotations
 import uuid
 from enum import Enum
 from http import HTTPStatus
+from typing import Annotated
 
-from fastapi import APIRouter, HTTPException
+from fastapi import (
+    Path,
+    APIRouter,
+    HTTPException,
+)
 
 from ..dependencies import PageDep
 from ..models.films import FilmInfo, Film
 from ....services import FilmServiceDep
-from ....services.auth.user import AuthUserDep
+from ....services.auth import AuthUserDep
 
 router = APIRouter()
 
@@ -34,7 +39,7 @@ async def get_list(
         genre: uuid.UUID | None = None,
         page: PageDep,
         film_service: FilmServiceDep,
-        auth_user: AuthUserDep
+        _user: AuthUserDep,
 ) -> list[Film]:
     sort_by = {}
     if sort:
@@ -69,11 +74,11 @@ async def get_list(
 )
 async def get_by_id(
         *,
-        uuid: uuid.UUID,
+        film_uuid: Annotated[uuid.UUID, Path(alias='uuid')],
         film_service: FilmServiceDep,
-        auth_user: AuthUserDep
+        _user: AuthUserDep,
 ) -> FilmInfo:
-    film = await film_service.get_by_id(uuid)
+    film = await film_service.get_by_id(film_uuid)
     if not film:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail='Film not found')
 
@@ -91,7 +96,7 @@ async def search(
         query: str = '',
         page: PageDep,
         film_service: FilmServiceDep,
-        auth_user: AuthUserDep
+        _user: AuthUserDep,
 ) -> list[Film]:
     if not query:
         return []
