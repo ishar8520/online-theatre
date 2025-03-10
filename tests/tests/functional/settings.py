@@ -64,6 +64,16 @@ class AutRedisConfig(BaseSettings):
     port: int = Field(default=6379)
 
 
+class MongoSettings(BaseSettings):
+    model_config = SettingsConfigDict(env_prefix='mongo_')
+
+    db: str = ''
+
+    host: str | None = Field(default='localhost')
+    port: int | None = Field(default=27017)
+
+
+
 class Settings(BaseSettings):
     redis: RedisSettings = RedisSettings()
     elasticsearch: ElasticsearchSettings = ElasticsearchSettings()
@@ -71,9 +81,11 @@ class Settings(BaseSettings):
     superuser: SuperUserSettings = SuperUserSettings()  # type: ignore[call-arg]
     ratelimiter: RateLimiterConfig = RateLimiterConfig()
     auth_redis: AutRedisConfig = AutRedisConfig()
+    mongo: MongoSettings = MongoSettings()
 
     movies_url: str = Field(default='http://localhost:8000')
     auth_url: str = Field(default='http://localhost:8000')
+    ugc_url: str = Field(default='http://localhost:8000/ugc-mongo')
 
     @property
     def movies_api_url(self) -> str:
@@ -90,6 +102,10 @@ class Settings(BaseSettings):
     @property
     def auth_api_v1_url(self) -> str:
         return urljoin(self.auth_url, '/auth/api/v1/')
+
+    @property
+    def ugc_api_v1_url(self) -> str:
+        return urljoin(self.ugc_url, '/v1/')
 
 
 settings = Settings()

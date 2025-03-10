@@ -14,6 +14,7 @@ services:
     environment:
       - MOVIES_URL=http://movies:8000
       - AUTH_URL=http://auth-service:8000
+      - UGC_URL=http://ugc-mongo-service:5002
       - AUTH_POSTGRESQL_HOST=auth-postgresql
       - AUTH_POSTGRESQL_PASSWORD=$AUTH_POSTGRESQL_PASSWORD
       - AUTH_SUPERUSER_LOGIN=$AUTH_SUPERUSER_LOGIN
@@ -27,6 +28,9 @@ services:
       - RATELIMITER_SECONDS=$RATELIMITER_SECONDS
       - AUTH_REDIS_HOST=auth-redis
       - AUTH_REDIS_PORT=6379
+      - MONGO_HOST=mongodb
+      - MONGO_PORT=27017
+      - MONGO_DB=ugc_mongo
     develop:
       watch:
         - action: sync
@@ -224,6 +228,35 @@ services:
       retries: 5
       start_period: 10s
 
+  mongodb:
+    image: mongo:8.0.5
+    networks:
+      - movies-network
+    volumes:
+      - "mongodb:/etc/mongodb/data"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+
+  ugc-mongo-service:
+    build:
+      context: ./compose/ugc_mongo/
+      dockerfile: Dockerfile
+    environment:
+      - PYTHONPATH=/opt/app
+      - MONGO_HOST=mongodb
+      - MONGO_PORT=27017
+      - MONGO_DB=ugc_mongo
+    networks:
+      - movies-network
+    depends_on:
+      mongodb:
+        condition: service_healthy
+
 networks:
   movies-network:
 
@@ -232,3 +265,4 @@ volumes:
   elasticsearch-data:
   auth-postgresql-data:
   auth-redis-data:
+  mongodb:
