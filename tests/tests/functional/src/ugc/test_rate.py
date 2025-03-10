@@ -102,7 +102,7 @@ async def test_delete(
             assert response_del.status == expected["status"]
 
             result_del = await response_del.json()
-            assert result_del["result"]
+            assert result_del["result"] is True
 
 
 @pytest.mark.parametrize(
