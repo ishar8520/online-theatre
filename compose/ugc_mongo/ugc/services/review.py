@@ -4,8 +4,12 @@ import uuid
 from datetime import datetime, timezone
 
 from beanie import PydanticObjectId
+from pymongo.errors import DuplicateKeyError
 
-from .exceptions import NotFoundException
+from .exceptions import (
+    NotFoundException,
+    DuplicateKeyException
+)
 from ..models.mongo import Review
 
 
@@ -16,23 +20,27 @@ class ReviewService:
             film_id: uuid.UUID,
             text: str,
             is_published: bool
-    ) -> PydanticObjectId | None:
-        new_review = Review(
-            user_id=user_id,
-            film_id=film_id,
-            text=text,
-            is_published=is_published
-        )
-        if is_published:
-            new_review.published_at = datetime.now(timezone.utc)
+    ) -> Review:
+        try:
+            new_review = Review(
+                user_id=user_id,
+                film_id=film_id,
+                text=text,
+                is_published=is_published
+            )
+            if is_published:
+                new_review.published_at = datetime.now(timezone.utc)
 
-        await new_review.insert()
-        return new_review.id
+            await new_review.insert()
+        except DuplicateKeyError:
+            raise DuplicateKeyException
+
+        return new_review
 
     async def get_list(self, user_id: uuid.UUID) -> list:
         return await Review.find(Review.user_id == user_id).to_list()
 
-    async def publish(self, id: PydanticObjectId) -> PydanticObjectId:
+    async def publish(self, id: PydanticObjectId) -> Review:
         review = await Review.get(id)
         if review is None:
             raise NotFoundException()
@@ -41,7 +49,7 @@ class ReviewService:
         review.published_at = datetime.now(timezone.utc)
         await review.save()
 
-        return id
+        return review
 
     async def update(self, id: PydanticObjectId, text: str) -> PydanticObjectId:
         review = await Review.get(id)

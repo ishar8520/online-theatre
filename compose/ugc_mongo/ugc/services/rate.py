@@ -18,7 +18,7 @@ class RateService:
             user_id: uuid.UUID,
             film_id: uuid.UUID,
             rate: int
-    ) -> PydanticObjectId | None:
+    ) -> Rate:
         try:
             new_rate = Rate(
                 user_id=user_id, film_id=film_id, rate=rate
@@ -27,7 +27,7 @@ class RateService:
         except DuplicateKeyError:
             raise DuplicateKeyException
 
-        return new_rate.id
+        return new_rate
 
     async def get_list(self, user_id: uuid.UUID) -> list:
         return await Rate.find(Rate.user_id == user_id).to_list()
