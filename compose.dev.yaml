@@ -496,6 +496,30 @@ services:
         - action: rebuild
           path: ./compose/ugc_mongo/poetry.lock
 
+  notifications-queue-service:
+    build:
+      context: ./compose/notifications-queue
+    networks:
+      - movies-network
+    command: [ '/opt/app/commands/fastapi.sh', 'dev' ]
+    healthcheck:
+      test: [ 'CMD-SHELL', 'curl -s http://localhost:8000/api/_health' ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+    develop:
+      watch:
+        - action: sync
+          path: ./compose/notifications-queue/notifications_queue
+          target: /opt/app/notifications_queue
+        - action: rebuild
+          path: ./compose/notifications-queue/commands
+        - action: rebuild
+          path: ./compose/notifications-queue/pyproject.toml
+        - action: rebuild
+          path: ./compose/notifications-queue/poetry.lock
+
 networks:
   movies-network:
 

@@ -40,7 +40,8 @@ run_command() {
         tests
         auth
         etl
-        ugc
+        ugc-mongo
+        notifications-queue
     )
 
     declare -A services_set

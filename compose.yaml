@@ -424,6 +424,21 @@ services:
       mongodb:
         condition: service_healthy
 
+  notifications-queue-service:
+    build:
+      context: ./compose/notifications-queue
+    networks:
+      - movies-network
+    environment:
+      - GUNICORN_WORKERS=${NOTIFICATIONS_QUEUE_GUNICORN_WORKERS:-}
+    command: [ '/opt/app/commands/gunicorn.sh' ]
+    healthcheck:
+      test: [ 'CMD-SHELL', 'curl -s http://localhost:8000/api/_health' ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+
 networks:
   movies-network:
 
