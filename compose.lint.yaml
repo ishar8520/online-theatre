@@ -95,7 +95,7 @@ services:
         - action: rebuild
           path: ./compose/etl/poetry.lock
 
-  ugc:
+  ugc-mongo:
     build:
       context: ./compose/ugc_mongo
       target: lint
@@ -117,6 +117,27 @@ services:
         - action: rebuild
           path: ./compose/ugc_mongo/poetry.lock
 
+  notifications-queue:
+    build:
+      context: ./compose/notifications-queue
+      target: lint
+    networks:
+      - movies-network
+    volumes:
+      - 'notifications-queue-mypy-cache:/opt/app/.mypy_cache'
+      - './compose/notifications-queue/.lint:/opt/app/.lint'
+    command: [ 'sleep', 'infinity' ]
+    develop:
+      watch:
+        - action: sync
+          path: ./compose/notifications-queue/notifications_queue
+          target: /opt/app/notifications_queue
+        - action: rebuild
+          path: ./compose/notifications-queue/commands
+        - action: rebuild
+          path: ./compose/notifications-queue/pyproject.toml
+        - action: rebuild
+          path: ./compose/notifications-queue/poetry.lock
 
 networks:
   movies-network:
@@ -127,3 +148,4 @@ volumes:
   auth-mypy-cache:
   etl-mypy-cache:
   ugc-mypy-cache:
+  notifications-queue-mypy-cache:
