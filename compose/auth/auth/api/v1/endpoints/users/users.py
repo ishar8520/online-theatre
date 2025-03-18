@@ -23,7 +23,7 @@ router = APIRouter()
 
 @router.get(
     '/me',
-    name='users:get_current_user',
+    name='users:current_user',
     response_model=UserRead,
     responses={
         status.HTTP_401_UNAUTHORIZED: {
@@ -76,7 +76,7 @@ async def patch_current_user(user: CurrentUserDep,
 
 @router.get(
     '/{user_id}',
-    name='users:get_user',
+    name='users:user',
     response_model=UserRead,
     responses={
         status.HTTP_401_UNAUTHORIZED: {

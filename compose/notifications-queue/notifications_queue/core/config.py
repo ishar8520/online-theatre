@@ -8,7 +8,7 @@ class NotificationsQueueConfig(BaseSettings):
 
 
 class Settings(BaseSettings):
-    ugc: NotificationsQueueConfig = NotificationsQueueConfig()
+    notifications_queue: NotificationsQueueConfig = NotificationsQueueConfig()
 
 
 settings = Settings()

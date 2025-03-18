@@ -4,6 +4,7 @@ import logging.config
 
 from fastapi import FastAPI
 
+from .api.v1.endpoints import notifications
 from .core import LOGGING
 
 logging.config.dictConfig(LOGGING)
@@ -20,3 +21,12 @@ app = FastAPI(
 @app.get(f'{base_api_prefix}/_health')
 async def healthcheck() -> dict:
     return {}
+
+
+ugc_api_prefix = f'{base_api_prefix}/v1'
+
+app.include_router(
+    notifications.router,
+    prefix=f'{ugc_api_prefix}/notifications',
+    tags=['notifications'],
+)
