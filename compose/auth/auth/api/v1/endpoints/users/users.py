@@ -75,6 +75,24 @@ async def patch_current_user(user: CurrentUserDep,
 
 
 @router.get(
+    '/get_login_history',
+    name='users:history_login_current_user',
+    response_model=list[LoginHistoryInDb],
+    status_code=status.HTTP_200_OK,
+)
+async def get_login_history(
+        login_history_service: LoginHistoryServiceDep,
+        page: PageDep,
+        user: CurrentUserDep,
+):
+    login_history_list = await login_history_service.get_list(user.id, page)
+    return [
+        LoginHistoryInDb.model_validate(login_history, from_attributes=True)
+        for login_history in login_history_list
+    ]
+
+
+@router.get(
     '/{user_id}',
     name='users:user',
     response_model=UserRead,
@@ -102,21 +120,3 @@ async def get_user(user_id: uuid.UUID,
         )
 
     return UserRead.model_validate(user, from_attributes=True)
-
-
-@router.get(
-    "/get_login_history",
-    response_model=list[LoginHistoryInDb],
-    status_code=status.HTTP_200_OK,
-    name="users:history_login_current_user"
-)
-async def get_login_history(
-        login_history_service: LoginHistoryServiceDep,
-        page: PageDep,
-        user: CurrentUserDep,
-):
-    login_history_list = await login_history_service.get_list(user.id, page)
-    return [
-        LoginHistoryInDb.model_validate(login_history, from_attributes=True)
-        for login_history in login_history_list
-    ]
