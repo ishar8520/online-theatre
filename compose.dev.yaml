@@ -328,7 +328,7 @@ services:
     networks:
       - movies-network
     healthcheck:
-      test: ["CMD-SHELL", "kafka-topics.sh --list --bootstrap-server kafka-0:9092"]
+      test: [ "CMD-SHELL", "kafka-topics.sh --list --bootstrap-server kafka-0:9092" ]
       interval: 10s
       timeout: 10s
       retries: 10
@@ -437,7 +437,7 @@ services:
       - nginx_logs_data:/opt/logs/nginx/:ro
     command: logstash -f /config/logstash.conf
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9600"]
+      test: [ "CMD", "curl", "-f", "http://localhost:9600" ]
       interval: 10s
       retries: 5
       start_period: 30s
@@ -464,7 +464,7 @@ services:
       - "mongodb:/etc/mongodb/data"
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      test: [ "CMD", "mongosh", "--eval", "db.adminCommand('ping')" ]
       interval: 10s
       timeout: 10s
       retries: 5
@@ -498,7 +498,7 @@ services:
 
   notifications-queue-service:
     build:
-      context: ./compose/notifications-queue
+      context: ./compose/notifications/queue
     networks:
       - movies-network
     command: [ '/opt/app/commands/fastapi.sh', 'dev' ]
@@ -511,14 +511,14 @@ services:
     develop:
       watch:
         - action: sync
-          path: ./compose/notifications-queue/notifications_queue
+          path: ./compose/notifications/queue/notifications_queue
           target: /opt/app/notifications_queue
         - action: rebuild
-          path: ./compose/notifications-queue/commands
+          path: ./compose/notifications/queue/commands
         - action: rebuild
-          path: ./compose/notifications-queue/pyproject.toml
+          path: ./compose/notifications/queue/pyproject.toml
         - action: rebuild
-          path: ./compose/notifications-queue/poetry.lock
+          path: ./compose/notifications/queue/poetry.lock
 
 networks:
   movies-network:

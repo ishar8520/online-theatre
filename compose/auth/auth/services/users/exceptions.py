@@ -9,9 +9,9 @@ class InvalidID(UsersException):
     pass
 
 
-class UserAlreadyExists(UsersException):
+class UserDoesNotExist(UsersException):
     pass
 
 
-class UserDoesNotExist(UsersException):
+class UserAlreadyExists(UsersException):
     pass
