@@ -119,25 +119,25 @@ services:
 
   notifications-queue:
     build:
-      context: ./compose/notifications-queue
+      context: ./compose/notifications/queue
       target: lint
     networks:
       - movies-network
     volumes:
       - 'notifications-queue-mypy-cache:/opt/app/.mypy_cache'
-      - './compose/notifications-queue/.lint:/opt/app/.lint'
+      - './compose/notifications/queue/.lint:/opt/app/.lint'
     command: [ 'sleep', 'infinity' ]
     develop:
       watch:
         - action: sync
-          path: ./compose/notifications-queue/notifications_queue
+          path: ./compose/notifications/queue/notifications_queue
           target: /opt/app/notifications_queue
         - action: rebuild
-          path: ./compose/notifications-queue/commands
+          path: ./compose/notifications/queue/commands
         - action: rebuild
-          path: ./compose/notifications-queue/pyproject.toml
+          path: ./compose/notifications/queue/pyproject.toml
         - action: rebuild
-          path: ./compose/notifications-queue/poetry.lock
+          path: ./compose/notifications/queue/poetry.lock
 
 networks:
   movies-network:
