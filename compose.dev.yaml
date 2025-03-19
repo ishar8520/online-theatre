@@ -520,6 +520,31 @@ services:
         - action: rebuild
           path: ./compose/notifications/queue/poetry.lock
 
+
+  notification-service:
+    build:
+      context: ./compose/notifications/notification
+    networks:
+      - movies-network
+    command: [ '/opt/app/commands/fastapi.sh', 'dev' ]
+    healthcheck:
+      test: [ 'CMD-SHELL', 'curl -s http://localhost:8000/api/_health' ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+    develop:
+      watch:
+        - action: sync
+          path: ./compose/notifications/notification/src
+          target: /opt/app/src
+        - action: rebuild
+          path: ./compose/notifications/notification/commands
+        - action: rebuild
+          path: ./compose/notifications/notification/pyproject.toml
+        - action: rebuild
+          path: ./compose/notifications/notification/poetry.lock
+
 networks:
   movies-network:
 
