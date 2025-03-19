@@ -10,7 +10,9 @@ from sqlalchemy.ext.asyncio import (
     AsyncSession,
 )
 
-engine = create_async_engine(settings.postgresql.engine_url, echo=settings.auth.sql_echo)
+from admin_panel.core import settings
+
+engine = create_async_engine(settings.postgresql.engine_url)
 async_session_maker = async_sessionmaker(engine, expire_on_commit=False)
 
 
