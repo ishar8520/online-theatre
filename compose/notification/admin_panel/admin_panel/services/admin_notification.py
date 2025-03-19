@@ -7,12 +7,12 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.future import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from db.postgres import get_postgres_session
-from models.enums import DeliveryEnum, AdminNotificationTypesEnum, AdminNotificationTaskStatusEnum
+from admin_panel.db.postgres import get_postgres_session
+from admin_panel.models.admin_notification import AdminNotificationTask
 
-from models.admin_notification import AdminNotificationTask
-from schemas import admin_notification as admin_schemas
-from services import exceptions as exc
+from admin_panel.models.enums import AdminNotificationTypesEnum, DeliveryEnum, AdminNotificationTaskStatusEnum
+from admin_panel.schemas import admin_notification as admin_schemas
+from admin_panel.services import exceptions as exc
 
 
 class AdminNotificationService:
@@ -23,14 +23,14 @@ class AdminNotificationService:
         self, notification_data: admin_schemas.CreateAdminNotificationSchema
     ) -> AdminNotificationTask:
         try:
-            notification_type = NotificationTypesEnum(notification_data.notification_type)
+            notification_type = AdminNotificationTypesEnum(notification_data.notification_type)
         except ValueError:
-            raise exc.NotificationNotFoundError("Notification type not found")
+            raise exc.AdminNotificationNotFoundError("Notification type not found")
 
         try:
             delivery_type = DeliveryEnum(notification_data.delivery_type)
         except ValueError:
-            raise exc.ChannelNotFoundError("Channel not found")
+            raise exc.DeliveryNotFoundError("Channel not found")
 
         if notification_data.send_date:
             send_date = notification_data.send_date.replace(tzinfo=None)
@@ -68,7 +68,7 @@ class AdminNotificationService:
             notification = notifications_data.first()
 
             if notification is None:
-                raise exc.NotificationNotFoundError("Notification not found")
+                raise exc.AdminNotificationNotFoundError("Notification not found")
 
             for field in notification_data.model_fields_set:
                 field_value = getattr(notification_data, field)
@@ -78,7 +78,7 @@ class AdminNotificationService:
             try:
                 await session.commit()
             except IntegrityError:
-                raise exc.ConflictError("ConflictError")
+                raise exc.DatabaseError("Database integrity error occurred")
             return notification
 
     async def delete_admin_notification_task(self, notification_id: str):
@@ -89,7 +89,7 @@ class AdminNotificationService:
             notification = notifications_data.first()
 
             if notification is None:
-                raise exc.NotificationNotFoundError("Notification not found")
+                raise exc.AdminNotificationNotFoundError("Notification not found")
 
             await session.delete(notification)
             await session.commit()

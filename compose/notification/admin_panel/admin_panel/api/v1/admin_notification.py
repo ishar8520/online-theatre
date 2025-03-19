@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import ValidationError
-from schemas import admin_notification as admin_schemas
-from services import admin_notification as admin_services
-from services.exceptions import DeliveryNotFoundError, AdminNotificationNotFoundError
+from admin_panel.schemas import admin_notification as admin_schemas
+from admin_panel.services import admin_notification as admin_services
+from admin_panel.services.exceptions import AdminNotificationNotFoundError, DeliveryNotFoundError
 
 router = APIRouter()
 

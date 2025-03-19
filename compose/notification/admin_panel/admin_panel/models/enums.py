@@ -10,7 +10,7 @@ class DeliveryEnum(enum.Enum):
 
 
 class AdminNotificationTaskStatusEnum(enum.Enum):
-    INIT = "init"
+    CREATED = "created"
     IN_PROGRESS = "in_progress"
     SUCCESS = "success"
     FAILED = "failed"
@@ -30,3 +30,10 @@ class AdminNotificationStatusEnum(enum.Enum):
     CREATED = "created"
     SUCCESS = "success"
     FAILED = "failed"
+
+
+class TemplateTypeEnum(enum.Enum):
+    EMAIL = "email"
+    SMS = "sms"
+    PUSH = "push"
+    OTHER = "other"
