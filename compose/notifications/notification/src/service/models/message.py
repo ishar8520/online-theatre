@@ -19,9 +19,5 @@ class MessageBase(BaseModel):
     type: NotificationType = NotificationType.EMAIL
 
 
-class MessageBroadcastDto(MessageBase):
-    pass
-
-
-class MessagePersonalizedDto(MessageBase):
-    pass
+class MessageDto(MessageBase):
+    user_id: uuid.UUID

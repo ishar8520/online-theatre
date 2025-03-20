@@ -7,7 +7,7 @@ from pydantic_settings import (
 
 
 class AdminSettings(BaseSettings):
-    model_config = SettingsConfigDict(env_prefix='notifications_admin_')
+    model_config = SettingsConfigDict(env_prefix='auth_superuser_')
 
     login: str
     password: str
@@ -19,7 +19,14 @@ class QueueSettings(BaseSettings):
     host: str
     port: int
 
+    @property
+    def queue_url(self) -> str:
+        return f'http://{self.host}:{self.port}/api/v1/notifications/send/'
+
 
 class Settings(BaseSettings):
     admin: AdminSettings = AdminSettings()
     queue: QueueSettings = QueueSettings()
+
+
+settings = Settings()

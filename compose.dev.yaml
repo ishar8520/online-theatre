@@ -526,6 +526,11 @@ services:
       context: ./compose/notifications/notification
     networks:
       - movies-network
+    environment:
+      - QUEUE_HOST=notifications-queue-service
+      - QUEUE_PORT=8000
+      - AUTH_SUPERUSER_LOGIN=$AUTH_SUPERUSER_LOGIN
+      - AUTH_SUPERUSER_PASSWORD=$AUTH_SUPERUSER_PASSWORD
     command: [ '/opt/app/commands/fastapi.sh', 'dev' ]
     healthcheck:
       test: [ 'CMD-SHELL', 'curl -s http://localhost:8000/api/_health' ]

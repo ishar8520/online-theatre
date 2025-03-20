@@ -3,7 +3,7 @@ from __future__ import annotations
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 
-from api.v1.endpoints import messages, events
+from .api.v1.endpoints import messages, events
 
 
 base_api_prefix = '/notification/api'

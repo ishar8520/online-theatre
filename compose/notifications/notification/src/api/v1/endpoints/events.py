@@ -2,6 +2,7 @@ from http import HTTPStatus
 
 from fastapi import APIRouter
 
+from ....service.event import EventServiceDep
 from ..models.events import (
     EventRegistrationDto,
     EventNewMovieDto
@@ -17,8 +18,9 @@ router = APIRouter()
 )
 async def notify_on_registration(
     event: EventRegistrationDto,
+    event_service: EventServiceDep
 ):
-    return event.model_dump()
+    return await event_service.on_user_registration(**event.model_dump())
 
 
 @router.post(
@@ -28,5 +30,8 @@ async def notify_on_registration(
 )
 async def notify_on_new_movie(
     event: EventNewMovieDto,
+    event_service: EventServiceDep
 ):
-    return event.model_dump()
+    result = await event_service.on_add_new_movie(**event.model_dump())
+
+    return result
