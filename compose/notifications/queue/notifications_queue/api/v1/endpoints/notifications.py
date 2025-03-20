@@ -8,6 +8,11 @@ from fastapi import (
 )
 from pydantic import BaseModel
 
+from ....services.auth import (
+    AuthServiceDep,
+    User,
+)
+
 router = APIRouter()
 
 
@@ -19,7 +24,7 @@ class NotificationType(enum.StrEnum):
 
 class Notification(BaseModel):
     user_id: uuid.UUID | None = None
-    subject: str
+    subject: str | None = None
     text: str | None = None
     template_id: uuid.UUID | None = None
     template_context: dict | None = None
@@ -27,7 +32,7 @@ class Notification(BaseModel):
 
 
 class SendNotificationResponse(BaseModel):
-    pass
+    user: User | None = None
 
 
 @router.post(
@@ -35,5 +40,11 @@ class SendNotificationResponse(BaseModel):
     name='notifications:send',
     response_model=SendNotificationResponse,
 )
-async def send_notification(_notification: Notification) -> SendNotificationResponse:
-    return SendNotificationResponse()
+async def send_notification(auth_service: AuthServiceDep,
+                            notification: Notification) -> SendNotificationResponse:
+    if notification.user_id is None:
+        return SendNotificationResponse()
+
+    user = await auth_service.get_user(user_id=notification.user_id)
+
+    return SendNotificationResponse(user=user)
