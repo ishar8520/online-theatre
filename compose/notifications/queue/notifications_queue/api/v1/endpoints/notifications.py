@@ -10,8 +10,8 @@ from pydantic import BaseModel
 
 from ....services.auth import (
     AuthServiceDep,
-    User,
 )
+from ....tasks import send_notification_task
 
 router = APIRouter()
 
@@ -32,7 +32,7 @@ class Notification(BaseModel):
 
 
 class SendNotificationResponse(BaseModel):
-    user: User | None = None
+    pass
 
 
 @router.post(
@@ -46,5 +46,9 @@ async def send_notification(auth_service: AuthServiceDep,
         return SendNotificationResponse()
 
     user = await auth_service.get_user(user_id=notification.user_id)
+    if user is None:
+        return SendNotificationResponse()
 
-    return SendNotificationResponse(user=user)
+    await send_notification_task.kiq(user=user)
+
+    return SendNotificationResponse()

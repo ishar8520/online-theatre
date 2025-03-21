@@ -2,10 +2,10 @@
 
 set -e
 
-app_path=/opt/app/notifications_queue/main.py
+APP_PATH=/opt/app/notifications_queue/main.py
 
 fastapi_dev() {
-    fastapi dev --host 0.0.0.0 "$app_path"
+    fastapi dev --host 0.0.0.0 "$APP_PATH"
 }
 
 fastapi_run() {
@@ -15,7 +15,7 @@ fastapi_run() {
         fastapi_args+=(--workers "$FASTAPI_WORKERS")
     fi
 
-    fastapi run "${fastapi_args[@]}" "$app_path"
+    fastapi run "${fastapi_args[@]}" "$APP_PATH"
 }
 
 main() {
