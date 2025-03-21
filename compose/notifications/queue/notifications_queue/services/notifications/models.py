@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import abc
 import enum
 import uuid
 
@@ -12,10 +13,16 @@ class NotificationType(enum.StrEnum):
     PUSH = 'push'
 
 
-class Notification(BaseModel):
-    user_id: uuid.UUID | None = None
-    subject: str | None = None
-    text: str | None = None
-    template_id: uuid.UUID | None = None
-    template_context: dict | None = None
+class Notification(BaseModel, abc.ABC):
     type: NotificationType = NotificationType.EMAIL
+    users: list[uuid.UUID] | None = []
+    subject: str
+
+
+class TextNotification(Notification):
+    text: str
+
+
+class TemplateNotification(Notification):
+    template_id: uuid.UUID
+    template_context: dict = {}
