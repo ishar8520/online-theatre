@@ -1,13 +1,14 @@
 from __future__ import annotations
 
-import logging
-
 from ..broker import broker
-from ..services.auth import User
-
-logger = logging.getLogger(__name__)
+from ..services.notifications import (
+    Notification,
+    NotificationsServiceTaskiqDep,
+)
 
 
 @broker.task
-async def send_notification_task(*, user: User) -> None:
-    logger.info(user)
+async def send_notification_task(*,
+                                 notification: Notification,
+                                 notification_service: NotificationsServiceTaskiqDep) -> None:
+    await notification_service.send_notification(notification=notification)

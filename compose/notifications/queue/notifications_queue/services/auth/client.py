@@ -6,19 +6,19 @@ from typing import Any, Annotated
 
 import httpx
 from fastapi import (
-    Depends,
     status,
 )
+from taskiq import TaskiqDepends
 
 from .models import (
     User,
 )
 from .token import (
     AuthTokenClient,
-    AuthTokenClientDep,
+    AuthTokenClientTaskiqDep,
 )
 from ...core import settings
-from ...dependencies import HTTPXClientDep
+from ...dependencies.tasks import HTTPXClientTaskiqDep
 
 
 class AuthClient:
@@ -108,12 +108,12 @@ class GetUserRequest(AuthClientRequest):
         )
 
 
-def get_auth_client(httpx_client: HTTPXClientDep,
-                    auth_token_client: AuthTokenClientDep) -> AuthClient:
+async def get_auth_client(httpx_client: HTTPXClientTaskiqDep,
+                          auth_token_client: AuthTokenClientTaskiqDep) -> AuthClient:
     return AuthClient(
         httpx_client=httpx_client,
         auth_token_client=auth_token_client,
     )
 
 
-AuthClientDep = Annotated[AuthClient, Depends(get_auth_client)]
+AuthClientTaskiqDep = Annotated[AuthClient, TaskiqDepends(get_auth_client)]

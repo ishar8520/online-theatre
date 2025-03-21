@@ -6,14 +6,14 @@ from typing import Annotated, Any
 
 import httpx
 from fastapi import (
-    Depends,
     status,
     HTTPException,
 )
+from taskiq import TaskiqDepends
 
 from .client import (
     AuthClient,
-    AuthClientDep,
+    AuthClientTaskiqDep,
 )
 from .models import User
 
@@ -65,8 +65,8 @@ class GetUserRequest(AuthServiceRequest[User | None]):
         return await self.auth_client.get_user(user_id=self.user_id)
 
 
-def get_auth_service(auth_client: AuthClientDep) -> AuthService:
+async def get_auth_service(auth_client: AuthClientTaskiqDep) -> AbstractAuthService:
     return AuthService(auth_client=auth_client)
 
 
-AuthServiceDep = Annotated[AuthService, Depends(get_auth_service)]
+AuthServiceTaskiqDep = Annotated[AbstractAuthService, TaskiqDepends(get_auth_service)]
