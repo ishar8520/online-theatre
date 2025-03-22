@@ -7,6 +7,10 @@ python = "^3.12"
 fastapi = { version = "0.115.11", extras = ["standard"] }
 pydantic = "2.10.6"
 pydantic-settings = "2.8.1"
+taskiq = { version = "0.11.14", extras = ["reload"] }
+taskiq-aio-pika = "0.4.1"
+taskiq-fastapi = "0.3.4"
+taskiq-redis = "1.0.3"
 uvicorn-worker = "0.3.0"
 
 [tool.poetry.group.dev]

@@ -1,13 +1,34 @@
 from __future__ import annotations
 
 import logging.config
+from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
 
+import httpx
 from fastapi import FastAPI
 
 from .api.v1.endpoints import notifications
+from .broker import broker
 from .core import LOGGING
 
 logging.config.dictConfig(LOGGING)
+
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI) -> AsyncGenerator[None]:
+    async with (
+        httpx.AsyncClient() as httpx_client,
+    ):
+        _app.state.httpx_client = httpx_client
+
+        if not broker.is_worker_process:
+            await broker.startup()
+
+        yield
+
+        if not broker.is_worker_process:
+            await broker.shutdown()
+
 
 base_api_prefix = '/api'
 app = FastAPI(
@@ -15,6 +36,7 @@ app = FastAPI(
     description='API for queueing notifications.',
     docs_url=f'{base_api_prefix}/openapi',
     openapi_url=f'{base_api_prefix}/openapi.json',
+    lifespan=lifespan,
 )
 
 
