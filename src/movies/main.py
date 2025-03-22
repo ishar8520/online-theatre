@@ -10,9 +10,11 @@ import redis.asyncio as redis
 import sentry_sdk
 from fastapi import FastAPI, Request, Response, status
 from fastapi.responses import JSONResponse
+from fastapi_pagination.utils import disable_installed_extensions_check
 from opentelemetry import trace
 from opentelemetry.baggage.propagation import W3CBaggagePropagator
-from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
+from opentelemetry.exporter.otlp.proto.http.trace_exporter import \
+    OTLPSpanExporter
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from opentelemetry.propagate import set_global_textmap
 from opentelemetry.propagators.composite import CompositePropagator
@@ -25,6 +27,7 @@ from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapProp
 from .api.v1.endpoints import films, genres, persons
 from .core import LOGGING, settings
 
+disable_installed_extensions_check()
 logging.config.dictConfig(LOGGING)
 
 if settings.sentry.enable_sdk:
