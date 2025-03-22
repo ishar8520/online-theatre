@@ -98,7 +98,7 @@ async def check_request_id(request: Request, call_next: Callable[[Request], Awai
 
 
 @app.get(f'{base_api_prefix}/_health')
-async def healthcheck():
+async def healthcheck() -> dict:
     return {}
 
 

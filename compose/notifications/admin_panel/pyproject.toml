@@ -13,10 +13,22 @@ package-mode = false
 
 [tool.poetry.dependencies]
 python = "^3.12"
-fastapi = "0.115.6"
-sqlalchemy = "^2.0.39"
-pydantic = "^2.10.6"
+
 alembic = "^1.15.1"
+asyncpg = "0.30.0"
+fastapi = { version = "0.115.6", extras = ["standard"] }
+httpx-oauth = "0.16.1"
+opentelemetry-api = "1.29.0"
+opentelemetry-exporter-otlp-proto-http = "1.29.0"
+opentelemetry-instrumentation = "0.50b0"
+opentelemetry-instrumentation-fastapi = "0.50b0"
+opentelemetry-propagator-jaeger = "1.29.0"
+opentelemetry-sdk = "1.29.0"
+pydantic = "^2.10.6"
+pydantic-settings = "2.7.1"
+sentry-sdk = {extras = ["fastapi"], version = "^2.22.0"}
+sqlalchemy = "^2.0.39"
+
 fastapi-pagination = "^0.12.34"
 
 [build-system]
