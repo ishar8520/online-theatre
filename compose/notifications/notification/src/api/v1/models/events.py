@@ -4,10 +4,14 @@ import uuid
 
 from pydantic import BaseModel
 
+from .base import NotificationType
+
 
 class EventRegistrationDto(BaseModel):
     user_id: uuid.UUID
+    type: NotificationType = NotificationType.EMAIL
 
 
 class EventNewMovieDto(BaseModel):
-    fim_id: uuid.UUID
+    film_id: uuid.UUID
+    type: NotificationType = NotificationType.EMAIL

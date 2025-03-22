@@ -17,7 +17,7 @@ class EventService:
     def __init__(self, queue: QueueService):
         self._queue = queue
 
-    async def on_user_registration(self, user_id: uuid.UUID) -> dict:
+    async def on_user_registration(self, user_id: uuid.UUID) -> bool:
 
         payload = {
             "user_id": user_id,
@@ -26,7 +26,7 @@ class EventService:
 
         return await self._queue.send(payload)
 
-    async def on_add_new_movie(self, film_id: uuid.UUID) -> dict:
+    async def on_add_new_movie(self, film_id: uuid.UUID) -> bool:
 
         payload = {
             "film_id": film_id,
@@ -43,5 +43,3 @@ EventServiceDep = Annotated[
     EventService,
     Depends(get_event_service)
 ]
-
-

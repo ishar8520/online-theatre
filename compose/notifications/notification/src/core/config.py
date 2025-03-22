@@ -16,8 +16,8 @@ class AdminSettings(BaseSettings):
 class QueueSettings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix='queue_')
 
-    host: str
-    port: int
+    host: str = 'localhost'
+    port: int = 8000
 
     @property
     def queue_url(self) -> str:
@@ -25,7 +25,7 @@ class QueueSettings(BaseSettings):
 
 
 class Settings(BaseSettings):
-    admin: AdminSettings = AdminSettings()
+    admin: AdminSettings = AdminSettings() # type: ignore[call-arg]
     queue: QueueSettings = QueueSettings()
 
 

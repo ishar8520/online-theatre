@@ -1,27 +1,22 @@
 from __future__ import annotations
 
-import enum
 import uuid
 
 from pydantic import BaseModel
 
-
-class NotificationType(enum.StrEnum):
-    EMAIL = 'email'
-    SMS = 'sms'
-    PUSH = 'push'
+from .base import NotificationType
 
 
-class MessageBase(BaseModel):
+class BaseMessageRequestDto(BaseModel):
     subject: str
-    template_id: uuid.UUID
-    text: str
+    template_id: uuid.UUID | None = None
+    text: str | None = None
     type: NotificationType = NotificationType.EMAIL
 
 
-class MessageBroadcastDto(MessageBase):
+class BroadcastMessageRequestDto(BaseMessageRequestDto):
     pass
 
 
-class MessagePersonalizedDto(MessageBase):
+class PersonalizedMessageRequestDto(BaseMessageRequestDto):
     pass
