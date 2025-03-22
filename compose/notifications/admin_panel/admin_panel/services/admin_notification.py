@@ -52,7 +52,7 @@ class AdminNotificationService:
             return task
 
     async def get_admin_notifications_list(self) -> list[AdminNotificationTask]:
-        async with self.postgres_session() as session:
+        async with self.postgres_session as session:
             notifications_data = await session.scalars(select(AdminNotificationTask))
             return notifications_data.all()
 

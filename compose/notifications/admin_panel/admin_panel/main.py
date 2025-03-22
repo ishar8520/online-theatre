@@ -20,7 +20,7 @@ from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapPropagator
 
-from .api.v1 import admin_notification
+from .api.v1 import admin_notification, template
 from .core import LOGGING, settings
 
 logging.config.dictConfig(LOGGING)
@@ -109,4 +109,8 @@ app.include_router(
     prefix=f'{admin_notification_prefix}/admin_notification',
     tags=['admin_notification'],
 )
-
+app.include_router(
+    template.router,
+    prefix=f'{admin_notification_prefix}/template',
+    tags=['template'],
+)

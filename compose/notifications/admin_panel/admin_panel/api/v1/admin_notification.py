@@ -3,7 +3,7 @@ from pydantic import ValidationError
 from admin_panel.schemas import admin_notification as admin_schemas
 from admin_panel.services import admin_notification as admin_services
 from admin_panel.services.exceptions import AdminNotificationNotFoundError, DeliveryNotFoundError
-from fastapi_pagination import Page, paginate
+from fastapi_pagination import Page, paginate, Params
 
 router = APIRouter()
 
@@ -45,12 +45,13 @@ async def send_notifications(
     summary="Получить задачи на рассылку",
 )
 async def get_notifications(
+    params: Params = Depends(),
     notification_service: admin_services.AdminNotificationService = Depends(
         admin_services.get_admin_notification_service
     ),
 ) -> Page[admin_schemas.GetAdminNotificationSchema]:
     notifications_list = await notification_service.get_admin_notifications_list()
-    return paginate(notifications_list)
+    return paginate(notifications_list, params)
 
 
 @router.patch(
