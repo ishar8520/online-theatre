@@ -9,7 +9,7 @@ from ....service.models.base import NotificationType
 
 class BaseMessageRequestDto(BaseModel):
     subject: str
-    template_id: uuid.UUID | None = None
+    template_id: uuid.UUID
     notification_type: NotificationType = NotificationType.EMAIL
 
 

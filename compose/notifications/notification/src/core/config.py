@@ -8,13 +8,6 @@ from pydantic_settings import (
 )
 
 
-class AdminSettings(BaseSettings):
-    model_config = SettingsConfigDict(env_prefix='auth_superuser_')
-
-    login: str
-    password: str
-
-
 class QueueSettings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix='queue_')
 
@@ -34,7 +27,6 @@ class TemplateList(BaseSettings):
 
 
 class Settings(BaseSettings):
-    admin: AdminSettings = AdminSettings() # type: ignore[call-arg]
     queue: QueueSettings = QueueSettings()
 
     templates: TemplateList = TemplateList() # type: ignore[call-arg]
