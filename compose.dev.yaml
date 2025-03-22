@@ -619,6 +619,8 @@ services:
       - QUEUE_PORT=8000
       - AUTH_SUPERUSER_LOGIN=$AUTH_SUPERUSER_LOGIN
       - AUTH_SUPERUSER_PASSWORD=$AUTH_SUPERUSER_PASSWORD
+      - TEMPLATE_MESSAGE_REGISTRATION=$TEMPLATE_MESSAGE_REGISTRATION_UUID
+      - TEMPLATE_MESSAGE_NEW_MOVIE=$TEMPLATE_MESSAGE_NEW_MOVIE_UUID
     command: [ '/opt/app/commands/fastapi.sh', 'dev' ]
     healthcheck:
       test: [ 'CMD-SHELL', 'curl -s http://localhost:8000/api/_health' ]

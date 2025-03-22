@@ -4,8 +4,8 @@ from fastapi import APIRouter, HTTPException
 
 from ....service.event import EventServiceDep
 from ..models.events import (
-    EventRegistrationDto,
-    EventNewMovieDto
+    EventRegistrationRequestDto,
+    EventNewMovieRequestDto
 )
 from ....service.exceptions.queue import QueueSendException
 
@@ -19,7 +19,7 @@ router = APIRouter()
     description='Send notification after user registration'
 )
 async def notify_on_registration(
-    event: EventRegistrationDto,
+    event: EventRegistrationRequestDto,
     event_service: EventServiceDep
 ):
     try:
@@ -40,7 +40,7 @@ async def notify_on_registration(
     description='Send notification for all people who subscribe on new movies'
 )
 async def notify_on_new_movie(
-    event: EventNewMovieDto,
+    event: EventNewMovieRequestDto,
     event_service: EventServiceDep
 ) -> dict:
     try:

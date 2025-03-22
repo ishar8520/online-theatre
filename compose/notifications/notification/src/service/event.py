@@ -5,6 +5,8 @@ from typing import Annotated
 
 from fastapi import Depends
 
+from .models.base import NotificationType
+from ..core.config import settings
 from ..service.queue import (
     QueueService,
     QueueServiceDep
@@ -17,23 +19,37 @@ class EventService:
     def __init__(self, queue: QueueService):
         self._queue = queue
 
-    async def on_user_registration(self, user_id: uuid.UUID) -> bool:
+    async def on_user_registration(
+            self,
+            user_id: uuid.UUID,
+            notification_type: NotificationType
+    ) -> bool:
 
         payload = {
-            "user_id": user_id,
-            "subject": "Registration"
+            "users": [str(user_id)],
+            "subject": "Registration",
+            "type": notification_type,
+            "template_id": str(settings.templates.registration)
         }
 
-        return await self._queue.send(payload)
+        return await self._queue.send(settings.queue.notification_url_template, payload)
 
-    async def on_add_new_movie(self, film_id: uuid.UUID) -> bool:
+    async def on_add_new_movie(
+            self,
+            film_id: uuid.UUID,
+            notification_type: NotificationType
+    ) -> bool:
 
         payload = {
-            "film_id": film_id,
-            "subject": "New movie"
+            "subject": "New movie",
+            "type": notification_type,
+            "template_id": str(settings.templates.registration),
+            "template_context": {
+                "film_id": str(film_id)
+            }
         }
 
-        return await self._queue.send(payload)
+        return await self._queue.send(settings.queue.notification_url_template, payload)
 
 
 async def get_event_service(queue: QueueServiceDep) -> EventService:

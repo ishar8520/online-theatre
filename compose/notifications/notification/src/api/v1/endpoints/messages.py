@@ -11,10 +11,6 @@ from ..models.messages import (
     BroadcastMessageRequestDto,
     PersonalizedMessageRequestDto
 )
-from ....service.models.message import (
-    PersonalizedMessageDto,
-    BroadcastMessageDto
-)
 
 router = APIRouter()
 
@@ -29,11 +25,8 @@ async def send_for_all(
         broadcast_message: BroadcastMessageRequestDto,
         message_service: MessageServiceDep
 ) -> dict:
-
-    message = BroadcastMessageDto(**broadcast_message.model_dump())
-
     try:
-        result = await message_service.send_broadcast(message)
+        result = await message_service.send_broadcast(**broadcast_message.model_dump())
     except QueueSendException:
         raise HTTPException(
             status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
@@ -54,11 +47,11 @@ async def send_for_user(
         personalized_message: PersonalizedMessageRequestDto,
         message_service: MessageServiceDep
 ) -> dict:
-
-    message = PersonalizedMessageDto(user_id=user_id, **personalized_message.model_dump())
-
     try:
-        result = await message_service.send_personalized(message)
+        result = await message_service.send_personalized(
+            user_id=user_id,
+            **personalized_message.model_dump()
+        )
     except QueueSendException:
         raise HTTPException(
             status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
