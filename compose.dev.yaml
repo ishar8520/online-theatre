@@ -609,6 +609,35 @@ services:
       retries: 5
       start_period: 10s
 
+  notification-service:
+    build:
+      context: ./compose/notifications/notification
+    networks:
+      - movies-network
+    environment:
+      - QUEUE_HOST=notifications-queue-service
+      - QUEUE_PORT=8000
+      - TEMPLATE_MESSAGE_REGISTRATION=$TEMPLATE_MESSAGE_REGISTRATION_UUID
+      - TEMPLATE_MESSAGE_NEW_MOVIE=$TEMPLATE_MESSAGE_NEW_MOVIE_UUID
+    command: [ '/opt/app/commands/fastapi.sh', 'dev' ]
+    healthcheck:
+      test: [ 'CMD-SHELL', 'curl -s http://localhost:8000/api/_health' ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+    develop:
+      watch:
+        - action: sync
+          path: ./compose/notifications/notification/src
+          target: /opt/app/src
+        - action: rebuild
+          path: ./compose/notifications/notification/commands
+        - action: rebuild
+          path: ./compose/notifications/notification/pyproject.toml
+        - action: rebuild
+          path: ./compose/notifications/notification/poetry.lock
+
 networks:
   movies-network:
 
