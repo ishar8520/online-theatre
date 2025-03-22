@@ -389,27 +389,6 @@ services:
       retries: 5
       start_period: 10s
 
-  short-link-redis:
-    restart: unless-stopped
-    healthcheck:
-      test: [ 'CMD', '/bin/bash', '-c', '[[ $(redis-cli ping) == "PONG" ]]' ]
-      interval: 10s
-      timeout: 10s
-      retries: 5
-      start_period: 10s
-
-  short-link-service:
-    build: ./compose/notifications/short_links
-    networks:
-      - movies-network
-    depends_on:
-      short-link-redis:
-        condition: service_healthy
-    environment:
-      - REDIS_HOST=short-link-redis
-      - REDIS_PORT=6379
-      - PROJECT_HOST
-
 networks:
   movies-network:
 
@@ -421,4 +400,3 @@ volumes:
   mongodb:
   notifications-queue-rabbitmq-data:
   notifications-queue-redis-data:
-  short_links_redis_data:
