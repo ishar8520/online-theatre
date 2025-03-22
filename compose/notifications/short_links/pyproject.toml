@@ -5,3 +5,5 @@ package-mode = false
 python = "^3.11"
 fastapi = { version = "0.115.6", extras = ["standard"] }
 redis = "^5.2.1"
+pydantic = "2.10.3"
+pydantic-settings = "2.6.1"

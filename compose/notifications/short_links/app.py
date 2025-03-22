@@ -1,9 +1,12 @@
 from contextlib import asynccontextmanager
 
 from api import router
-from config import REDIS_URL
+from config import settings
 from fastapi import FastAPI
 from redis.asyncio import Redis
+
+REDIS_URL = f'redis://{settings.redis.host}:{settings.redis.port}'
+base_api_prefix = '/short_link/api'
 
 
 @asynccontextmanager
@@ -13,7 +16,11 @@ async def lifespan(app: FastAPI):
     await app.state.redis.close()
 
 
-app = FastAPI(lifespan=lifespan)
+app = FastAPI(
+    docs_url=f'{base_api_prefix}/openapi',
+    openapi_url=f'{base_api_prefix}/openapi.json',
+    lifespan=lifespan
+)
 
 
 app.include_router(router)

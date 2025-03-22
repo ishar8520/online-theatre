@@ -1,2 +1,0 @@
-SHORT_LINK_TTL = 300
-REDIS_URL = 'redis://redis:6379'
