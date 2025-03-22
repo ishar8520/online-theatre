@@ -8,6 +8,7 @@ fastapi = { version = "0.115.11", extras = ["standard"] }
 pydantic = "2.10.6"
 pydantic-settings = "2.8.1"
 uvicorn-worker = "0.3.0"
+aiohttp = "^3.11.11"
 
 [tool.poetry.group.dev]
 optional = true

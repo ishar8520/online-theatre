@@ -40,7 +40,8 @@ jobs:
             ./compose/auth/.lint/
             ./compose/etl/.lint/
             ./compose/ugc_mongo/.lint/
-            ./compose/notifications-queue/.lint/
+            ./compose/notifications/queue/.lint/
+            ./compose/notifications/notification/.lint/
           include-hidden-files: true
 
   tests:

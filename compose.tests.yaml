@@ -15,6 +15,7 @@ services:
       - MOVIES_URL=http://movies:8000
       - AUTH_SERVICE_URL=http://auth-service:8000
       - UGC_URL=http://ugc-mongo-service:5002
+      - NOTIFICATION_SERVICE_URL=http://notification-service:8000
       - AUTH_POSTGRESQL_HOST=auth-postgresql
       - AUTH_POSTGRESQL_PASSWORD=$AUTH_POSTGRESQL_PASSWORD
       - AUTH_REDIS_HOST=auth-redis
@@ -257,15 +258,138 @@ services:
       mongodb:
         condition: service_healthy
 
-  short-link-redis:
+  notifications-queue-service:
+    build:
+      context: ./compose/notifications/queue
+    depends_on:
+      notifications-queue-worker:
+        condition: service_started
+    networks:
+      - movies-network
+    environment:
+      - AUTH_HOST=auth-service
+      - AUTH_PORT=8000
+      - AUTH_SUPERUSER_LOGIN=$AUTH_SUPERUSER_LOGIN
+      - AUTH_SUPERUSER_PASSWORD=$AUTH_SUPERUSER_PASSWORD
+      - RABBITMQ_HOST=notifications-queue-rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USERNAME=$NOTIFICATIONS_QUEUE_RABBITMQ_USERNAME
+      - RABBITMQ_PASSWORD=$NOTIFICATIONS_QUEUE_RABBITMQ_PASSWORD
+      - REDIS_HOST=notifications-queue-redis
+      - REDIS_PORT=6379
+    command: [ '/opt/app/commands/fastapi.sh', 'dev' ]
+    restart: unless-stopped
+    healthcheck:
+      test: [ 'CMD-SHELL', 'curl -s http://localhost:8000/api/_health' ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+    develop:
+      watch:
+        - action: sync
+          path: ./compose/notifications/queue/notifications_queue
+          target: /opt/app/notifications_queue
+        - action: rebuild
+          path: ./compose/notifications/queue/commands
+        - action: rebuild
+          path: ./compose/notifications/queue/pyproject.toml
+        - action: rebuild
+          path: ./compose/notifications/queue/poetry.lock
+
+  notifications-queue-worker:
+    build:
+      context: ./compose/notifications/queue
+    depends_on:
+      auth-service:
+        condition: service_healthy
+      notifications-queue-rabbitmq:
+        condition: service_healthy
+      notifications-queue-redis:
+        condition: service_healthy
+    networks:
+      - movies-network
+    environment:
+      - TASKIQ_RELOAD=true
+      - AUTH_HOST=auth-service
+      - AUTH_PORT=8000
+      - AUTH_SUPERUSER_LOGIN=$AUTH_SUPERUSER_LOGIN
+      - AUTH_SUPERUSER_PASSWORD=$AUTH_SUPERUSER_PASSWORD
+      - RABBITMQ_HOST=notifications-queue-rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USERNAME=$NOTIFICATIONS_QUEUE_RABBITMQ_USERNAME
+      - RABBITMQ_PASSWORD=$NOTIFICATIONS_QUEUE_RABBITMQ_PASSWORD
+      - REDIS_HOST=notifications-queue-redis
+      - REDIS_PORT=6379
+    command: [ '/opt/app/commands/worker.sh' ]
+    restart: unless-stopped
+    develop:
+      watch:
+        - action: sync
+          path: ./compose/notifications/queue/notifications_queue
+          target: /opt/app/notifications_queue
+        - action: rebuild
+          path: ./compose/notifications/queue/commands
+        - action: rebuild
+          path: ./compose/notifications/queue/pyproject.toml
+        - action: rebuild
+          path: ./compose/notifications/queue/poetry.lock
+
+  notifications-queue-rabbitmq:
+    image: 'bitnami/rabbitmq:4.0.7-debian-12-r1'
+    networks:
+      - movies-network
+    volumes:
+      - 'notifications-queue-rabbitmq-data:/bitnami/rabbitmq/mnesia'
+    environment:
+      - RABBITMQ_USERNAME=$NOTIFICATIONS_QUEUE_RABBITMQ_USERNAME
+      - RABBITMQ_PASSWORD=$NOTIFICATIONS_QUEUE_RABBITMQ_PASSWORD
+      - RABBITMQ_LOGS=-
+      - RABBITMQ_MANAGEMENT_ALLOW_WEB_ACCESS=true
+    restart: unless-stopped
+    healthcheck:
+      test: [ 'CMD-SHELL', 'rabbitmq-diagnostics -q ping' ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  notifications-queue-redis:
     image: 'bitnami/redis:7.4.2-debian-12-r0'
     networks:
       - movies-network
     volumes:
-      - short_links_redis_data:/bitnami/redis/data
+      - 'notifications-queue-redis-data:/bitnami/redis/data'
     environment:
       - ALLOW_EMPTY_PASSWORD=yes
-    command: [ '/opt/bitnami/scripts/redis/run.sh', '--maxmemory', '200m' ]
+    command: [ '/opt/bitnami/scripts/redis/run.sh', '--maxmemory', '${NOTIFICATIONS_QUEUE_REDIS_MAXMEMORY:-200mb}' ]
+    restart: unless-stopped
+    healthcheck:
+      test: [ 'CMD', '/bin/bash', '-c', '[[ $(redis-cli ping) == "PONG" ]]' ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+
+  notification-service:
+    build:
+      context: ./compose/notifications/notification
+    networks:
+      - movies-network
+    environment:
+      - QUEUE_HOST=notifications-queue-service
+      - QUEUE_PORT=8000
+      - TEMPLATE_MESSAGE_REGISTRATION=$TEMPLATE_MESSAGE_REGISTRATION_UUID
+      - TEMPLATE_MESSAGE_NEW_MOVIE=$TEMPLATE_MESSAGE_NEW_MOVIE_UUID
+    command: [ '/opt/app/commands/fastapi.sh', 'dev' ]
+    healthcheck:
+      test: [ 'CMD-SHELL', 'curl -s http://localhost:8000/api/_health' ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+
+  short-link-redis:
     restart: unless-stopped
     healthcheck:
       test: [ 'CMD', '/bin/bash', '-c', '[[ $(redis-cli ping) == "PONG" ]]' ]
@@ -286,7 +410,6 @@ services:
       - REDIS_PORT=6379
       - PROJECT_HOST
 
-
 networks:
   movies-network:
 
@@ -296,4 +419,6 @@ volumes:
   auth-postgresql-data:
   auth-redis-data:
   mongodb:
+  notifications-queue-rabbitmq-data:
+  notifications-queue-redis-data:
   short_links_redis_data:

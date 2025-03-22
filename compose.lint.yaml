@@ -119,25 +119,46 @@ services:
 
   notifications-queue:
     build:
-      context: ./compose/notifications-queue
+      context: ./compose/notifications/queue
       target: lint
     networks:
       - movies-network
     volumes:
       - 'notifications-queue-mypy-cache:/opt/app/.mypy_cache'
-      - './compose/notifications-queue/.lint:/opt/app/.lint'
+      - './compose/notifications/queue/.lint:/opt/app/.lint'
     command: [ 'sleep', 'infinity' ]
     develop:
       watch:
         - action: sync
-          path: ./compose/notifications-queue/notifications_queue
+          path: ./compose/notifications/queue/notifications_queue
           target: /opt/app/notifications_queue
         - action: rebuild
-          path: ./compose/notifications-queue/commands
+          path: ./compose/notifications/queue/commands
         - action: rebuild
-          path: ./compose/notifications-queue/pyproject.toml
+          path: ./compose/notifications/queue/pyproject.toml
         - action: rebuild
-          path: ./compose/notifications-queue/poetry.lock
+          path: ./compose/notifications/queue/poetry.lock
+
+  notification-service:
+    build:
+      context: ./compose/notifications/notification
+    networks:
+      - movies-network
+    volumes:
+      - 'notifications-notification-mypy-cache:/opt/app/.mypy_cache'
+      - './compose/notifications/notification/.lint:/opt/app/.lint'
+    command: [ '/opt/app/commands/fastapi.sh', 'dev' ]
+    develop:
+      watch:
+        - action: sync
+          path: ./compose/notifications/notification/src
+          target: /opt/app/src
+        - action: rebuild
+          path: ./compose/notifications/notification/commands
+        - action: rebuild
+          path: ./compose/notifications/notification/pyproject.toml
+        - action: rebuild
+          path: ./compose/notifications/notification/poetry.lock
 
 networks:
   movies-network:
@@ -149,3 +170,4 @@ volumes:
   etl-mypy-cache:
   ugc-mypy-cache:
   notifications-queue-mypy-cache:
+  notifications-notification-mypy-cache:

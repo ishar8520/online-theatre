@@ -8,6 +8,7 @@ from .authentication.backend import (
     AuthenticationBackendDep,
 )
 from .exceptions import (
+    UserDoesNotExist,
     UserAlreadyExists,
 )
 from .manager import (
