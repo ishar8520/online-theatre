@@ -7,6 +7,7 @@ from pydantic import BaseModel
 class CreateAdminNotificationSchema(BaseModel):
     notification_type: str
     delivery_type: str
+    template_code: str
     send_date: datetime | None = None
 
 
@@ -15,7 +16,7 @@ class GetAdminNotificationSchema(BaseModel):
     notification_type: str
     delivery_type: str
     status: str
-    created: datetime
+    created_at: datetime
     send_date: datetime
 
     class Config:

@@ -30,7 +30,7 @@ class AdminNotificationService:
         try:
             delivery_type = DeliveryEnum(notification_data.delivery_type)
         except ValueError:
-            raise exc.DeliveryNotFoundError("Channel not found")
+            raise exc.DeliveryNotFoundError("Delivery type not found")
 
         if notification_data.send_date:
             send_date = notification_data.send_date.replace(tzinfo=None)
@@ -42,10 +42,10 @@ class AdminNotificationService:
             notification_type=notification_type,
             delivery_type=delivery_type,
             send_date=send_date,
-            template_id=notification_data.template_id,
+            template_code=notification_data.template_code,
         )
 
-        async with self.postgres_session() as session:
+        async with self.postgres_session as session:
             session.add(task)
             await session.commit()
             await session.refresh(task)
@@ -61,7 +61,7 @@ class AdminNotificationService:
         notification_id: str,
         notification_data: admin_schemas.UpdateNotificationSchema,
     ) -> AdminNotificationTask:
-        async with self.postgres_session() as session:
+        async with self.postgres_session as session:
             notifications_data = await session.scalars(
                 select(AdminNotificationTask).filter_by(id=notification_id)
             )
@@ -82,7 +82,7 @@ class AdminNotificationService:
             return notification
 
     async def delete_admin_notification_task(self, notification_id: str):
-        async with self.postgres_session() as session:
+        async with self.postgres_session as session:
             notifications_data = await session.scalars(
                 select(AdminNotificationTask).filter_by(id=notification_id)
             )

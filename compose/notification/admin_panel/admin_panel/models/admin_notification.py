@@ -45,6 +45,7 @@ class AdminBase(DeclarativeBase):
 class Template(AdminBase):
     __tablename__ = "templates"
 
+    code: Mapped[str] = mapped_column(String(100), unique=True, nullable=False)
     subject: Mapped[str] = mapped_column(String(255))
     body: Mapped[str] = mapped_column(Text, nullable=False)
     type: Mapped[TemplateTypeEnum] = mapped_column(
@@ -76,11 +77,7 @@ class AdminNotificationTask(AdminBase):
         nullable=False,
     )
     send_date: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
-    template_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
-        ForeignKey("templates.id"),
-        nullable=False,
-    )
+    template_code: Mapped[str] = mapped_column(String(100), ForeignKey("templates.code"), nullable=False)
 
     template: Mapped["Template"] = relationship("Template", back_populates="admin_notifications")
 
