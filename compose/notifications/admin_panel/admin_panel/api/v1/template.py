@@ -1,9 +1,14 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi_pagination import Page, paginate, Params
-from pydantic import ValidationError
 from admin_panel.schemas import template as template_schemas
 from admin_panel.services import template as template_services
-from admin_panel.services.exceptions import TemplateNotFoundError, DatabaseError, TemplateAlreadyExistsError
+from admin_panel.services.exceptions import (
+    DatabaseError,
+    SystemTemplateOperationNotAllowedError,
+    TemplateAlreadyExistsError,
+    TemplateNotFoundError,
+)
+from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi_pagination import Page, Params, paginate
+from pydantic import ValidationError
 
 router = APIRouter()
 
@@ -72,6 +77,10 @@ async def update_template(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail=str(error)
         )
+    except SystemTemplateOperationNotAllowedError as error:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail=str(error)
+        )
 
 
 @router.delete(
@@ -91,4 +100,48 @@ async def delete_template(
     except TemplateNotFoundError as error:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail=str(error)
+        )
+    except SystemTemplateOperationNotAllowedError as error:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail=str(error)
+        )
+
+
+@router.get(
+    "/{template_id}",
+    response_model=template_schemas.GetTemplateSchema,
+    summary="Получить шаблон по ID",
+)
+async def get_template_by_id(
+    template_id: str,
+    template_service: template_services.TemplateService = Depends(
+        template_services.get_template_service
+    ),
+):
+    try:
+        template = await template_service.get_template_by_id(template_id)
+        return template
+    except TemplateNotFoundError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=str(e)
+        )
+
+
+@router.get(
+    "/by-code/{code}",
+    response_model=template_schemas.GetTemplateSchema,
+    summary="Получить шаблон по коду",
+)
+async def get_template_by_code(
+    code: str,
+    template_service: template_services.TemplateService = Depends(
+        template_services.get_template_service
+    ),
+):
+    try:
+        template = await template_service.get_template_by_code(code)
+        return template
+    except TemplateNotFoundError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=str(e)
         )

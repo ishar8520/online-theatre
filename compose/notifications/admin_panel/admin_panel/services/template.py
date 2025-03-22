@@ -9,7 +9,7 @@ from admin_panel.services.exceptions import (
     DatabaseError,
     TemplateAlreadyExistsError,
     TemplateNotFoundError,
-    TemplateTypeNotFoundError,
+    TemplateTypeNotFoundError, SystemTemplateOperationNotAllowedError,
 )
 from fastapi import Depends
 from sqlalchemy import select
@@ -81,6 +81,9 @@ class TemplateService:
             if template is None:
                 raise TemplateNotFoundError("Template not found")
 
+            if template.is_system:
+                raise SystemTemplateOperationNotAllowedError("Updating system templates is not allowed")
+
             if template_data.type is not None:
                 try:
                     template.type = TemplateTypeEnum(template_data.type)
@@ -103,6 +106,10 @@ class TemplateService:
             template = result.first()
             if template is None:
                 raise exc.TemplateNotFoundError("Template not found")
+
+            if template.is_system:
+                raise SystemTemplateOperationNotAllowedError("Deleting system templates is not allowed")
+
             await session.delete(template)
             await session.commit()
 
