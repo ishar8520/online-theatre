@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import datetime
 import uuid
 
 from pydantic import BaseModel
@@ -20,3 +21,8 @@ class UserCreate(BaseModel):
 class UserUpdate(BaseModel):
     login: str | None = None
     password: str | None = None
+
+
+class ExtendedUserRead(UserRead):
+    created: datetime.datetime
+    modified: datetime.datetime

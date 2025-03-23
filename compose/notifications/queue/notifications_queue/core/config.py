@@ -32,14 +32,17 @@ class AuthConfig(BaseSettings):
     def api_v1_url(self) -> str:
         return urljoin(self.api_url, 'v1/')
 
-    def get_user_url(self, *, user_id: uuid.UUID) -> str:
-        return urljoin(self.api_v1_url, f'users/{user_id}')
-
     def get_login_url(self) -> str:
         return urljoin(self.api_v1_url, f'jwt/login')
 
     def get_refresh_url(self) -> str:
         return urljoin(self.api_v1_url, f'jwt/refresh')
+
+    def get_user_url(self, *, user_id: uuid.UUID) -> str:
+        return urljoin(self.api_v1_url, f'users/{user_id}/profile')
+
+    def get_users_list_url(self) -> str:
+        return urljoin(self.api_v1_url, f'users/list')
 
 
 class RabbitMQConfig(BaseSettings):
