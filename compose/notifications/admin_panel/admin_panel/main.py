@@ -7,6 +7,7 @@ from contextlib import asynccontextmanager
 import httpx
 import sentry_sdk
 from fastapi import FastAPI, Request, Response, status
+from fastapi_pagination.utils import disable_installed_extensions_check
 from fastapi.responses import JSONResponse
 from opentelemetry import trace
 from opentelemetry.baggage.propagation import W3CBaggagePropagator
@@ -23,6 +24,7 @@ from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapProp
 from .api.v1 import admin_notification, template
 from .core import LOGGING, settings
 
+disable_installed_extensions_check()
 logging.config.dictConfig(LOGGING)
 
 if settings.sentry.enable_sdk:

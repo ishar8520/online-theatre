@@ -167,7 +167,7 @@ services:
       - movies-network
     volumes:
       - 'notifications-admin-panel-mypy-cache:/opt/app/.mypy_cache'
-      - './compose/notifications/admin-panel/.lint:/opt/app/.lint'
+      - './compose/notifications/admin_panel/.lint:/opt/app/.lint'
     command: [ '/opt/app/commands/fastapi.sh', 'dev' ]
     develop:
       watch:
