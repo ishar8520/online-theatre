@@ -571,6 +571,12 @@ services:
       - REDIS_PORT=6379
       - PROJECT_HOST
 
+  websocket-service:
+    build: ./compose/notifications/websockets_service
+    networks:
+      - movies-network
+
+
   notification-admin-panel-service:
     build:
       context: ./compose/notifications/admin_panel
