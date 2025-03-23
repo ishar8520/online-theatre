@@ -20,7 +20,7 @@ from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapPropagator
-import admin_panel.scheduler
+from admin_panel.scheduler import scheduler_cron
 
 from .api.v1 import admin_notification, template, scheduler
 from .core import LOGGING, settings
@@ -63,6 +63,7 @@ def configure_otel() -> None:
 @asynccontextmanager
 async def lifespan(_app) -> AsyncGenerator[dict]:
     configure_otel()
+    scheduler_cron.start()
 
     async with (
         httpx.AsyncClient() as httpx_client,
@@ -70,6 +71,7 @@ async def lifespan(_app) -> AsyncGenerator[dict]:
         yield {
             'httpx_client': httpx_client,
         }
+    scheduler_cron.shutdown()
 
 
 base_api_prefix = '/admin_panel/api'

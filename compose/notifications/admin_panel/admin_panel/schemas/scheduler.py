@@ -1,19 +1,25 @@
 from pydantic import BaseModel
 from uuid import UUID
 from datetime import datetime
-
-from admin_panel.models.enums import TemplateTypeEnum
+from admin_panel.models.enums import (
+    DeliveryEnum,
+    AdminNotificationTypesEnum,
+)
 
 
 class SchedulerCreate(BaseModel):
-    template_id: UUID
-    user_id: UUID
+    notification_type: AdminNotificationTypesEnum
+    delivery_type: DeliveryEnum
+    template_code: str
+    send_date: datetime | None = None
     cron_expression: str
 
 class SchedulerGet(BaseModel):
     id: UUID
-    template_id: UUID
-    user_id: UUID
+    notification_type: AdminNotificationTypesEnum
+    delivery_type: DeliveryEnum
+    template_code: str
+    send_date: datetime | None = None
     cron_expression: str
     created_at: datetime
     updated_at: datetime
@@ -22,9 +28,10 @@ class SchedulerGet(BaseModel):
     class Config:
         from_attributes = True
 
-
-# class UpdateScheduler(BaseModel):
-#     code: str | None = None
-#     subject: str | None = None
-#     body: str | None = None
-#     type: str | None = None
+class SchedulerUpdate(BaseModel):
+    notification_type: AdminNotificationTypesEnum | None = None,
+    delivery_type: DeliveryEnum | None = None,
+    template_code: str | None = None,
+    send_date: datetime | None = None,
+    cron_expression: str | None = None,
+    last_run: str | None = None,

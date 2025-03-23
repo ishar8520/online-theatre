@@ -38,14 +38,10 @@ async def get_scheduler(
 )
 async def update_scheduler(
     task_id: str,
-    template_id: str | None = None,
-    user_id: str | None = None,
-    cron_expression: str | None = None,
-    last_run: str | None = None,
+    scheduler: scheduler_schemas.SchedulerUpdate,
     scheduler_service: scheduler_services.SchedulerService = Depends(scheduler_services.get_scheduler_service)
 ):
-    response = await scheduler_service.update(
-        task_id, template_id, user_id, cron_expression, last_run)
+    response = await scheduler_service.update(task_id, scheduler)
     return response
 
 @router.delete(

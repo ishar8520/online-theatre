@@ -1,4 +1,3 @@
-from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
-scheduler_cron = BackgroundScheduler()
-scheduler_cron.start()
+scheduler_cron = AsyncIOScheduler()

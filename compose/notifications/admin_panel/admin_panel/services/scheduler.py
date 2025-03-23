@@ -5,12 +5,15 @@ from fastapi import Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from apscheduler.triggers.cron import CronTrigger
 
-from admin_panel.schemas.scheduler import SchedulerCreate, SchedulerGet
+from admin_panel.schemas.scheduler import SchedulerCreate, SchedulerGet, SchedulerUpdate
 from admin_panel.db.redis import get_redis_client
 from admin_panel.scheduler import scheduler_cron
 from uuid import uuid4
 from croniter import croniter
 import httpx
+import logging
+
+logging.basicConfig(level=logging.INFO)
 
 
 def is_valid_cron_expression(cron_expression: str) -> bool:
@@ -26,7 +29,8 @@ class SchedulerService:
     
     def __init__(self, session: AsyncSession):
         self._redis_client = session
-        
+        self._http_client = httpx.AsyncClient()
+
     async def create(self, scheduler: SchedulerCreate):
         task_id = str(uuid4())
         
@@ -38,8 +42,10 @@ class SchedulerService:
 
         task_data = {
             "task_id": str(task_id),
-            "template_id": str(scheduler.template_id),
-            "user_id": str(scheduler.user_id),
+            "notification_type": str(scheduler.notification_type),
+            "delivery_type": str(scheduler.delivery_type),
+            "template_code": scheduler.template_code,
+            "send_date": scheduler.send_date.isoformat() if scheduler.send_date else None,
             "cron_expression": scheduler.cron_expression,
             "created_at": datetime.now().isoformat(),
             "updated_at": datetime.now().isoformat(),
@@ -55,8 +61,10 @@ class SchedulerService:
         task_data = json.loads(task_data)
         scheduler = SchedulerGet(
             id=UUID(task_id),
-            template_id=UUID(task_data["template_id"]),
-            user_id=UUID(task_data["user_id"]),
+            notification_type=task_data["notification_type"],
+            delivery_type=task_data["delivery_type"],
+            template_code=task_data["template_code"],
+            send_date=task_data["send_date"],
             cron_expression=task_data["cron_expression"],
             created_at=datetime.fromisoformat(task_data["created_at"]),
             updated_at=datetime.fromisoformat(task_data["updated_at"]),
@@ -64,34 +72,34 @@ class SchedulerService:
         )
         return scheduler
 
-    async def update(self, task_id: str,
-                    template_id: str | None = None,
-                    user_id: str | None = None,
-                    cron_expression: str | None = None,
-                    last_run: str | None = None):
+    async def update(self, task_id: str, scheduler: SchedulerUpdate):
         task_data = await self._redis_client.get_value(task_id)
         task_data = json.loads(task_data)
         if not task_data:
             raise HTTPException(status_code=404, detail="Задача не найдена")
-        if cron_expression:
+        if scheduler.cron_expression:
             if not is_valid_cron_expression(scheduler.cron_expression):
                 raise HTTPException(status_code=400, detail="Некорректное cron-выражение")   
         
         updated = datetime.now().isoformat()
         task_data.update({
-            "template_id": template_id if template_id else task_data["template_id"],
-            "user_id": user_id if user_id else task_data["user_id"],
-            "cron_expression": cron_expression if cron_expression else task_data["cron_expression"],
+            "notification_type": str(scheduler.notification_type) if scheduler.notification_type else task_data["notification_type"],
+            "delivery_type": str(scheduler.delivery_type) if scheduler.delivery_type else task_data["delivery_type"],
+            "template_code": scheduler.template_code if scheduler.template_code else task_data["template_code"],
+            "send_date": scheduler.send_date.isoformat() if scheduler.send_date else None if scheduler.send_date else task_data["send_date"],
+            "cron_expression": scheduler.cron_expression if scheduler.cron_expression else task_data["cron_expression"],
             "updated_at": updated,
-            "last_run": last_run if last_run else task_data["last_run"]
+            "last_run": scheduler.last_run if scheduler.last_run else task_data["last_run"]
         })
         
         await self._redis_client.set_value(task_id, json.dumps(task_data))
-        
+
         scheduler = SchedulerGet(
             id=UUID(task_id),
-            template_id=UUID(task_data["template_id"]),
-            user_id=UUID(task_data["user_id"]),
+            notification_type=task_data["notification_type"],
+            delivery_type=task_data["delivery_type"],
+            template_code=task_data["template_code"],
+            send_date=task_data["send_date"],
             cron_expression=task_data["cron_expression"],
             created_at=datetime.fromisoformat(task_data["created_at"]),
             updated_at=updated,
@@ -100,6 +108,12 @@ class SchedulerService:
         return scheduler 
 
     async def delete(self, task_id: str):
+        job = scheduler_cron.get_job(task_id)
+        if not job:
+            logging.warning(f"Задача с task_id {task_id} не найдена в планировщике")
+            raise HTTPException(status_code=404, detail="Задача не найдена в планировщике")
+        
+        scheduler_cron.remove_job(task_id)
         task_data = await self._redis_client.get_value(task_id)
         if not task_data:
             raise HTTPException(status_code=404, detail="Задача не найдена") 
@@ -112,22 +126,21 @@ class SchedulerService:
 
         task_data = json.loads(task_data)
         notification_data = {
-            "notification_type": "email",
-            "delivery_type": "email",
-            "template_code": "welcome",
-            "send_date": None
-            # "user_id": task_data["user_id"]
+            "notification_type": task_data["notification_type"],
+            "delivery_type": task_data["delivery_type"],
+            "template_code": task_data["template_code"],
+            "send_date": task_data["send_date"],
         }
         try:
             response = await self._http_client.post(
                 "http://localhost:8000/api/admin_notification/",
                 json=notification_data
             )
-            response.raise_for_status()  # Проверяем, что запрос успешен
+            response.raise_for_status()
+            logging.info(f"Задача {task_id} из планировщика успешно отправлена")
         except httpx.HTTPError as e:
-            print(f"Ошибка при выполнении запроса: {e}")
+            logging.warning(f"Ошибка при выполнении запроса: {e}")
         finally:
-            # Обновляем время последнего выполнения задачи
             task_data["last_run"] = datetime.now().isoformat()
             await self._redis_client.set_value(task_id, json.dumps(task_data))
 
