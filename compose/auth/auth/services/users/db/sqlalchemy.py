@@ -1,9 +1,17 @@
 from __future__ import annotations
 
+import datetime
 import uuid
+from collections.abc import Sequence
 from typing import Any
 
-from sqlalchemy import select
+from sqlalchemy import (
+    select,
+    or_,
+    and_,
+    true,
+    ColumnElement,
+)
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql import Select
 
@@ -31,6 +39,39 @@ class SQLAlchemyUserDatabase(BaseUserDatabase):
     async def get(self, id: uuid.UUID) -> User | None:
         statement = select(self.user_table).where(self.user_table.id == id)
         return await self._get_user(statement)
+
+    async def get_list(self,
+                       *,
+                       id: uuid.UUID | None = None,
+                       created: datetime.datetime | None = None,
+                       count: int) -> Sequence[User]:
+        created_parts: list[ColumnElement[bool]] = []
+
+        if created is not None:
+            created_parts.append(
+                self.user_table.created > created,
+            )
+
+        if created is not None and id is not None:
+            created_parts.append(
+                and_(
+                    self.user_table.created == created,
+                    self.user_table.id > id,
+                ),
+            )
+
+        statement = select(
+            self.user_table,
+        ).where(
+            or_(*created_parts) if created_parts else true(),
+        ).limit(
+            count,
+        ).order_by(
+            self.user_table.created,
+            self.user_table.id,
+        )
+
+        return await self._get_users_list(statement)
 
     async def get_by_login(self, login: str) -> User | None:
         statement = select(self.user_table).where(self.user_table.login == login)
@@ -93,5 +134,9 @@ class SQLAlchemyUserDatabase(BaseUserDatabase):
         return user
 
     async def _get_user(self, statement: Select) -> User | None:
-        results = await self.session.execute(statement)
-        return results.unique().scalar_one_or_none()
+        result = await self.session.execute(statement)
+        return result.unique().scalar_one_or_none()
+
+    async def _get_users_list(self, statement: Select) -> Sequence[User]:
+        result = await self.session.execute(statement)
+        return result.unique().scalars().all()

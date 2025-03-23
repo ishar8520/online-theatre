@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import datetime
 import uuid
 
 from pydantic import BaseModel
@@ -16,3 +17,11 @@ class User(BaseModel):
     login: str | None
     email: str | None
     is_superuser: bool
+    created: datetime.datetime
+    modified: datetime.datetime
+
+
+class UsersListParams(BaseModel):
+    user_id: uuid.UUID | None = None
+    user_created: datetime.datetime | None = None
+    page_size: int | None = None

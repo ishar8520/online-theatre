@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import abc
+import datetime
 import uuid
 from typing import Annotated, Any
 
@@ -22,6 +23,13 @@ class AbstractAuthService(abc.ABC):
     @abc.abstractmethod
     async def get_user(self, *, user_id: uuid.UUID) -> User | None: ...
 
+    @abc.abstractmethod
+    async def get_users_list(self,
+                             *,
+                             user_id: uuid.UUID | None = None,
+                             user_created: datetime.datetime | None = None,
+                             page_size: int | None = None) -> list[User]: ...
+
 
 class AuthService(AbstractAuthService):
     auth_service_client: AuthServiceClient
@@ -33,6 +41,18 @@ class AuthService(AbstractAuthService):
         return await GetUserRequest(
             auth_service_client=self.auth_service_client,
             user_id=user_id,
+        ).send_request()
+
+    async def get_users_list(self,
+                             *,
+                             user_id: uuid.UUID | None = None,
+                             user_created: datetime.datetime | None = None,
+                             page_size: int | None = None) -> list[User]:
+        return await GetUsersListRequest(
+            auth_service_client=self.auth_service_client,
+            user_id=user_id,
+            user_created=user_created,
+            page_size=page_size,
         ).send_request()
 
 
@@ -63,6 +83,30 @@ class GetUserRequest(AuthServiceRequest[User | None]):
 
     async def _send_request(self) -> User | None:
         return await self.auth_service_client.get_user(user_id=self.user_id)
+
+
+class GetUsersListRequest(AuthServiceRequest[list[User]]):
+    user_id: uuid.UUID | None
+    user_created: datetime.datetime | None
+    page_size: int | None
+
+    def __init__(self,
+                 *,
+                 user_id: uuid.UUID | None = None,
+                 user_created: datetime.datetime | None = None,
+                 page_size: int | None = None,
+                 **kwargs: Any) -> None:
+        super().__init__(**kwargs)
+        self.user_id = user_id
+        self.user_created = user_created
+        self.page_size = page_size
+
+    async def _send_request(self) -> list[User]:
+        return await self.auth_service_client.get_users_list(
+            user_id=self.user_id,
+            user_created=self.user_created,
+            page_size=self.page_size,
+        )
 
 
 async def get_auth_service(auth_service_client: AuthServiceClientTaskiqDep) -> AbstractAuthService:

@@ -1,9 +1,13 @@
 from __future__ import annotations
 
 import abc
+import datetime
 import logging
 import uuid
-from collections.abc import Iterable
+from collections.abc import (
+    Iterable,
+    AsyncIterable,
+)
 from typing import Annotated
 
 from taskiq import TaskiqDepends
@@ -48,7 +52,7 @@ class NotificationsService(AbstractNotificationsService):
 
         await self._send_notification(
             notification_type=notification.type,
-            users=notification.users,
+            users_ids=notification.users,
             subject=notification.subject,
             text=notification.text,
         )
@@ -72,27 +76,51 @@ class NotificationsService(AbstractNotificationsService):
     async def _send_notification(self,
                                  *,
                                  notification_type: NotificationType,
-                                 users: Iterable[uuid.UUID] | None,
+                                 users_ids: Iterable[uuid.UUID] | None = None,
                                  subject: str,
                                  text: str) -> None:
         logger.info('NotificationsService._send_notification()')
+        users_list = self._get_selected_users(users_ids=users_ids) if users_ids else self._get_all_users()
 
-        if users is None:
-            return
-
-        for user_id in users:
-            user = await self.auth_service.get_user(user_id=user_id)
-            logger.info('user=%r', user)
-
-            if user is None:
-                continue
-
+        async for user in users_list:
             if notification_type == NotificationType.EMAIL:
                 await self._send_email_message(
                     user=user,
                     subject=subject,
                     text=text,
                 )
+
+    async def _get_selected_users(self, *, users_ids: Iterable[uuid.UUID] | None = None) -> AsyncIterable[User]:
+        users_ids = users_ids or []
+
+        for user_id in users_ids:
+            user = await self.auth_service.get_user(user_id=user_id)
+            logger.info('user=%r', user)
+
+            if user is None:
+                continue
+
+            yield user
+
+    async def _get_all_users(self) -> AsyncIterable[User]:
+        user_id: uuid.UUID | None = None
+        user_created: datetime.datetime | None = None
+
+        while True:
+            users_list = await self.auth_service.get_users_list(
+                user_id=user_id,
+                user_created=user_created,
+            )
+            logger.info('users_list=%r', users_list)
+
+            if not users_list:
+                break
+
+            user_id = users_list[-1].id
+            user_created = users_list[-1].created
+
+            for _user in users_list:
+                yield _user
 
     async def _send_email_message(self,
                                   *,
