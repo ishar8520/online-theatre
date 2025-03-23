@@ -8,7 +8,7 @@ from admin_panel.models.enums import (
     DeliveryEnum,
     TemplateTypeEnum,
 )
-from sqlalchemy import DateTime, ForeignKey, MetaData, String, Text, func
+from sqlalchemy import Boolean, DateTime, ForeignKey, MetaData, String, Text, func
 from sqlalchemy.dialects.postgresql import ENUM as PG_ENUM
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
@@ -52,6 +52,7 @@ class Template(AdminBase):
         PG_ENUM(TemplateTypeEnum, name="template_type_enum", create_type=True),
         nullable=False,
     )
+    is_system: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
     admin_notifications: Mapped[list["AdminNotificationTask"]] = relationship(
         "AdminNotificationTask", back_populates="template"

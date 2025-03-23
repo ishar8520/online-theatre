@@ -20,3 +20,8 @@ class TemplateTypeNotFoundError(Exception):
 
 class TemplateAlreadyExistsError(Exception):
     pass
+
+
+class SystemTemplateOperationNotAllowedError(Exception):
+    pass
+

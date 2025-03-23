@@ -18,6 +18,7 @@ class AuthConfig(BaseSettings):
     port: int = 8000
     superuser_login: str
     superuser_password: str
+    x_request_id: str = 'notifications_queue'
 
     @property
     def service_url(self) -> str:
@@ -70,5 +71,6 @@ class Settings(BaseSettings):
     auth: AuthConfig = AuthConfig()  # type: ignore[call-arg]
     rabbitmq: RabbitMQConfig = RabbitMQConfig()  # type: ignore[call-arg]
     redis: RedisConfig = RedisConfig()
+
 
 settings = Settings()

@@ -617,8 +617,6 @@ services:
     environment:
       - QUEUE_HOST=notifications-queue-service
       - QUEUE_PORT=8000
-      - TEMPLATE_MESSAGE_REGISTRATION=$TEMPLATE_MESSAGE_REGISTRATION_UUID
-      - TEMPLATE_MESSAGE_NEW_MOVIE=$TEMPLATE_MESSAGE_NEW_MOVIE_UUID
     command: [ '/opt/app/commands/fastapi.sh', 'dev' ]
     healthcheck:
       test: [ 'CMD-SHELL', 'curl -s http://localhost:8000/api/_health' ]
@@ -667,13 +665,13 @@ services:
       - REDIS_PORT=6379
       - PROJECT_HOST
 
-  notifications-admin-panel-service:
+  notification-admin-panel-service:
     build:
       context: ./compose/notifications/admin_panel
     depends_on:
       admim-panel-postgresql:
         condition: service_healthy
-      notifications-admin-panel-init:
+      notification-admin-panel-init:
         condition: service_completed_successfully
       jaeger:
         condition: service_healthy
@@ -686,8 +684,6 @@ services:
       - POSTGRESQL_USERNAME=$ADMIN_PANEL_POSTGRESQL_USERNAME
       - POSTGRESQL_PASSWORD=$ADMIN_PANEL_POSTGRESQL_PASSWORD
     command: [ '/opt/app/commands/fastapi.sh', 'dev' ]
-    ports:
-      - "8000:8000"
     healthcheck:
       test: [ 'CMD-SHELL', 'curl -s -H "X-Request-Id: healthcheck" http://localhost:8000/admin_panel/api/_health' ]
       interval: 10s
@@ -706,7 +702,7 @@ services:
         - action: rebuild
           path: ./compose/notifications/admin_panel/poetry.lock
 
-  notifications-admin-panel-init:
+  notification-admin-panel-init:
     build:
       context: ./compose/notifications/admin_panel
     depends_on:

@@ -12,8 +12,8 @@ from fastapi import (
 from taskiq import TaskiqDepends
 
 from .client import (
-    AuthClient,
-    AuthClientTaskiqDep,
+    AuthServiceClient,
+    AuthServiceClientTaskiqDep,
 )
 from .models import User
 
@@ -24,23 +24,23 @@ class AbstractAuthService(abc.ABC):
 
 
 class AuthService(AbstractAuthService):
-    auth_client: AuthClient
+    auth_service_client: AuthServiceClient
 
-    def __init__(self, *, auth_client: AuthClient) -> None:
-        self.auth_client = auth_client
+    def __init__(self, *, auth_service_client: AuthServiceClient) -> None:
+        self.auth_service_client = auth_service_client
 
     async def get_user(self, *, user_id: uuid.UUID) -> User | None:
         return await GetUserRequest(
-            auth_client=self.auth_client,
+            auth_service_client=self.auth_service_client,
             user_id=user_id,
         ).send_request()
 
 
 class AuthServiceRequest[TResponse](abc.ABC):
-    auth_client: AuthClient
+    auth_service_client: AuthServiceClient
 
-    def __init__(self, *, auth_client: AuthClient) -> None:
-        self.auth_client = auth_client
+    def __init__(self, *, auth_service_client: AuthServiceClient) -> None:
+        self.auth_service_client = auth_service_client
 
     async def send_request(self) -> TResponse:
         try:
@@ -62,11 +62,11 @@ class GetUserRequest(AuthServiceRequest[User | None]):
         self.user_id = user_id
 
     async def _send_request(self) -> User | None:
-        return await self.auth_client.get_user(user_id=self.user_id)
+        return await self.auth_service_client.get_user(user_id=self.user_id)
 
 
-async def get_auth_service(auth_client: AuthClientTaskiqDep) -> AbstractAuthService:
-    return AuthService(auth_client=auth_client)
+async def get_auth_service(auth_service_client: AuthServiceClientTaskiqDep) -> AbstractAuthService:
+    return AuthService(auth_service_client=auth_service_client)
 
 
 AuthServiceTaskiqDep = Annotated[AbstractAuthService, TaskiqDepends(get_auth_service)]

@@ -24,5 +24,6 @@ class TextNotification(Notification):
 
 
 class TemplateNotification(Notification):
-    template_id: uuid.UUID
+    template_id: uuid.UUID | None = None
+    template_code: str | None = None
     template_context: dict = {}
