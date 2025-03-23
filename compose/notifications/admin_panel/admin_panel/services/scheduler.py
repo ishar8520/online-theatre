@@ -133,9 +133,14 @@ class SchedulerService:
         }
         try:
             response = await self._http_client.post(
-                "http://localhost:8000/api/admin_notification/",
+                "http://localhost:8000/admin_panel/api/v1/admin_notification/",
+                headers={
+                    "accept": "application/json",
+                    "Content-Type": "application/json",
+                },
                 json=notification_data
             )
+            logging.info(f"Ответ от API: {response.status_code}, {response.text}")
             response.raise_for_status()
             logging.info(f"Задача {task_id} из планировщика успешно отправлена")
         except httpx.HTTPError as e:

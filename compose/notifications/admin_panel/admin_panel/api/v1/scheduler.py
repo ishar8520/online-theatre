@@ -7,7 +7,7 @@ router = APIRouter()
 
 
 @router.post(
-    "/scheduler",
+    "/",
     response_model=dict,
     summary="Создать отложенную задачу на рассылку",
 )
@@ -20,7 +20,7 @@ async def create_scheduler(
             'task_id': task_id}
 
 @router.get(
-    "/scheduler/{task_id}",
+    "/{task_id}",
     response_model=scheduler_schemas.SchedulerGet,
     summary='Получить задачу по id'
 )
@@ -32,7 +32,7 @@ async def get_scheduler(
     return response
 
 @router.patch(
-    "scheduler/{task_id}",
+    "/{task_id}",
     response_model=scheduler_schemas.SchedulerGet,
     summary='Обновить задачу по id'
 )
@@ -45,7 +45,7 @@ async def update_scheduler(
     return response
 
 @router.delete(
-    "schedeuler/{task_id}",
+    "/{task_id}",
     response_model=dict,
     summary='Удалить задачу по id'
 )
