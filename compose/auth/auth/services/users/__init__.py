@@ -26,4 +26,5 @@ from .schemas import (
     UserRead,
     UserCreate,
     UserUpdate,
+    ExtendedUserRead,
 )

@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import datetime
 import uuid
+from collections.abc import Sequence
 from typing import Any, Optional, Annotated
 
 from fastapi import Depends, Request
@@ -65,6 +67,17 @@ class UserManager:
             raise exceptions.UserDoesNotExist
 
         return user
+
+    async def get_list(self,
+                       *,
+                       id: uuid.UUID | None = None,
+                       created: datetime.datetime | None = None,
+                       count: int) -> Sequence[User]:
+        return await self.user_db.get_list(
+            created=created,
+            id=id,
+            count=count,
+        )
 
     async def get_by_login(self, user_login: str) -> User:
         """

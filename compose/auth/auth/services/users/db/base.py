@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import datetime
 import uuid
+from collections.abc import Sequence
 from typing import Any
 
 from ....models.sqlalchemy import (
@@ -11,6 +13,13 @@ from ....models.sqlalchemy import (
 
 class BaseUserDatabase:
     async def get(self, id: uuid.UUID) -> User | None:
+        raise NotImplementedError
+
+    async def get_list(self,
+                       *,
+                       id: uuid.UUID | None = None,
+                       created: datetime.datetime | None = None,
+                       count: int) -> Sequence[User]:
         raise NotImplementedError
 
     async def get_by_login(self, login: str) -> User | None:
