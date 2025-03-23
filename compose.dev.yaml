@@ -671,7 +671,7 @@ services:
     depends_on:
       admim-panel-postgresql:
         condition: service_healthy
-      notifications-admin-panel-init:
+      notification-admin-panel-init:
         condition: service_completed_successfully
       jaeger:
         condition: service_healthy
