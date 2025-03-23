@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import json
-import uuid
 from http import HTTPStatus
 from typing import Annotated
 
