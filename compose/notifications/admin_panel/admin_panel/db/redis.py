@@ -21,7 +21,7 @@ class RedisClient:
         return await self._client.set(key, value)
 
     async def delete_value(self, key: str):
-        await self._client.delete(key)
+        return await self._client.delete(key)
 
 async def get_redis_client() -> RedisClient:
     return RedisClient(redis_client)
