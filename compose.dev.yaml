@@ -617,8 +617,6 @@ services:
     environment:
       - QUEUE_HOST=notifications-queue-service
       - QUEUE_PORT=8000
-      - TEMPLATE_MESSAGE_REGISTRATION=$TEMPLATE_MESSAGE_REGISTRATION_UUID
-      - TEMPLATE_MESSAGE_NEW_MOVIE=$TEMPLATE_MESSAGE_NEW_MOVIE_UUID
     command: [ '/opt/app/commands/fastapi.sh', 'dev' ]
     healthcheck:
       test: [ 'CMD-SHELL', 'curl -s http://localhost:8000/api/_health' ]
@@ -667,6 +665,80 @@ services:
       - REDIS_PORT=6379
       - PROJECT_HOST
 
+  notification-admin-panel-service:
+    build:
+      context: ./compose/notifications/admin_panel
+    depends_on:
+      admim-panel-postgresql:
+        condition: service_healthy
+      notification-admin-panel-init:
+        condition: service_completed_successfully
+      jaeger:
+        condition: service_healthy
+    networks:
+      - movies-network
+    environment:
+      - POSTGRESQL_HOST=admim-panel-postgresql
+      - POSTGRESQL_PORT=5432
+      - POSTGRESQL_DATABASE=$ADMIN_PANEL_POSTGRESQL_DATABASE
+      - POSTGRESQL_USERNAME=$ADMIN_PANEL_POSTGRESQL_USERNAME
+      - POSTGRESQL_PASSWORD=$ADMIN_PANEL_POSTGRESQL_PASSWORD
+    command: [ '/opt/app/commands/fastapi.sh', 'dev' ]
+    healthcheck:
+      test: [ 'CMD-SHELL', 'curl -s -H "X-Request-Id: healthcheck" http://localhost:8000/admin_panel/api/_health' ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+    develop:
+      watch:
+        - action: sync
+          path: ./compose/notifications/admin_panel/admin_panel
+          target: /opt/app/src
+        - action: rebuild
+          path: ./compose/notifications/admin_panel/commands
+        - action: rebuild
+          path: ./compose/notifications/admin_panel/pyproject.toml
+        - action: rebuild
+          path: ./compose/notifications/admin_panel/poetry.lock
+
+  notification-admin-panel-init:
+    build:
+      context: ./compose/notifications/admin_panel
+    depends_on:
+      admim-panel-postgresql:
+        condition: service_healthy
+      jaeger:
+        condition: service_healthy
+    networks:
+      - movies-network
+    environment:
+      - POSTGRESQL_HOST=admim-panel-postgresql
+      - POSTGRESQL_PORT=5432
+      - POSTGRESQL_DATABASE=$ADMIN_PANEL_POSTGRESQL_DATABASE
+      - POSTGRESQL_USERNAME=$ADMIN_PANEL_POSTGRESQL_USERNAME
+      - POSTGRESQL_PASSWORD=$ADMIN_PANEL_POSTGRESQL_PASSWORD
+    command: [ '/opt/app/commands/init.sh' ]
+
+
+  admim-panel-postgresql:
+    image: 'bitnami/postgresql:17.2.0-debian-12-r5'
+    networks:
+      - movies-network
+    volumes:
+      - 'admin-panel-postgresql-data:/bitnami/postgresql'
+    environment:
+      - POSTGRESQL_DATABASE=$ADMIN_PANEL_POSTGRESQL_DATABASE
+      - POSTGRESQL_USERNAME=$ADMIN_PANEL_POSTGRESQL_USERNAME
+      - POSTGRESQL_PASSWORD=$ADMIN_PANEL_POSTGRESQL_PASSWORD
+    restart: unless-stopped
+    healthcheck:
+      test: [ 'CMD-SHELL', 'pg_isready --username=$ADMIN_PANEL_POSTGRESQL_USERNAME --dbname=$ADMIN_PANEL_POSTGRESQL_DATABASE' ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
 networks:
   movies-network:
 
@@ -685,3 +757,4 @@ volumes:
   short_links_redis_data:
   notifications-queue-rabbitmq-data:
   notifications-queue-redis-data:
+  admin-panel-postgresql-data:

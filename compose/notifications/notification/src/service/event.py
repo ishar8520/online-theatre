@@ -7,6 +7,7 @@ from fastapi import Depends
 
 from .models.base import NotificationType
 from ..core.config import settings
+from ..core.templates import TemplateList
 from ..service.queue import (
     QueueService,
     QueueServiceDep
@@ -29,7 +30,7 @@ class EventService:
             "users": [str(user_id)],
             "subject": "Registration",
             "type": notification_type,
-            "template_id": str(settings.templates.registration)
+            "template_code": TemplateList.REGISTRATION,
         }
 
         return await self._queue.send(settings.queue.notification_url_template, payload)
@@ -43,7 +44,7 @@ class EventService:
         payload = {
             "subject": "New movie",
             "type": notification_type,
-            "template_id": str(settings.templates.registration),
+            "template_code": TemplateList.ON_NEW_MOVIE,
             "template_context": {
                 "film_id": str(film_id)
             }

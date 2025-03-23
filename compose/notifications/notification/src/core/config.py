@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import uuid
-
 from pydantic_settings import (
     BaseSettings,
     SettingsConfigDict
@@ -19,17 +17,8 @@ class QueueSettings(BaseSettings):
         return f'http://{self.host}:{self.port}/api/v1/notifications/send/template'
 
 
-class TemplateList(BaseSettings):
-    model_config = SettingsConfigDict(env_prefix='template_message_')
-
-    registration: uuid.UUID
-    new_movie: uuid.UUID
-
-
 class Settings(BaseSettings):
     queue: QueueSettings = QueueSettings()
-
-    templates: TemplateList = TemplateList() # type: ignore[call-arg]
 
 
 settings = Settings()
