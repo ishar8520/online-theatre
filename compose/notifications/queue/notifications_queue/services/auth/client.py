@@ -13,30 +13,31 @@ from taskiq import TaskiqDepends
 from .models import (
     User,
 )
-from .token import (
-    AuthTokenClient,
-    AuthTokenClientTaskiqDep,
+from .tokens import (
+    AuthTokensProcessor,
+    AuthTokensProcessorTaskiqDep,
+    AuthServiceRequest,
 )
 from ...core import settings
 from ...dependencies.tasks import HTTPXClientTaskiqDep
 
 
-class AuthClient:
+class AuthServiceClient:
     httpx_client: httpx.AsyncClient
-    auth_token_client: AuthTokenClient
+    auth_tokens_processor: AuthTokensProcessor
 
     def __init__(self,
                  *,
                  httpx_client: httpx.AsyncClient,
-                 auth_token_client: AuthTokenClient) -> None:
+                 auth_tokens_processor: AuthTokensProcessor) -> None:
         self.httpx_client = httpx_client
-        self.auth_token_client = auth_token_client
+        self.auth_tokens_processor = auth_tokens_processor
 
     async def get_user(self, *, user_id: uuid.UUID) -> User | None:
         try:
             response = await GetUserRequest(
                 httpx_client=self.httpx_client,
-                auth_token_client=self.auth_token_client,
+                auth_tokens_processor=self.auth_tokens_processor,
                 user_id=user_id,
             ).send_request()
 
@@ -49,50 +50,36 @@ class AuthClient:
         return User.model_validate(response.json())
 
 
-class AuthClientRequest(abc.ABC):
-    httpx_client: httpx.AsyncClient
-    auth_token_client: AuthTokenClient
-    x_request_id: str
+class AuthenticatedRequest(AuthServiceRequest):
+    auth_tokens_processor: AuthTokensProcessor
 
-    def __init__(self,
-                 *,
-                 httpx_client: httpx.AsyncClient,
-                 auth_token_client: AuthTokenClient,
-                 x_request_id: str | None = None) -> None:
-        self.httpx_client = httpx_client
-        self.auth_token_client = auth_token_client
-        self.x_request_id = x_request_id or 'notifications_queue'
+    def __init__(self, *, auth_tokens_processor: AuthTokensProcessor, **kwargs: Any) -> None:
+        super().__init__(**kwargs)
+        self.auth_tokens_processor = auth_tokens_processor
 
     async def send_request(self) -> httpx.Response:
-        auth_tokens = await self.auth_token_client.login()
+        auth_tokens = await self.auth_tokens_processor.login()
 
         try:
             return await self._send_authenticated_request(token=auth_tokens.access_token)
         except httpx.HTTPStatusError as e:
             if e.response.status_code == status.HTTP_401_UNAUTHORIZED:
-                auth_tokens = await self.auth_token_client.refresh()
+                auth_tokens = await self.auth_tokens_processor.refresh()
                 return await self._send_authenticated_request(token=auth_tokens.access_token)
             else:
                 raise
 
     async def _send_authenticated_request(self, *, token: str) -> httpx.Response:
-        headers = self.get_headers(token=token)
-        response = await self._send_request(headers=headers)
-        response.raise_for_status()
-        return response
-
-    def get_headers(self, *, token: str) -> dict:
-        return {
-            'X-Request-Id': self.x_request_id,
+        return await self._process_request(headers={
             'Authorization': f'Bearer {token}',
-        }
+        })
 
     @abc.abstractmethod
     async def _send_request(self, *, headers: dict) -> httpx.Response:
         ...
 
 
-class GetUserRequest(AuthClientRequest):
+class GetUserRequest(AuthenticatedRequest):
     user_id: uuid.UUID
 
     def __init__(self, *, user_id: uuid.UUID, **kwargs: Any) -> None:
@@ -108,12 +95,12 @@ class GetUserRequest(AuthClientRequest):
         )
 
 
-async def get_auth_client(httpx_client: HTTPXClientTaskiqDep,
-                          auth_token_client: AuthTokenClientTaskiqDep) -> AuthClient:
-    return AuthClient(
+async def get_auth_service_client(httpx_client: HTTPXClientTaskiqDep,
+                                  auth_tokens_processor: AuthTokensProcessorTaskiqDep) -> AuthServiceClient:
+    return AuthServiceClient(
         httpx_client=httpx_client,
-        auth_token_client=auth_token_client,
+        auth_tokens_processor=auth_tokens_processor,
     )
 
 
-AuthClientTaskiqDep = Annotated[AuthClient, TaskiqDepends(get_auth_client)]
+AuthServiceClientTaskiqDep = Annotated[AuthServiceClient, TaskiqDepends(get_auth_service_client)]
