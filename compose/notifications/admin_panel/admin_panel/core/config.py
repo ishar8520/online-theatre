@@ -50,12 +50,19 @@ class PostgreSQLConfig(BaseSettings):
         return f'postgresql+asyncpg://{self.username}:{self.password}@{self.host}:{self.port}/{self.database}'
 
 
+class RedisConfig(BaseSettings):
+    model_config = SettingsConfigDict(env_prefix='redis_')
+    
+    host: str
+    port: int
+    
 class Settings(BaseSettings):
     project: ProjectConfig = ProjectConfig()
     admin_notification: AdminNotificationConfig = AdminNotificationConfig()
     otel: OpenTelemetryConfig = OpenTelemetryConfig()
     sentry: SentryConfig = SentryConfig()
     postgresql: PostgreSQLConfig = PostgreSQLConfig()  # type: ignore[call-arg]
+    redis: RedisConfig = RedisConfig()
 
 
 settings = Settings()

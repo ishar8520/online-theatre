@@ -19,8 +19,9 @@ from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapPropagator
+import admin_panel.scheduler
 
-from .api.v1 import admin_notification, template
+from .api.v1 import admin_notification, template, scheduler
 from .core import LOGGING, settings
 
 logging.config.dictConfig(LOGGING)
@@ -113,4 +114,9 @@ app.include_router(
     template.router,
     prefix=f'{admin_notification_prefix}/template',
     tags=['template'],
+)
+app.include_router(
+    scheduler.router,
+    prefix=f'{admin_notification_prefix}/scheduler',
+    tags=['scheduler']
 )
