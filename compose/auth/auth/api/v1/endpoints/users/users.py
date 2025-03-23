@@ -120,7 +120,7 @@ async def get_user(user_id: uuid.UUID,
 async def get_users_list(*,
                          user_id: uuid.UUID | None = None,
                          user_created: datetime.datetime | None = None,
-                         page_size: Annotated[int, Query(ge=1, le=50)] = 50,
+                         page_size: Annotated[int, Query(ge=1, le=100)] = 100,
                          user_manager: UserManagerDep,
                          _current_superuser: CurrentSuperuserDep) -> list[ExtendedUserRead]:
     users_list = await user_manager.get_list(

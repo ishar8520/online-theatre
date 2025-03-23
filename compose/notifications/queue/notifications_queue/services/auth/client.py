@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import abc
+import datetime
 import uuid
 from typing import Any, Annotated
 
@@ -12,6 +13,7 @@ from taskiq import TaskiqDepends
 
 from .models import (
     User,
+    UsersListParams,
 )
 from .tokens import (
     AuthTokensProcessor,
@@ -48,6 +50,21 @@ class AuthServiceClient:
             raise
 
         return User.model_validate(response.json())
+
+    async def get_users_list(self,
+                             *,
+                             user_id: uuid.UUID | None = None,
+                             user_created: datetime.datetime | None = None,
+                             page_size: int | None = None) -> list[User]:
+        response = await GetUsersListRequest(
+            httpx_client=self.httpx_client,
+            auth_tokens_processor=self.auth_tokens_processor,
+            user_id=user_id,
+            user_created=user_created,
+            page_size=page_size,
+        ).send_request()
+
+        return [User.model_validate(user_data) for user_data in response.json()]
 
 
 class AuthenticatedRequest(AuthServiceRequest):
@@ -91,6 +108,42 @@ class GetUserRequest(AuthenticatedRequest):
 
         return await self.httpx_client.get(
             url=user_url,
+            headers=headers,
+        )
+
+
+class GetUsersListRequest(AuthenticatedRequest):
+    user_id: uuid.UUID | None
+    user_created: datetime.datetime | None
+    page_size: int | None = None
+
+    def __init__(self,
+                 *,
+                 user_id: uuid.UUID | None = None,
+                 user_created: datetime.datetime | None = None,
+                 page_size: int | None = None,
+                 **kwargs: Any) -> None:
+        super().__init__(**kwargs)
+        self.user_id = user_id
+        self.user_created = user_created
+        self.page_size = page_size
+
+    async def _send_request(self, *, headers: dict) -> httpx.Response:
+        users_list_url = settings.auth.get_users_list_url()
+        users_list_params = UsersListParams(
+            user_id=self.user_id,
+            user_created=self.user_created,
+            page_size=self.page_size,
+        )
+        params = {
+            key: value
+            for key, value in users_list_params.model_dump(mode='json').items()
+            if value is not None
+        }
+
+        return await self.httpx_client.get(
+            url=users_list_url,
+            params=params,
             headers=headers,
         )
 

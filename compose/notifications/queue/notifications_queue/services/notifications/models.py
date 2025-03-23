@@ -15,7 +15,7 @@ class NotificationType(enum.StrEnum):
 
 class Notification(BaseModel, abc.ABC):
     type: NotificationType = NotificationType.EMAIL
-    users: list[uuid.UUID] | None = []
+    users: list[uuid.UUID] = []
     subject: str
 
 
