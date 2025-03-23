@@ -1,0 +1,100 @@
+services:
+  notifications-admin-panel-service:
+    build:
+      context: ./compose/notifications/admin_panel
+    depends_on:
+      admim-panel-postgresql:
+        condition: service_healthy
+      notifications-admin-panel-init:
+        condition: service_completed_successfully
+    networks:
+      - movies-network
+    environment:
+      - POSTGRESQL_HOST=admim-panel-postgresql
+      - POSTGRESQL_PORT=5432
+      - POSTGRESQL_DATABASE=$ADMIN_PANEL_POSTGRESQL_DATABASE
+      - POSTGRESQL_USERNAME=$ADMIN_PANEL_POSTGRESQL_USERNAME
+      - POSTGRESQL_PASSWORD=$ADMIN_PANEL_POSTGRESQL_PASSWORD
+      - REDIS_HOST=admin-panel-redis
+      - REDIS_PORT=6379
+    command: [ '/opt/app/commands/fastapi.sh', 'dev' ]
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: [ 'CMD-SHELL', 'curl -s -H "X-Request-Id: healthcheck" http://localhost:8000/admin_panel/api/_health' ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+    develop:
+      watch:
+        - action: sync
+          path: ./compose/notifications/admin_panel/admin_panel
+          target: /opt/app/src
+        - action: rebuild
+          path: ./compose/notifications/admin_panel/commands
+        - action: rebuild
+          path: ./compose/notifications/admin_panel/pyproject.toml
+        - action: rebuild
+          path: ./compose/notifications/admin_panel/poetry.lock
+
+  notifications-admin-panel-init:
+    build:
+      context: ./compose/notifications/admin_panel
+    depends_on:
+      admim-panel-postgresql:
+        condition: service_healthy
+    networks:
+      - movies-network
+    environment:
+      - POSTGRESQL_HOST=admim-panel-postgresql
+      - POSTGRESQL_PORT=5432
+      - POSTGRESQL_DATABASE=$ADMIN_PANEL_POSTGRESQL_DATABASE
+      - POSTGRESQL_USERNAME=$ADMIN_PANEL_POSTGRESQL_USERNAME
+      - POSTGRESQL_PASSWORD=$ADMIN_PANEL_POSTGRESQL_PASSWORD
+      - REDIS_HOST=admin-panel-redis
+      - REDIS_PORT=6379
+    command: [ '/opt/app/commands/init.sh' ]
+
+
+  admim-panel-postgresql:
+    image: 'bitnami/postgresql:17.2.0-debian-12-r5'
+    networks:
+      - movies-network
+    volumes:
+      - 'admin-panel-postgresql-data:/bitnami/postgresql'
+    environment:
+      - POSTGRESQL_DATABASE=$ADMIN_PANEL_POSTGRESQL_DATABASE
+      - POSTGRESQL_USERNAME=$ADMIN_PANEL_POSTGRESQL_USERNAME
+      - POSTGRESQL_PASSWORD=$ADMIN_PANEL_POSTGRESQL_PASSWORD
+    restart: unless-stopped
+    healthcheck:
+      test: [ 'CMD-SHELL', 'pg_isready --username=$ADMIN_PANEL_POSTGRESQL_USERNAME --dbname=$ADMIN_PANEL_POSTGRESQL_DATABASE' ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  admin-panel-redis:
+    image: 'bitnami/redis:7.4.2-debian-12-r0'
+    networks:
+      - movies-network
+    volumes:
+      - 'admin-panel-redis-data:/bitnami/redis/data'
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+    command: [ '/opt/bitnami/scripts/redis/run.sh', '--maxmemory', '${AUTH_REDIS_MAXMEMORY:-200mb}' ]
+    restart: unless-stopped
+    healthcheck:
+      test: [ 'CMD', '/bin/bash', '-c', '[[ $(redis-cli ping) == "PONG" ]]' ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+
+networks:
+  movies-network:
+
+volumes:
+  admin-panel-postgresql-data:
+  admin-panel-redis-data:

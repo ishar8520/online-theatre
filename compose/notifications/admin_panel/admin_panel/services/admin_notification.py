@@ -25,12 +25,12 @@ class AdminNotificationService:
         try:
             notification_type = AdminNotificationTypesEnum(notification_data.notification_type)
         except ValueError:
-            raise exc.AdminNotificationNotFoundError("Notification type not found")
+            raise exc.AdminNotificationNotFoundError(f"Notification type not found: {notification_data.notification_type}")
 
         try:
             delivery_type = DeliveryEnum(notification_data.delivery_type)
         except ValueError:
-            raise exc.DeliveryNotFoundError("Delivery type not found")
+            raise exc.DeliveryNotFoundError(f"Delivery type not found: {notification_data.delivery_type}")
 
         if notification_data.send_date:
             send_date = notification_data.send_date.replace(tzinfo=None)

@@ -3,7 +3,6 @@ import enum
 
 class DeliveryEnum(enum.Enum):
     EMAIL = "email"
-    # не используем, но предполагаем для будущей реализации
     MESSAGE = "message"
     TELEGRAM = "telegram"
     WEBSOCKET = "websocket"
