@@ -43,7 +43,7 @@ ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
 FROM common AS lint
 
-COPY --from=venv "$VIRTUAL_ENV" "$VIRTUAL_ENV"
+COPY --from=venv-dev "$VIRTUAL_ENV" "$VIRTUAL_ENV"
 COPY ./pyproject.toml .
 COPY ./src/ ./src/
 
