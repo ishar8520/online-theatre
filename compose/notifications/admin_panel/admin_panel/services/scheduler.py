@@ -8,6 +8,7 @@ from apscheduler.triggers.cron import CronTrigger
 from admin_panel.schemas.scheduler import SchedulerCreate, SchedulerGet, SchedulerUpdate
 from admin_panel.db.redis import get_redis_client
 from admin_panel.scheduler import scheduler_cron
+from admin_panel.core.config import settings
 from uuid import uuid4
 from croniter import croniter
 import httpx
@@ -133,7 +134,7 @@ class SchedulerService:
         }
         try:
             response = await self._http_client.post(
-                "http://localhost:8000/admin_panel/api/v1/admin_notification/",
+                f"http://{settings.admin_notification.host}:{settings.admin_notification.port}/admin_panel/api/v1/admin_notification/",
                 headers={
                     "accept": "application/json",
                     "Content-Type": "application/json",
