@@ -142,6 +142,7 @@ services:
   notification-service:
     build:
       context: ./compose/notifications/notification
+      target: lint
     networks:
       - movies-network
     volumes:
@@ -160,26 +161,26 @@ services:
         - action: rebuild
           path: ./compose/notifications/notification/poetry.lock
 
-  notification-admin-panel-service:
-    build:
-      context: ./compose/notifications/admin_panel
-    networks:
-      - movies-network
-    volumes:
-      - 'notifications-admin-panel-mypy-cache:/opt/app/.mypy_cache'
-      - './compose/notifications/admin_panel/.lint:/opt/app/.lint'
-    command: [ '/opt/app/commands/fastapi.sh', 'dev' ]
-    develop:
-      watch:
-        - action: sync
-          path: ./compose/notifications/admin_panel/admin_panel
-          target: /opt/app/admin_panel
-        - action: rebuild
-          path: ./compose/notifications/admin_panel/commands
-        - action: rebuild
-          path: ./compose/notifications/admin_panel/pyproject.toml
-        - action: rebuild
-          path: ./compose/notifications/admin_panel/poetry.lock
+#  notification-admin-panel-service:
+#    build:
+#      context: ./compose/notifications/admin_panel
+#    networks:
+#      - movies-network
+#    volumes:
+#      - 'notifications-admin-panel-mypy-cache:/opt/app/.mypy_cache'
+#      - './compose/notifications/admin_panel/.lint:/opt/app/.lint'
+#    command: [ '/opt/app/commands/fastapi.sh', 'dev' ]
+#    develop:
+#      watch:
+#        - action: sync
+#          path: ./compose/notifications/admin_panel/admin_panel
+#          target: /opt/app/admin_panel
+#        - action: rebuild
+#          path: ./compose/notifications/admin_panel/commands
+#        - action: rebuild
+#          path: ./compose/notifications/admin_panel/pyproject.toml
+#        - action: rebuild
+#          path: ./compose/notifications/admin_panel/poetry.lock
 
 networks:
   movies-network:
@@ -192,4 +193,4 @@ volumes:
   ugc-mypy-cache:
   notifications-queue-mypy-cache:
   notifications-notification-mypy-cache:
-  notifications-admin-panel-mypy-cache:
+#  notifications-admin-panel-mypy-cache:
