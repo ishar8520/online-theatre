@@ -6,9 +6,6 @@ FROM python:${PYTHON_VERSION}-slim AS base
 
 ENV PYTHONUNBUFFERED=1
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    && rm -rf /var/lib/apt/lists/*
-
 WORKDIR /opt/app
 
 FROM base AS venv
@@ -28,14 +25,39 @@ RUN --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
     --mount=type=cache,target=/root/.cache/pypoetry \
     poetry install --no-ansi --no-interaction
 
-FROM base
+FROM venv AS venv-dev
+
+RUN --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
+    --mount=type=bind,source=poetry.lock,target=poetry.lock \
+    --mount=type=cache,target=/root/.cache/pypoetry \
+    poetry install --no-ansi --no-interaction --only dev
+
+FROM base AS common
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
 
 ENV VIRTUAL_ENV=/venv
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
+FROM common AS lint
+
 COPY --from=venv "$VIRTUAL_ENV" "$VIRTUAL_ENV"
+COPY ./pyproject.toml .
 COPY ./src/ ./src/
-COPY ./poetry.lock ./pyproject.toml ./
+
+COPY ./commands/ ./commands/
+RUN chmod +x ./commands/*.sh
+
+COPY ./docker-entrypoint.sh .
+RUN chmod +x docker-entrypoint.sh
+
+FROM common
+
+COPY --from=venv "$VIRTUAL_ENV" "$VIRTUAL_ENV"
+COPY ./pyproject.toml .
+COPY ./src/ ./src/
 
 COPY ./commands/ ./commands/
 RUN chmod +x ./commands/*.sh
