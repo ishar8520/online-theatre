@@ -147,7 +147,7 @@ services:
     volumes:
       - 'notifications-notification-mypy-cache:/opt/app/.mypy_cache'
       - './compose/notifications/notification/.lint:/opt/app/.lint'
-    command: [ '/opt/app/commands/fastapi.sh', 'dev' ]
+    command: [ 'sleep', 'infinity' ]
     develop:
       watch:
         - action: sync
