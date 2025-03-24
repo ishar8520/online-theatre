@@ -683,6 +683,8 @@ services:
       - POSTGRESQL_DATABASE=$ADMIN_PANEL_POSTGRESQL_DATABASE
       - POSTGRESQL_USERNAME=$ADMIN_PANEL_POSTGRESQL_USERNAME
       - POSTGRESQL_PASSWORD=$ADMIN_PANEL_POSTGRESQL_PASSWORD
+      - REDIS_HOST=admin-panel-redis
+      - REDIS_PORT=6379
     command: [ '/opt/app/commands/fastapi.sh', 'dev' ]
     healthcheck:
       test: [ 'CMD-SHELL', 'curl -s -H "X-Request-Id: healthcheck" http://localhost:8000/admin_panel/api/_health' ]
@@ -718,6 +720,8 @@ services:
       - POSTGRESQL_DATABASE=$ADMIN_PANEL_POSTGRESQL_DATABASE
       - POSTGRESQL_USERNAME=$ADMIN_PANEL_POSTGRESQL_USERNAME
       - POSTGRESQL_PASSWORD=$ADMIN_PANEL_POSTGRESQL_PASSWORD
+      - REDIS_HOST=admin-panel-redis
+      - REDIS_PORT=6379
     command: [ '/opt/app/commands/init.sh' ]
 
 
@@ -739,6 +743,23 @@ services:
       retries: 5
       start_period: 30s
 
+  admin-panel-redis:
+    image: 'bitnami/redis:7.4.2-debian-12-r0'
+    networks:
+      - movies-network
+    volumes:
+      - 'admin-panel-redis-data:/bitnami/redis/data'
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+    command: [ '/opt/bitnami/scripts/redis/run.sh', '--maxmemory', '${AUTH_REDIS_MAXMEMORY:-200mb}' ]
+    restart: unless-stopped
+    healthcheck:
+      test: [ 'CMD', '/bin/bash', '-c', '[[ $(redis-cli ping) == "PONG" ]]' ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+
 networks:
   movies-network:
 
@@ -758,3 +779,4 @@ volumes:
   notifications-queue-rabbitmq-data:
   notifications-queue-redis-data:
   admin-panel-postgresql-data:
+  admin-panel-redis-data:
