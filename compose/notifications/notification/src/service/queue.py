@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from http import HTTPStatus
 from typing import Annotated
 
@@ -7,6 +8,9 @@ import aiohttp
 from fastapi import Depends
 
 from .exceptions.queue import QueueSendException
+
+
+logging.basicConfig(level=logging.INFO)
 
 
 class QueueService:
@@ -21,8 +25,16 @@ class QueueService:
                     url=notification_url,
                     json=payload
                 ) as response:
-                    return response.status == HTTPStatus.OK
-        except Exception:
+                    if response.status == HTTPStatus.OK:
+                        return True
+
+                    data = await response.json()
+                    logging.debug(f'QueueService.send: status=:{response.status}, data={data}')
+
+                    return False
+
+        except Exception as err:
+            logging.debug(f'QueueService.send: error:{err}')
             raise QueueSendException
 
 

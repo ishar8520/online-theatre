@@ -42,6 +42,7 @@ run_command() {
         etl
         ugc-mongo
         notifications-queue
+        notification-service
     )
 
     declare -A services_set
