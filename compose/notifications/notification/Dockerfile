@@ -35,7 +35,7 @@ ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
 COPY --from=venv "$VIRTUAL_ENV" "$VIRTUAL_ENV"
 COPY ./src/ ./src/
-COPY ./pyproject.toml .
+COPY ./poetry.lock ./pyproject.toml ./
 
 COPY ./commands/ ./commands/
 RUN chmod +x ./commands/*.sh
