@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import abc
+import dataclasses
 import enum
 import uuid
 
@@ -27,3 +28,10 @@ class TemplateNotification(Notification):
     template_id: uuid.UUID | None = None
     template_code: str | None = None
     template_context: dict = {}
+
+
+@dataclasses.dataclass(kw_only=True)
+class NotificationMessage:
+    type: NotificationType = NotificationType.EMAIL
+    subject: str
+    text: str

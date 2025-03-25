@@ -3,7 +3,10 @@ from __future__ import annotations
 import datetime
 import uuid
 
-from pydantic import BaseModel
+from pydantic import (
+    BaseModel,
+    EmailStr,
+)
 
 
 class AuthTokens(BaseModel):
@@ -15,7 +18,7 @@ class AuthTokens(BaseModel):
 class User(BaseModel):
     id: uuid.UUID
     login: str | None
-    email: str | None
+    email: EmailStr | None
     is_superuser: bool
     created: datetime.datetime
     modified: datetime.datetime
