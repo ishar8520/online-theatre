@@ -710,7 +710,7 @@ services:
     build:
       context: ./compose/notifications/admin_panel
     depends_on:
-      admim-panel-postgresql:
+      admin-panel-postgresql:
         condition: service_healthy
       notification-admin-panel-init:
         condition: service_completed_successfully
@@ -749,7 +749,7 @@ services:
     build:
       context: ./compose/notifications/admin_panel
     depends_on:
-      admim-panel-postgresql:
+      admin-panel-postgresql:
         condition: service_healthy
       jaeger:
         condition: service_healthy
@@ -766,7 +766,7 @@ services:
     command: [ '/opt/app/commands/init.sh' ]
 
 
-  admim-panel-postgresql:
+  admin-panel-postgresql:
     image: 'bitnami/postgresql:17.2.0-debian-12-r5'
     networks:
       - movies-network
@@ -777,6 +777,8 @@ services:
       - POSTGRESQL_USERNAME=$ADMIN_PANEL_POSTGRESQL_USERNAME
       - POSTGRESQL_PASSWORD=$ADMIN_PANEL_POSTGRESQL_PASSWORD
     restart: unless-stopped
+    ports:
+      - "5432:5432"
     healthcheck:
       test: [ 'CMD-SHELL', 'pg_isready --username=$ADMIN_PANEL_POSTGRESQL_USERNAME --dbname=$ADMIN_PANEL_POSTGRESQL_DATABASE' ]
       interval: 10s

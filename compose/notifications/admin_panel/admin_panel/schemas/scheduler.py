@@ -10,6 +10,7 @@ class SchedulerCreate(BaseModel):
     send_date: datetime | None = None
     cron_expression: str
 
+
 class SchedulerGet(BaseModel):
     id: UUID
     notification_type: str
@@ -24,10 +25,11 @@ class SchedulerGet(BaseModel):
     class Config:
         from_attributes = True
 
+
 class SchedulerUpdate(BaseModel):
-    notification_type: str | None = None,
-    delivery_type: str | None = None,
-    template_code: str | None = None,
-    send_date: datetime | None = None,
-    cron_expression: str | None = None,
-    last_run: str | None = None,
+    notification_type: str | None = None
+    delivery_type: str | None = None
+    template_code: str | None = None
+    send_date: datetime | None = None
+    cron_expression: str | None = None
+    last_run: str | None = None

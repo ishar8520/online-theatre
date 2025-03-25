@@ -55,14 +55,15 @@ class RedisConfig(BaseSettings):
     
     host: str
     port: int
-    
+
+
 class Settings(BaseSettings):
     project: ProjectConfig = ProjectConfig()
     admin_notification: AdminNotificationConfig = AdminNotificationConfig()
     otel: OpenTelemetryConfig = OpenTelemetryConfig()
     sentry: SentryConfig = SentryConfig()
     postgresql: PostgreSQLConfig = PostgreSQLConfig()  # type: ignore[call-arg]
-    redis: RedisConfig = RedisConfig()
+    redis: RedisConfig = RedisConfig()  # type: ignore[call-arg]
 
 
 settings = Settings()

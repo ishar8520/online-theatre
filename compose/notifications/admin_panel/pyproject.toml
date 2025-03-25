@@ -15,8 +15,11 @@ package-mode = false
 python = "^3.12"
 
 alembic = "^1.15.1"
+apscheduler = "3.11.0"
 asyncpg = "0.30.0"
+croniter = "6.0.0"
 fastapi = { version = "0.115.6", extras = ["standard"] }
+fastapi-pagination = "^0.12.34"
 httpx-oauth = "0.16.1"
 opentelemetry-api = "1.29.0"
 opentelemetry-exporter-otlp-proto-http = "1.29.0"
@@ -26,13 +29,31 @@ opentelemetry-propagator-jaeger = "1.29.0"
 opentelemetry-sdk = "1.29.0"
 pydantic = "^2.10.6"
 pydantic-settings = "2.7.1"
+redis = "5.2.1"
 sentry-sdk = {extras = ["fastapi"], version = "^2.22.0"}
 sqlalchemy = "^2.0.39"
-apscheduler = "3.11.0"
-redis = "5.2.1"
-croniter = "6.0.0"
 
-fastapi-pagination = "^0.12.34"
+[tool.poetry.group.dev]
+optional = true
+
+[tool.poetry.group.dev.dependencies]
+ciqar = "1.0.0"
+mypy = "1.15.0"
+ruff = "0.10.0"
+types-croniter = "^5.0.1.20250322"
+
+[tool.ruff]
+target-version = "py312"
+line-length = 120
+
+[tool.ruff.lint]
+select = [
+    "E",
+]
+
+[[tool.mypy.overrides]]
+module = "apscheduler.*"
+ignore_missing_imports = true
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
