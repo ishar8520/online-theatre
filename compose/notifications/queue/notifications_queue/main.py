@@ -8,7 +8,7 @@ import httpx
 from fastapi import FastAPI
 
 from .api.v1.endpoints import notifications
-from .broker import broker
+from .broker import BROKERS
 from .core import LOGGING
 
 logging.config.dictConfig(LOGGING)
@@ -21,13 +21,15 @@ async def lifespan(_app: FastAPI) -> AsyncGenerator[None]:
     ):
         _app.state.httpx_client = httpx_client
 
-        if not broker.is_worker_process:
-            await broker.startup()
+        for _broker in BROKERS.values():
+            if not _broker.is_worker_process:
+                await _broker.startup()
 
         yield
 
-        if not broker.is_worker_process:
-            await broker.shutdown()
+        for _broker in BROKERS.values():
+            if not _broker.is_worker_process:
+                await _broker.shutdown()
 
 
 base_api_prefix = '/api'
