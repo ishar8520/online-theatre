@@ -777,8 +777,6 @@ services:
       - POSTGRESQL_USERNAME=$ADMIN_PANEL_POSTGRESQL_USERNAME
       - POSTGRESQL_PASSWORD=$ADMIN_PANEL_POSTGRESQL_PASSWORD
     restart: unless-stopped
-    ports:
-      - "5432:5432"
     healthcheck:
       test: [ 'CMD-SHELL', 'pg_isready --username=$ADMIN_PANEL_POSTGRESQL_USERNAME --dbname=$ADMIN_PANEL_POSTGRESQL_DATABASE' ]
       interval: 10s
