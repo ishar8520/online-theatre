@@ -519,6 +519,9 @@ services:
       - RABBITMQ_PASSWORD=$NOTIFICATIONS_QUEUE_RABBITMQ_PASSWORD
       - RABBITMQ_LOGS=-
       - RABBITMQ_MANAGEMENT_ALLOW_WEB_ACCESS=true
+    ports:
+      - '15672:15672'
+      - '5672:5672'
     restart: unless-stopped
     healthcheck:
       test: [ 'CMD-SHELL', 'rabbitmq-diagnostics -q ping' ]

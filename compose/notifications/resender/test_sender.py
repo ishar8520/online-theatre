@@ -4,7 +4,7 @@ from pydantic import BaseModel
 
 class RabbitConfig(BaseModel):
     username: str = 'username'
-    password: str = 'pass'
+    password: str = 'password'
     host: str = 'localhost'
     port: int = 5672
     
@@ -14,25 +14,22 @@ class RabbitConfig(BaseModel):
 
 async def send_message_to_queue(message: str):
     rabbitmq = RabbitConfig()
-    """Отправляет сообщение в очередь taskiq.dead_letter"""
     connection = await connect(rabbitmq.url)
     channel = await connection.channel()
     
-    # Объявляем очередь (параметры должны совпадать с consumer!)
-    queue = await channel.declare_queue('taskiq.dead_letter', durable=False)
+    queue = await channel.declare_queue('undelivered_messages', passive=True)
     
-    # Отправляем сообщение
     await channel.default_exchange.publish(
         Message(
             body=message.encode(),
-            delivery_mode=2,  # Сообщение будет сохраняться при перезагрузке RabbitMQ (если очередь durable)
         ),
         routing_key=queue.name,
     )
     
-    print(f"Сообщение отправлено: {message}")
+    print(f'Сообщение отправлено: {message}')
     await connection.close()
 
 if __name__ == '__main__':
-    message = input("Введите сообщение для отправки: ")
-    asyncio.run(send_message_to_queue(message))
+    while True:
+        message = input('Введите сообщение для отправки: ')
+        asyncio.run(send_message_to_queue(message))
