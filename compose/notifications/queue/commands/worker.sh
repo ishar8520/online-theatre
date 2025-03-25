@@ -13,7 +13,7 @@ main() {
         taskiq_args+=(--reload)
     fi
 
-    taskiq worker "${taskiq_args[@]}" notifications_queue.broker:broker
+    taskiq worker "${taskiq_args[@]}" "notifications_queue.broker:${TASKIQ_BROKER_NAME:-broker}"
 }
 
 main "$@"
