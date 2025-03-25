@@ -7,7 +7,7 @@ run_server() {
 }
 
 run_server_dev() {
-    docker-compose -f compose.dev.yaml up --watch "$@"
+    docker compose -f compose.dev.yaml up --watch "$@"
 }
 
 main() {
