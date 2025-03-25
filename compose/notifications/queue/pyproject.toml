@@ -5,7 +5,7 @@ package-mode = false
 python = "^3.12"
 
 fastapi = { version = "0.115.11", extras = ["standard"] }
-pydantic = "2.10.6"
+pydantic = { version = "2.10.6", extras = ["email"] }
 pydantic-settings = "2.8.1"
 taskiq = { version = "0.11.14", extras = ["reload"] }
 taskiq-aio-pika = "0.4.1"
