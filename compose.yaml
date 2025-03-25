@@ -672,6 +672,21 @@ services:
       retries: 5
       start_period: 10s
 
+  notifications-resender-service:
+    build: ./compose/notifications/resender
+    networks:
+      - movies-network
+    depends_on:
+      notifications-queue-worker:
+        condition: service_started
+      notifications-queue-rabbitmq:
+        condition: service_healthy
+    environment:
+      - RABBITMQ_USERNAME=$NOTIFICATIONS_QUEUE_RABBITMQ_USERNAME
+      - RABBITMQ_PASSWORD=$NOTIFICATIONS_QUEUE_RABBITMQ_PASSWORD
+      - RABBITMQ_HOST=notifications-queue-rabbitmq
+      - RABBITMQ_port=5672
+
 networks:
   movies-network:
 
