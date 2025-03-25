@@ -9,5 +9,4 @@ app = FastAPI(title=settings.APP_NAME,
               docs_url=f'{base_api_prefix}/openapi',
               openapi_url=f'{base_api_prefix}/openapi.json')
 
-app.include_router(router,
-                   prefix=f'{base_api_prefix}/messages')
+app.include_router(router)

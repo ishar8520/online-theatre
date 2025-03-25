@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Test Client</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        #messages {
+            list-style-type: none;
+            padding: 0;
+        }
+        #messages li {
+            padding: 10px;
+            border-bottom: 1px solid #ccc;
+        }
+        #status {
+            margin-top: 20px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>WebSocket Test Client</h1>
+    <form id="connectForm">
+        <label for="user_uuid">User UUID:</label>
+        <input type="text" id="user_uuid" placeholder="Enter UUID" required>
+        <button type="submit">Connect</button>
+    </form>
+
+    <form id="messageForm" style="display: none;">
+        <label for="messageText">Message:</label>
+        <input type="text" id="messageText" placeholder="Enter message" required>
+        <button type="submit">Send</button>
+    </form>
+
+    <h2>Messages</h2>
+    <ul id="messages"></ul>
+
+    <div id="status">Not connected</div>
+
+    <script>
+        let ws;
+        const userUuidInput = document.getElementById('user_uuid');
+        const connectForm = document.getElementById('connectForm');
+        const messageForm = document.getElementById('messageForm');
+        const messagesList = document.getElementById('messages');
+        const statusDiv = document.getElementById('status');
+
+        // Подключение к WebSocket
+        connectForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+            const user_uuid = userUuidInput.value;
+
+            // Закрываем предыдущее соединение, если оно есть
+            if (ws) {
+                ws.close();
+            }
+
+            // Подключаемся к WebSocket
+            ws = new WebSocket(`ws://localhost:8000/ws/${user_uuid}`);
+
+            ws.onopen = function() {
+                statusDiv.textContent = `Connected as ${user_uuid}`;
+                messageForm.style.display = 'block';
+                connectForm.style.display = 'none';
+            };
+
+            ws.onmessage = function(event) {
+                const message = document.createElement('li');
+                message.textContent = `Received: ${event.data}`;
+                messagesList.appendChild(message);
+
+                // Отправляем подтверждение о получении сообщения
+                ws.send('{"status": "received"}');
+                console.log("Confirmation sent: {'status': 'received'}");
+            };
+
+            ws.onclose = function() {
+                statusDiv.textContent = 'Disconnected';
+                messageForm.style.display = 'none';
+                connectForm.style.display = 'block';
+            };
+
+            ws.onerror = function(error) {
+                console.error('WebSocket error:', error);
+                statusDiv.textContent = 'Connection error';
+            };
+        });
+
+        // Отправка сообщения
+        messageForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+            const messageText = document.getElementById('messageText').value;
+            ws.send(messageText);
+            document.getElementById('messageText').value = '';
+
+            const message = document.createElement('li');
+            message.textContent = `Sent: ${messageText}`;
+            messagesList.appendChild(message);
+        });
+    </script>
+</body>
+</html>

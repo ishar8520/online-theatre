@@ -20,9 +20,22 @@ class WebSocketManager:
             return False
 
         websocket = self.active_connections[user_uuid]
-        if websocket:
-            await websocket.send_text(message)
+        await websocket.send_text(message)
+        print(f"Message sent to {user_uuid}: {message}")
+
+        confirmation_future = asyncio.get_event_loop().create_future()
+        self.pending_confirmations[user_uuid] = confirmation_future
+
+        try:
+            await asyncio.wait_for(confirmation_future, timeout=timeout)
+            print(f"Confirmation received from {user_uuid}")
             return True
+        except asyncio.TimeoutError:
+            print(f"Confirmation timeout for {user_uuid}")
+            return False
+        finally:
+            if user_uuid in self.pending_confirmations:
+                del self.pending_confirmations[user_uuid]
 
     async def handle_message(self, user_uuid: str, message: str):
         if user_uuid in self.pending_confirmations:
