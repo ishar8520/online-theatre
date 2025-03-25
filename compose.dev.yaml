@@ -719,7 +719,7 @@ services:
     networks:
       - movies-network
     environment:
-      - POSTGRESQL_HOST=admim-panel-postgresql
+      - POSTGRESQL_HOST=admin-panel-postgresql
       - POSTGRESQL_PORT=5432
       - POSTGRESQL_DATABASE=$ADMIN_PANEL_POSTGRESQL_DATABASE
       - POSTGRESQL_USERNAME=$ADMIN_PANEL_POSTGRESQL_USERNAME
@@ -756,7 +756,7 @@ services:
     networks:
       - movies-network
     environment:
-      - POSTGRESQL_HOST=admim-panel-postgresql
+      - POSTGRESQL_HOST=admin-panel-postgresql
       - POSTGRESQL_PORT=5432
       - POSTGRESQL_DATABASE=$ADMIN_PANEL_POSTGRESQL_DATABASE
       - POSTGRESQL_USERNAME=$ADMIN_PANEL_POSTGRESQL_USERNAME
