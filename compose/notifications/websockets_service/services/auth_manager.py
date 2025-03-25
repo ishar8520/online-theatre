@@ -4,7 +4,9 @@ from uuid import UUID
 import httpx
 from fastapi import HTTPException, status
 
-logger = logging.getLogger(__name__)
+import logging
+
+logging.basicConfig(level=logging.INFO)
 
 
 class AuthClient:
@@ -23,7 +25,7 @@ class AuthClient:
                     return False
                 response.raise_for_status()
         except httpx.RequestError as e:
-            logger.error(f"Error connecting to auth service: {str(e)}")
+            logging.info(f"Error connecting to auth service: {str(e)}")
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Authorization service unavailable"
             )

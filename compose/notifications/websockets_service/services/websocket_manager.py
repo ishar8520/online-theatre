@@ -3,6 +3,9 @@ from typing import Dict
 
 from fastapi import HTTPException, WebSocket, status
 from services.auth_manager import auth_client
+import logging
+
+logging.basicConfig(level=logging.INFO)
 
 
 class WebSocketManager:
@@ -27,17 +30,17 @@ class WebSocketManager:
 
         websocket = self.active_connections[user_uuid]
         await websocket.send_text(message)
-        print(f"Message sent to {user_uuid}: {message}")
+        logging.info(f"Message sent to {user_uuid}: {message}")
 
         confirmation_future = asyncio.get_event_loop().create_future()
         self.pending_confirmations[user_uuid] = confirmation_future
 
         try:
             await asyncio.wait_for(confirmation_future, timeout=timeout)
-            print(f"Confirmation received from {user_uuid}")
+            logging.info(f"Confirmation received from {user_uuid}")
             return True
         except asyncio.TimeoutError:
-            print(f"Confirmation timeout for {user_uuid}")
+            logging.info(f"Confirmation timeout for {user_uuid}")
             return False
         finally:
             if user_uuid in self.pending_confirmations:
