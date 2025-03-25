@@ -3,7 +3,10 @@ from __future__ import annotations
 import datetime
 import uuid
 
-from ..broker import broker
+from ..broker import (
+    broker,
+    undelivered_messages_broker,
+)
 from ..services.auth import (
     User,
 )
@@ -132,6 +135,20 @@ async def send_email_message_task(
         text: str,
         notification_message_service: NotificationMessageServiceTaskiqDep) -> None:
     await notification_message_service.send_email_message(
+        email=email,
+        subject=subject,
+        text=text,
+    )
+
+
+@undelivered_messages_broker.task
+async def send_email_message_retry_task(
+        *,
+        email: str,
+        subject: str,
+        text: str,
+        notification_message_service: NotificationMessageServiceTaskiqDep) -> None:
+    await notification_message_service.send_email_message_retry(
         email=email,
         subject=subject,
         text=text,

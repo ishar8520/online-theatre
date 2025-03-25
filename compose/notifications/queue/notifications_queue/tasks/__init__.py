@@ -11,4 +11,5 @@ from .notifications import (
     download_all_users_task,
     process_notification_message_task,
     send_email_message_task,
+    send_email_message_retry_task,
 )

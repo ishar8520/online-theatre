@@ -10,9 +10,31 @@ from .core import settings, LOGGING
 
 logging.config.dictConfig(LOGGING)
 
-broker = AioPikaBroker(
-    url=settings.rabbitmq.url,
-).with_result_backend(RedisAsyncResultBackend(
-    redis_url=settings.redis.url,
-))
-taskiq_fastapi.init(broker, 'notifications_queue.main:app')
+
+def create_broker(*, queue_name: str | None = None) -> AioPikaBroker:
+    broker_kwargs: dict = {}
+
+    if queue_name:
+        broker_kwargs.update({
+            'exchange_name': queue_name,
+            'queue_name': queue_name,
+        })
+
+    _broker = AioPikaBroker(
+        url=settings.rabbitmq.url,
+        **broker_kwargs,
+    ).with_result_backend(RedisAsyncResultBackend(
+        redis_url=settings.redis.url,
+    ))
+    taskiq_fastapi.init(_broker, 'notifications_queue.main:app')
+
+    return _broker
+
+
+broker = create_broker()
+undelivered_messages_broker = create_broker(queue_name='undelivered_messages')
+
+BROKERS = {
+    'default': broker,
+    'undelivered_messages': undelivered_messages_broker,
+}
