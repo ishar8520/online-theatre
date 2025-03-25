@@ -7,6 +7,10 @@ class RabbitConfig(BaseSettings):
     password: str
     host: str
     port: int
+    
+    @property
+    def url(self) -> str:
+        return f'amqp://{self.username}:{self.password}@{self.host}:{self.port}'
 
 class Settings(BaseSettings):
     rabbitmq: RabbitConfig = RabbitConfig()

@@ -62,4 +62,4 @@ RUN chmod +x docker-entrypoint.sh
 EXPOSE 8000
 
 ENTRYPOINT ["/opt/app/docker-entrypoint.sh"]
-CMD ["python", "/opt/app/resender/resender.py"]
+CMD ["python", "-m", "resender.main"]
