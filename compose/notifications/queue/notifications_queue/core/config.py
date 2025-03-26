@@ -69,11 +69,27 @@ class RedisConfig(BaseSettings):
         return f'redis://{self.host}:{self.port}'
 
 
+class SmtpConfig(BaseSettings):
+    model_config = SettingsConfigDict(env_prefix='smtp_')
+
+    host: str = 'localhost'
+    port: int = 1025
+    username: str = 'username'
+    password: str = 'password'
+
+
+class EmailConfig(BaseSettings):
+    model_config = SettingsConfigDict(env_prefix='email_')
+    
+    from_email: str = 'email_service@example.com'
+    
+
 class Settings(BaseSettings):
     notifications_queue: NotificationsQueueConfig = NotificationsQueueConfig()
     auth: AuthConfig = AuthConfig()  # type: ignore[call-arg]
     rabbitmq: RabbitMQConfig = RabbitMQConfig()  # type: ignore[call-arg]
     redis: RedisConfig = RedisConfig()
-
+    smtp: SmtpConfig = SmtpConfig()
+    email: EmailConfig = EmailConfig()
 
 settings = Settings()
