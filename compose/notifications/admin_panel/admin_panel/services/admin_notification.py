@@ -1,18 +1,19 @@
 from datetime import datetime
 from functools import lru_cache
 
-from fastapi import Depends
-from sqlalchemy import func
-from sqlalchemy.exc import IntegrityError
-from sqlalchemy.future import select
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from admin_panel.db.postgres import get_postgres_session
 from admin_panel.models.admin_notification import AdminNotificationTask
-
-from admin_panel.models.enums import AdminNotificationTypesEnum, DeliveryEnum, AdminNotificationTaskStatusEnum
+from admin_panel.models.enums import (
+    AdminNotificationTaskStatusEnum,
+    AdminNotificationTypesEnum,
+    DeliveryEnum,
+)
 from admin_panel.schemas import admin_notification as admin_schemas
 from admin_panel.services import exceptions as exc
+from fastapi import Depends
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
 
 
 class AdminNotificationService:
@@ -25,7 +26,9 @@ class AdminNotificationService:
         try:
             notification_type = AdminNotificationTypesEnum(notification_data.notification_type)
         except ValueError:
-            raise exc.AdminNotificationNotFoundError(f"Notification type not found: {notification_data.notification_type}")
+            raise exc.AdminNotificationNotFoundError(
+                f"Notification type not found: {notification_data.notification_type}"
+            )
 
         try:
             delivery_type = DeliveryEnum(notification_data.delivery_type)
@@ -35,7 +38,7 @@ class AdminNotificationService:
         if notification_data.send_date:
             send_date = notification_data.send_date.replace(tzinfo=None)
         else:
-            send_date = func.now()
+            send_date = datetime.now()
 
         task = AdminNotificationTask(
             status=AdminNotificationTaskStatusEnum.CREATED,
@@ -54,7 +57,7 @@ class AdminNotificationService:
     async def get_admin_notifications_list(self) -> list[AdminNotificationTask]:
         async with self.postgres_session as session:
             notifications_data = await session.scalars(select(AdminNotificationTask))
-            return notifications_data.all()
+            return list(notifications_data.all())
 
     async def update_admin_notification(
         self,
