@@ -18,7 +18,6 @@ class AuthConfig(BaseSettings):
     port: int = 8000
     superuser_login: str
     superuser_password: str
-    x_request_id: str = 'notifications_queue'
 
     @property
     def service_url(self) -> str:
@@ -33,16 +32,16 @@ class AuthConfig(BaseSettings):
         return urljoin(self.api_url, 'v1/')
 
     def get_login_url(self) -> str:
-        return urljoin(self.api_v1_url, f'jwt/login')
+        return 'jwt/login'
 
     def get_refresh_url(self) -> str:
-        return urljoin(self.api_v1_url, f'jwt/refresh')
+        return 'jwt/refresh'
 
     def get_user_url(self, *, user_id: uuid.UUID) -> str:
-        return urljoin(self.api_v1_url, f'users/{user_id}/profile')
+        return f'users/{user_id}/profile'
 
     def get_users_list_url(self) -> str:
-        return urljoin(self.api_v1_url, f'users/list')
+        return f'users/list'
 
 
 class RabbitMQConfig(BaseSettings):

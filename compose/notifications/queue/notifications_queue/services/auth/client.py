@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import abc
 import datetime
 import uuid
 from typing import Any, Annotated
@@ -12,36 +11,40 @@ from fastapi import (
 from taskiq import TaskiqDepends
 
 from .models import (
+    AuthTokens,
     User,
     UsersListParams,
 )
 from .tokens import (
     AuthTokensProcessor,
     AuthTokensProcessorTaskiqDep,
-    AuthServiceRequest,
+)
+from ..http import (
+    HttpClient,
+    HttpResponse,
 )
 from ...core import settings
 from ...dependencies.tasks import HTTPXClientTaskiqDep
 
 
 class AuthServiceClient:
-    httpx_client: httpx.AsyncClient
-    auth_tokens_processor: AuthTokensProcessor
+    http_client: HttpClient
 
     def __init__(self,
                  *,
                  httpx_client: httpx.AsyncClient,
                  auth_tokens_processor: AuthTokensProcessor) -> None:
-        self.httpx_client = httpx_client
-        self.auth_tokens_processor = auth_tokens_processor
+        self.http_client = AuthenticatedHttpClient(
+            httpx_client=httpx_client,
+            base_url=settings.auth.api_v1_url,
+            auth_tokens_processor=auth_tokens_processor,
+        )
 
     async def get_user(self, *, user_id: uuid.UUID) -> User | None:
         try:
-            response = await GetUserRequest(
-                httpx_client=self.httpx_client,
-                auth_tokens_processor=self.auth_tokens_processor,
-                user_id=user_id,
-            ).send_request()
+            response = await self.http_client.get(
+                settings.auth.get_user_url(user_id=user_id),
+            )
 
         except httpx.HTTPStatusError as e:
             if e.response.status_code == status.HTTP_404_NOT_FOUND:
@@ -56,95 +59,78 @@ class AuthServiceClient:
                              user_id: uuid.UUID | None = None,
                              user_created: datetime.datetime | None = None,
                              page_size: int | None = None) -> list[User]:
-        response = await GetUsersListRequest(
-            httpx_client=self.httpx_client,
-            auth_tokens_processor=self.auth_tokens_processor,
+        users_list_params = UsersListParams(
             user_id=user_id,
             user_created=user_created,
             page_size=page_size,
-        ).send_request()
+        )
+
+        response = await self.http_client.get(
+            settings.auth.get_users_list_url(),
+            params=users_list_params.serialize(),
+        )
 
         return [User.model_validate(user_data) for user_data in response.json()]
 
 
-class AuthenticatedRequest(AuthServiceRequest):
+class AuthenticatedHttpClient(HttpClient):
     auth_tokens_processor: AuthTokensProcessor
 
     def __init__(self, *, auth_tokens_processor: AuthTokensProcessor, **kwargs: Any) -> None:
         super().__init__(**kwargs)
         self.auth_tokens_processor = auth_tokens_processor
 
-    async def send_request(self) -> httpx.Response:
+    async def send_request(self,
+                           method: str,
+                           url: str,
+                           *,
+                           headers: dict | None = None,
+                           **kwargs: Any) -> HttpResponse:
         auth_tokens = await self.auth_tokens_processor.login()
 
         try:
-            return await self._send_authenticated_request(token=auth_tokens.access_token)
+            return await self._send_authenticated_request(
+                method,
+                url,
+                headers=headers,
+                auth_tokens=auth_tokens,
+                **kwargs,
+            )
+
         except httpx.HTTPStatusError as e:
             if e.response.status_code == status.HTTP_401_UNAUTHORIZED:
                 auth_tokens = await self.auth_tokens_processor.refresh()
-                return await self._send_authenticated_request(token=auth_tokens.access_token)
+
+                return await self._send_authenticated_request(
+                    method,
+                    url,
+                    headers=headers,
+                    auth_tokens=auth_tokens,
+                    **kwargs,
+                )
+
             else:
                 raise
 
-    async def _send_authenticated_request(self, *, token: str) -> httpx.Response:
-        return await self._process_request(headers={
-            'Authorization': f'Bearer {token}',
-        })
-
-    @abc.abstractmethod
-    async def _send_request(self, *, headers: dict) -> httpx.Response:
-        ...
-
-
-class GetUserRequest(AuthenticatedRequest):
-    user_id: uuid.UUID
-
-    def __init__(self, *, user_id: uuid.UUID, **kwargs: Any) -> None:
-        super().__init__(**kwargs)
-        self.user_id = user_id
-
-    async def _send_request(self, *, headers: dict) -> httpx.Response:
-        user_url = settings.auth.get_user_url(user_id=self.user_id)
-
-        return await self.httpx_client.get(
-            url=user_url,
-            headers=headers,
-        )
-
-
-class GetUsersListRequest(AuthenticatedRequest):
-    user_id: uuid.UUID | None
-    user_created: datetime.datetime | None
-    page_size: int | None = None
-
-    def __init__(self,
-                 *,
-                 user_id: uuid.UUID | None = None,
-                 user_created: datetime.datetime | None = None,
-                 page_size: int | None = None,
-                 **kwargs: Any) -> None:
-        super().__init__(**kwargs)
-        self.user_id = user_id
-        self.user_created = user_created
-        self.page_size = page_size
-
-    async def _send_request(self, *, headers: dict) -> httpx.Response:
-        users_list_url = settings.auth.get_users_list_url()
-        users_list_params = UsersListParams(
-            user_id=self.user_id,
-            user_created=self.user_created,
-            page_size=self.page_size,
-        )
-        params = {
-            key: value
-            for key, value in users_list_params.model_dump(mode='json').items()
-            if value is not None
+    async def _send_authenticated_request(self,
+                                          method: str,
+                                          url: str,
+                                          *,
+                                          headers: dict | None = None,
+                                          auth_tokens: AuthTokens,
+                                          **kwargs: Any) -> HttpResponse:
+        token_headers: dict = {
+            'Authorization': f'Bearer {auth_tokens.access_token}',
         }
 
-        return await self.httpx_client.get(
-            url=users_list_url,
-            params=params,
-            headers=headers,
+        return await super().send_request(
+            method,
+            url,
+            headers={
+                **token_headers,
+                **(headers or {}),
+            },
+            **kwargs,
         )
 
 
