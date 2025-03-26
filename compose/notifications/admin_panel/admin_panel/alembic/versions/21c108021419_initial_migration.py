@@ -7,8 +7,8 @@ Create Date: 2025-03-23 11:31:35.543115
 """
 from typing import Sequence, Union
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
@@ -37,15 +37,39 @@ def upgrade() -> None:
     schema='admin_panel'
     )
     op.create_table('admin_notifications',
-    sa.Column('notification_type', postgresql.ENUM('REGISTRATION', 'NEW_EPISODES', 'NEW_FILMS', 'NEWS', 'PROMOTION', 'MOVIE_RECOMMENDATION', 'LIKE_NOTIFICATION', name='notification_types_enum'), nullable=False),
-    sa.Column('delivery_type', postgresql.ENUM('EMAIL', 'MESSAGE', 'TELEGRAM', 'WEBSOCKET', name='delivery_enum'), nullable=False),
-    sa.Column('status', postgresql.ENUM('CREATED', 'IN_PROGRESS', 'SUCCESS', 'FAILED', name='notification_task_status_enum'), nullable=False),
+    sa.Column(
+        'notification_type',
+        postgresql.ENUM(
+            'REGISTRATION',
+            'NEW_EPISODES',
+            'NEW_FILMS',
+            'NEWS',
+            'PROMOTION',
+            'MOVIE_RECOMMENDATION',
+            'LIKE_NOTIFICATION',
+            name='notification_types_enum',
+        ),
+        nullable=False,
+    ),
+    sa.Column(
+        'delivery_type',
+        postgresql.ENUM('EMAIL', 'MESSAGE', 'TELEGRAM', 'WEBSOCKET', name='delivery_enum'),
+        nullable=False,
+    ),
+    sa.Column(
+        'status',
+        postgresql.ENUM('CREATED', 'IN_PROGRESS', 'SUCCESS', 'FAILED', name='notification_task_status_enum'),
+        nullable=False),
     sa.Column('send_date', sa.DateTime(), nullable=True),
     sa.Column('template_code', sa.String(length=100), nullable=False),
     sa.Column('id', sa.UUID(), nullable=False),
     sa.Column('created_at', sa.DateTime(), nullable=False),
     sa.Column('updated_at', sa.DateTime(), nullable=False),
-    sa.ForeignKeyConstraint(['template_code'], ['admin_panel.templates.code'], name=op.f('fk_admin_notifications_template_code_templates')),
+    sa.ForeignKeyConstraint(
+        ['template_code'],
+        ['admin_panel.templates.code'],
+        name=op.f('fk_admin_notifications_template_code_templates'),
+    ),
     sa.PrimaryKeyConstraint('id', name=op.f('pk_admin_notifications')),
     sa.UniqueConstraint('id', name=op.f('uq_admin_notifications_id')),
     schema='admin_panel'

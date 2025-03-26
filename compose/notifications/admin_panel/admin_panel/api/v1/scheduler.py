@@ -19,6 +19,7 @@ async def create_scheduler(
     return {'detail': 'success',
             'task_id': task_id}
 
+
 @router.get(
     "/{task_id}",
     response_model=scheduler_schemas.SchedulerGet,
@@ -30,6 +31,7 @@ async def get_scheduler(
 ):
     response = await scheduler_service.get(task_id)
     return response
+
 
 @router.patch(
     "/{task_id}",
@@ -44,6 +46,7 @@ async def update_scheduler(
     response = await scheduler_service.update(task_id, scheduler)
     return response
 
+
 @router.delete(
     "/{task_id}",
     response_model=dict,
@@ -54,5 +57,7 @@ async def delete_scheduler(
     scheduler_service: scheduler_services.SchedulerService = Depends(scheduler_services.get_scheduler_service)
 ):
     await scheduler_service.delete(task_id)
-    return {'detail': 'success',
-            'task_id': task_id}
+    return {
+        'detail': 'success',
+        'task_id': task_id,
+    }

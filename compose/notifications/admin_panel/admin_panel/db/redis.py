@@ -1,12 +1,10 @@
 from __future__ import annotations
 
-from typing import Annotated
-
 import redis.asyncio as async_redis
-from fastapi import Request, Depends
 from admin_panel.core import settings
 
 redis_client = async_redis.Redis(host=settings.redis.host, port=settings.redis.port, db=0)
+
 
 class RedisClient:
     _client: async_redis.Redis
@@ -22,6 +20,7 @@ class RedisClient:
 
     async def delete_value(self, key: str):
         return await self._client.delete(key)
+
 
 async def get_redis_client() -> RedisClient:
     return RedisClient(redis_client)
