@@ -2,5 +2,5 @@ from pydantic import BaseModel
 from uuid import UUID
 
 class MessageModel(BaseModel):
-    user_uuid: UUID
+    user_uuid: str
     text: str

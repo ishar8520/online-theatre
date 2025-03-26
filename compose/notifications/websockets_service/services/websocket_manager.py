@@ -1,5 +1,6 @@
 import asyncio
 from typing import Dict
+import json
 
 from fastapi import HTTPException, WebSocket, status
 from services.auth_manager import auth_client
@@ -13,12 +14,19 @@ class WebSocketManager:
         self.active_connections: Dict[str, WebSocket] = {}
         self.pending_confirmations: Dict[str, asyncio.Future] = {}
 
-    async def connect(self, user_uuid: str, websocket: WebSocket):
-        if not await auth_client.verify_user(user_uuid):
-            await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="User not authorized")
-        await websocket.accept()
-        self.active_connections[user_uuid] = websocket
+    async def connect(self, token: str, websocket: WebSocket):
+        try:
+            validate_body_json = await auth_client.verify_user(token)
+            if not validate_body_json:
+                await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+                raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="User not authorized")
+            validate_body = json.loads(validate_body_json)
+            await websocket.accept()
+            self.active_connections[validate_body["id"]] = websocket
+            return validate_body["id"]
+        except Exception as e:
+            logging.error(e)
+
 
     def disconnect(self, user_uuid: str):
         if user_uuid in self.active_connections:

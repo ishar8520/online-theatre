@@ -1,7 +1,6 @@
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, HTTPException, status
 from models import MessageModel
 from services.websocket_manager import websocket_manager
-from uuid import UUID
 import logging
 
 logging.basicConfig(level=logging.INFO)
@@ -9,10 +8,11 @@ logging.basicConfig(level=logging.INFO)
 router = APIRouter()
 
 
-@router.websocket('/ws/{user_uuid}')
-async def websocket_endpoint(websocket: WebSocket, user_uuid: UUID):
-    await websocket_manager.connect(user_uuid, websocket)
+@router.websocket('/ws/{token}')
+async def websocket_endpoint(websocket: WebSocket, token: str):
+    user_uuid = await websocket_manager.connect(token, websocket)
     logging.info(f'User connect {user_uuid}')
+    print(f'User connect {user_uuid}')
     try:
         while True:
             data = await websocket.receive_text()
@@ -22,7 +22,8 @@ async def websocket_endpoint(websocket: WebSocket, user_uuid: UUID):
         websocket_manager.disconnect(user_uuid)
         logging.info(f'Client {user_uuid} disconnected')
 
-@router.post('/send_notification')
+
+@router.post('/send_notification/{user_uuid}')
 async def send_notification(message: MessageModel):
     user_uuid = message.user_uuid
     text = message.text

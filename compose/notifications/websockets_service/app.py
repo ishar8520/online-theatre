@@ -9,4 +9,8 @@ app = FastAPI(title=settings.APP_NAME,
               docs_url=f'{base_api_prefix}/openapi',
               openapi_url=f'{base_api_prefix}/openapi.json')
 
-app.include_router(router)
+app.include_router(
+    router,
+    prefix=base_api_prefix,
+    tags=['websocket']
+)
