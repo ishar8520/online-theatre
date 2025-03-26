@@ -12,7 +12,6 @@ router = APIRouter()
 async def websocket_endpoint(websocket: WebSocket, token: str):
     user_uuid = await websocket_manager.connect(token, websocket)
     logging.info(f'User connect {user_uuid}')
-    print(f'User connect {user_uuid}')
     try:
         while True:
             data = await websocket.receive_text()
@@ -23,7 +22,7 @@ async def websocket_endpoint(websocket: WebSocket, token: str):
         logging.info(f'Client {user_uuid} disconnected')
 
 
-@router.post('/send_notification/{user_uuid}')
+@router.post('/send_notification')
 async def send_notification(message: MessageModel):
     user_uuid = message.user_uuid
     text = message.text
