@@ -111,10 +111,6 @@ class EmailConfig(BaseSettings):
 class DQLRabbitMQConfig(BaseSettings):
     model_config = SettingsConfigDict(env_prefix='dlq_rabbitmq_')
     
-    host: str
-    port: int = 5672
-    username: str
-    password: str
     queue_name: str = 'undelivered_messages'
     
     @property
