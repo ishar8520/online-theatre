@@ -287,6 +287,13 @@ services:
       - RABBITMQ_PASSWORD=$NOTIFICATIONS_QUEUE_RABBITMQ_PASSWORD
       - REDIS_HOST=notifications-queue-redis
       - REDIS_PORT=6379
+      - SMTP_HOST=mailhog
+      - SMTP_PORT=1025
+      - SMTP_USERNAME=$SMTP_USERNAME
+      - SMTP_PASSWORD=$SMTP_PASSWORD
+      - SMTP_USE_TLS=false
+      - EMAIL_FROM_EMAIL=$EMAIL_FROM_EMAIL
+      - DLQ_RABBITMQ_QUEUE_NAME=$DLQ_RABBITMQ_QUEUE_NAME
     restart: unless-stopped
     healthcheck:
       test: [ 'CMD-SHELL', 'curl -s http://localhost:8000/api/_health' ]
@@ -332,6 +339,13 @@ services:
       - RABBITMQ_PASSWORD=$NOTIFICATIONS_QUEUE_RABBITMQ_PASSWORD
       - REDIS_HOST=notifications-queue-redis
       - REDIS_PORT=6379
+      - SMTP_HOST=mailhog
+      - SMTP_PORT=1025
+      - SMTP_USERNAME=$SMTP_USERNAME
+      - SMTP_PASSWORD=$SMTP_PASSWORD
+      - SMTP_USE_TLS=false
+      - EMAIL_FROM_EMAIL=$EMAIL_FROM_EMAIL
+      - DLQ_RABBITMQ_QUEUE_NAME=$DLQ_RABBITMQ_QUEUE_NAME
     command: [ '/opt/app/commands/worker.sh' ]
     restart: unless-stopped
     develop:
@@ -373,6 +387,13 @@ services:
       - RABBITMQ_PASSWORD=$NOTIFICATIONS_QUEUE_RABBITMQ_PASSWORD
       - REDIS_HOST=notifications-queue-redis
       - REDIS_PORT=6379
+      - SMTP_HOST=mailhog
+      - SMTP_PORT=1025
+      - SMTP_USERNAME=$SMTP_USERNAME
+      - SMTP_PASSWORD=$SMTP_PASSWORD
+      - SMTP_USE_TLS=false
+      - EMAIL_FROM_EMAIL=$EMAIL_FROM_EMAIL
+      - DLQ_RABBITMQ_QUEUE_NAME=$DLQ_RABBITMQ_QUEUE_NAME
     command: [ '/opt/app/commands/worker.sh' ]
     restart: unless-stopped
     develop:
@@ -537,6 +558,14 @@ services:
       timeout: 10s
       retries: 5
       start_period: 10s
+
+  mailhog:
+    image: mailhog/mailhog
+    ports:
+      - '1025:1025'
+      - '8025:8025'
+    networks:
+      - movies-network
 
 networks:
   movies-network:
