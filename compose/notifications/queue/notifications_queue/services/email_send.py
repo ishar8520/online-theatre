@@ -14,7 +14,7 @@ logging.basicConfig(level=logging.INFO)
 async def send_to_dead_letter_queue(email_data: dict):
     try:
         channel = await RabbitMQ.get_channel()
-        queue = await channel.declare_queue(settings.dlq.queue, passive=True)
+        queue = await channel.declare_queue(settings.dlq.queue_name, passive=True)
         
         await channel.default_exchange.publish(
             Message(
