@@ -113,9 +113,6 @@ class DQLRabbitMQConfig(BaseSettings):
     
     queue_name: str = 'undelivered_messages'
     
-    @property
-    def url(self) -> str:
-        return f'amqp://{self.username}:{self.password}@{self.host}:{self.port}'
 
 class Settings(BaseSettings):
     notifications_queue: NotificationsQueueConfig = NotificationsQueueConfig()
