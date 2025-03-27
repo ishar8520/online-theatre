@@ -7,6 +7,9 @@ from ..broker import (
     broker,
     undelivered_messages_broker,
 )
+from ..services.admin_panel import (
+    Template,
+)
 from ..services.auth import (
     User,
 )
@@ -50,19 +53,39 @@ async def send_template_notifications_bulk_task(*,
 
 
 @broker.task
-async def render_text_notification_task(
+async def process_text_notification_task(
         *,
         notification: TextNotification,
         notification_template_service: NotificationTemplateServiceTaskiqDep) -> None:
-    await notification_template_service.render_text_notification(notification=notification)
+    await notification_template_service.process_text_notification(notification=notification)
 
 
 @broker.task
-async def render_template_notification_task(
+async def process_template_notification_task(
         *,
         notification: TemplateNotification,
         notification_template_service: NotificationTemplateServiceTaskiqDep) -> None:
-    await notification_template_service.render_template_notification(notification=notification)
+    await notification_template_service.process_template_notification(notification=notification)
+
+
+@broker.task
+async def download_notification_template_task(
+        *,
+        notification: TemplateNotification,
+        notification_template_service: NotificationTemplateServiceTaskiqDep) -> None:
+    await notification_template_service.download_notification_template(notification=notification)
+
+
+@broker.task
+async def render_notification_template_task(
+        *,
+        notification: TemplateNotification,
+        template: Template,
+        notification_template_service: NotificationTemplateServiceTaskiqDep) -> None:
+    await notification_template_service.render_notification_template(
+        notification=notification,
+        template=template,
+    )
 
 
 @broker.task

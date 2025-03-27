@@ -30,22 +30,22 @@ class AbstractNotificationService(abc.ABC):
 
 class NotificationService(AbstractNotificationService):
     async def send_text_notification(self, *, notification: TextNotification) -> None:
-        from ...tasks import render_text_notification_task
+        from ...tasks import process_text_notification_task
 
         logger.info('NotificationService.send_text_notification()')
         logger.info('notification=%r', notification)
 
-        await render_text_notification_task.kiq(  # type: ignore[call-overload]
+        await process_text_notification_task.kiq(  # type: ignore[call-overload]
             notification=notification,
         )
 
     async def send_template_notification(self, *, notification: TemplateNotification) -> None:
-        from ...tasks import render_template_notification_task
+        from ...tasks import process_template_notification_task
 
         logger.info('NotificationService.send_template_notification()')
         logger.info('notification=%r', notification)
 
-        await render_template_notification_task.kiq(  # type: ignore[call-overload]
+        await process_template_notification_task.kiq(  # type: ignore[call-overload]
             notification=notification,
         )
 
