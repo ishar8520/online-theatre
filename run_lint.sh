@@ -43,6 +43,7 @@ run_command() {
         ugc-mongo
         notifications-queue
         notification-service
+        notifications-admin-panel-service
     )
 
     declare -A services_set

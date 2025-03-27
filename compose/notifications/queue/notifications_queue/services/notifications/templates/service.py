@@ -4,6 +4,7 @@ import abc
 import logging
 from typing import Annotated
 
+import jinja2
 from taskiq import TaskiqDepends
 
 from ..models import (
@@ -60,11 +61,21 @@ class NotificationTemplateService(AbstractNotificationTemplateService):
         template = await self._download_template(notification=notification)
         logger.info('template=%r', template)
 
+        if template is None:
+            return
+
+        message_text = await self._render_text(
+            template.body,
+            notification.template_context
+        )
+
         message = NotificationMessage(
             type=notification.type,
             subject=notification.subject,
-            text='<Rendered message text>',
+            text=message_text,
         )
+
+        logger.info('notification=%r', message)
 
         await process_notification_users_task.kiq(  # type: ignore[call-overload]
             message=message,
@@ -89,6 +100,10 @@ class NotificationTemplateService(AbstractNotificationTemplateService):
                 return template
 
         return None
+
+    @staticmethod
+    async def _render_text(template_string: str, data: dict) -> str:
+        return jinja2.Template(source=template_string).render(data)
 
 
 async def get_notification_template_service(

@@ -716,7 +716,7 @@ services:
     build:
       context: ./compose/notifications/admin_panel
     depends_on:
-      admim-panel-postgresql:
+      admin-panel-postgresql:
         condition: service_healthy
       notification-admin-panel-init:
         condition: service_completed_successfully
@@ -725,7 +725,7 @@ services:
     networks:
       - movies-network
     environment:
-      - POSTGRESQL_HOST=admim-panel-postgresql
+      - POSTGRESQL_HOST=admin-panel-postgresql
       - POSTGRESQL_PORT=5432
       - POSTGRESQL_DATABASE=$ADMIN_PANEL_POSTGRESQL_DATABASE
       - POSTGRESQL_USERNAME=$ADMIN_PANEL_POSTGRESQL_USERNAME
@@ -755,14 +755,14 @@ services:
     build:
       context: ./compose/notifications/admin_panel
     depends_on:
-      admim-panel-postgresql:
+      admin-panel-postgresql:
         condition: service_healthy
       jaeger:
         condition: service_healthy
     networks:
       - movies-network
     environment:
-      - POSTGRESQL_HOST=admim-panel-postgresql
+      - POSTGRESQL_HOST=admin-panel-postgresql
       - POSTGRESQL_PORT=5432
       - POSTGRESQL_DATABASE=$ADMIN_PANEL_POSTGRESQL_DATABASE
       - POSTGRESQL_USERNAME=$ADMIN_PANEL_POSTGRESQL_USERNAME
@@ -772,7 +772,7 @@ services:
     command: [ '/opt/app/commands/init.sh' ]
 
 
-  admim-panel-postgresql:
+  admin-panel-postgresql:
     image: 'bitnami/postgresql:17.2.0-debian-12-r5'
     networks:
       - movies-network

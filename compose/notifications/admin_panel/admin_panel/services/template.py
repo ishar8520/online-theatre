@@ -70,7 +70,7 @@ class TemplateService:
     async def get_templates_list(self) -> list[Template]:
         async with self.postgres_session as session:
             templates = await session.scalars(select(Template))
-            return templates.all()
+            return list(templates.all())
 
     async def update_template(
             self, template_id: str, template_data: template_schemas.UpdateTemplateSchema

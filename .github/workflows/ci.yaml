@@ -42,6 +42,7 @@ jobs:
             ./compose/ugc_mongo/.lint/
             ./compose/notifications/queue/.lint/
             ./compose/notifications/notification/.lint/
+            ./compose/notifications/admin_panel/.lint/
           include-hidden-files: true
 
   tests:
