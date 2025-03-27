@@ -455,10 +455,6 @@ services:
       - SMTP_USE_TLS=false
       - EMAIL_FROM_EMAIL=$EMAIL_FROM_EMAIL
       - DLQ_RABBITMQ_QUEUE_NAME=$DLQ_RABBITMQ_QUEUE_NAME
-      - DLQ_RABBITMQ_HOST=notifications-queue-worker-undelivered-messages
-      - DLQ_RABBITMQ_PORT=5672
-      - DLQ_RABBITMQ_USERNAME=$NOTIFICATIONS_QUEUE_RABBITMQ_USERNAME
-      - DLQ_RABBITMQ_PASSWORD=$NOTIFICATIONS_QUEUE_RABBITMQ_PASSWORD
     command: [ '/opt/app/commands/gunicorn.sh' ]
     restart: unless-stopped
     healthcheck:
@@ -500,10 +496,6 @@ services:
       - SMTP_USE_TLS=false
       - EMAIL_FROM_EMAIL=$EMAIL_FROM_EMAIL
       - DLQ_RABBITMQ_QUEUE_NAME=$DLQ_RABBITMQ_QUEUE_NAME
-      - DLQ_RABBITMQ_HOST=notifications-queue-worker-undelivered-messages
-      - DLQ_RABBITMQ_PORT=5672
-      - DLQ_RABBITMQ_USERNAME=$NOTIFICATIONS_QUEUE_RABBITMQ_USERNAME
-      - DLQ_RABBITMQ_PASSWORD=$NOTIFICATIONS_QUEUE_RABBITMQ_PASSWORD
     command: [ '/opt/app/commands/worker.sh' ]
     restart: unless-stopped
 
@@ -540,10 +532,6 @@ services:
       - SMTP_USE_TLS=false
       - EMAIL_FROM_EMAIL=$EMAIL_FROM_EMAIL
       - DLQ_RABBITMQ_QUEUE_NAME=$DLQ_RABBITMQ_QUEUE_NAME
-      - DLQ_RABBITMQ_HOST=notifications-queue-worker-undelivered-messages
-      - DLQ_RABBITMQ_PORT=5672
-      - DLQ_RABBITMQ_USERNAME=$NOTIFICATIONS_QUEUE_RABBITMQ_USERNAME
-      - DLQ_RABBITMQ_PASSWORD=$NOTIFICATIONS_QUEUE_RABBITMQ_PASSWORD
     command: [ '/opt/app/commands/worker.sh' ]
     restart: unless-stopped
 
