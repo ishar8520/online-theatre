@@ -8,7 +8,7 @@ class RabbitMQ:
     @classmethod
     async def get_connection(cls) -> Connection:
         if cls._connection is None or cls._connection.is_closed:
-            cls._connection = await connect(settings.rabbitmq.url)
+            cls._connection = await connect(settings.dlq.url)
         return cls._connection
 
     @classmethod
