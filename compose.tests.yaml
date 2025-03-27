@@ -269,6 +269,8 @@ services:
     networks:
       - movies-network
     environment:
+      - NOTIFICATIONS_ADMIN_PANEL_HOST=notification-admin-panel-service
+      - NOTIFICATIONS_ADMIN_PANEL_PORT=8000
       - AUTH_HOST=auth-service
       - AUTH_PORT=8000
       - AUTH_SUPERUSER_LOGIN=$AUTH_SUPERUSER_LOGIN
@@ -313,6 +315,8 @@ services:
       - movies-network
     environment:
       - TASKIQ_RELOAD=true
+      - NOTIFICATIONS_ADMIN_PANEL_HOST=notification-admin-panel-service
+      - NOTIFICATIONS_ADMIN_PANEL_PORT=8000
       - AUTH_HOST=auth-service
       - AUTH_PORT=8000
       - AUTH_SUPERUSER_LOGIN=$AUTH_SUPERUSER_LOGIN
@@ -352,6 +356,8 @@ services:
     environment:
       - TASKIQ_BROKER_NAME=undelivered_messages_broker
       - TASKIQ_RELOAD=true
+      - NOTIFICATIONS_ADMIN_PANEL_HOST=notification-admin-panel-service
+      - NOTIFICATIONS_ADMIN_PANEL_PORT=8000
       - AUTH_HOST=auth-service
       - AUTH_PORT=8000
       - AUTH_SUPERUSER_LOGIN=$AUTH_SUPERUSER_LOGIN

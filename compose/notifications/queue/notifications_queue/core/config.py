@@ -10,6 +10,32 @@ class NotificationsQueueConfig(BaseSettings):
     model_config = SettingsConfigDict(env_prefix='notifications_queue_')
 
 
+class NotificationsAdminPanelConfig(BaseSettings):
+    model_config = SettingsConfigDict(env_prefix='notifications_admin_panel_')
+
+    scheme: str = 'http'
+    host: str = 'localhost'
+    port: int = 8000
+
+    @property
+    def service_url(self) -> str:
+        return f'{self.scheme}://{self.host}:{self.port}'
+
+    @property
+    def api_url(self) -> str:
+        return urljoin(self.service_url, '/admin_panel/api/')
+
+    @property
+    def api_v1_url(self) -> str:
+        return urljoin(self.api_url, 'v1/')
+
+    def get_template_by_id_url(self, *, template_id: uuid.UUID) -> str:
+        return f'template/{template_id}'
+
+    def get_template_by_code_url(self, *, template_code: str) -> str:
+        return f'template/by-code/{template_code}'
+
+
 class AuthConfig(BaseSettings):
     model_config = SettingsConfigDict(env_prefix='auth_')
 
@@ -70,6 +96,7 @@ class RedisConfig(BaseSettings):
 
 class Settings(BaseSettings):
     notifications_queue: NotificationsQueueConfig = NotificationsQueueConfig()
+    notifications_admin_panel: NotificationsAdminPanelConfig = NotificationsAdminPanelConfig()
     auth: AuthConfig = AuthConfig()  # type: ignore[call-arg]
     rabbitmq: RabbitMQConfig = RabbitMQConfig()  # type: ignore[call-arg]
     redis: RedisConfig = RedisConfig()
