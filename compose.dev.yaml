@@ -771,7 +771,6 @@ services:
       - REDIS_PORT=6379
     command: [ '/opt/app/commands/init.sh' ]
 
-
   admin-panel-postgresql:
     image: 'bitnami/postgresql:17.2.0-debian-12-r5'
     networks:
