@@ -23,10 +23,19 @@ logger = logging.getLogger(__name__)
 
 class AbstractNotificationTemplateService(abc.ABC):
     @abc.abstractmethod
-    async def render_text_notification(self, *, notification: TextNotification) -> None: ...
+    async def process_text_notification(self, *, notification: TextNotification) -> None: ...
 
     @abc.abstractmethod
-    async def render_template_notification(self, *, notification: TemplateNotification) -> None: ...
+    async def process_template_notification(self, *, notification: TemplateNotification) -> None: ...
+
+    @abc.abstractmethod
+    async def download_notification_template(self, *, notification: TemplateNotification) -> None: ...
+
+    @abc.abstractmethod
+    async def render_notification_template(self,
+                                           *,
+                                           notification: TemplateNotification,
+                                           template: Template) -> None: ...
 
 
 class NotificationTemplateService(AbstractNotificationTemplateService):
@@ -35,10 +44,10 @@ class NotificationTemplateService(AbstractNotificationTemplateService):
     def __init__(self, *, admin_panel_service: AbstractAdminPanelService) -> None:
         self.admin_panel_service = admin_panel_service
 
-    async def render_text_notification(self, *, notification: TextNotification) -> None:
+    async def process_text_notification(self, *, notification: TextNotification) -> None:
         from ....tasks import process_notification_users_task
 
-        logger.info('NotificationTemplateService.render_text_notification()')
+        logger.info('NotificationTemplateService.process_text_notification()')
         logger.info('notification=%r', notification)
 
         message = NotificationMessage(
@@ -52,10 +61,20 @@ class NotificationTemplateService(AbstractNotificationTemplateService):
             users=notification.users,
         )
 
-    async def render_template_notification(self, *, notification: TemplateNotification) -> None:
-        from ....tasks import process_notification_users_task
+    async def process_template_notification(self, *, notification: TemplateNotification) -> None:
+        from ....tasks import download_notification_template_task
 
-        logger.info('NotificationTemplateService.render_template_notification()')
+        logger.info('NotificationTemplateService.process_template_notification()')
+        logger.info('notification=%r', notification)
+
+        await download_notification_template_task.kiq(  # type: ignore[call-overload]
+            notification=notification,
+        )
+
+    async def download_notification_template(self, *, notification: TemplateNotification) -> None:
+        from ....tasks import render_notification_template_task
+
+        logger.info('NotificationTemplateService.download_notification_template()')
         logger.info('notification=%r', notification)
 
         template = await self._download_template(notification=notification)
@@ -64,22 +83,9 @@ class NotificationTemplateService(AbstractNotificationTemplateService):
         if template is None:
             return
 
-        message_text = await self._render_text(
-            template.body,
-            notification.template_context
-        )
-
-        message = NotificationMessage(
-            type=notification.type,
-            subject=notification.subject,
-            text=message_text,
-        )
-
-        logger.info('notification=%r', message)
-
-        await process_notification_users_task.kiq(  # type: ignore[call-overload]
-            message=message,
-            users=notification.users
+        await render_notification_template_task.kiq(  # type: ignore[call-overload]
+            notification=notification,
+            template=template,
         )
 
     async def _download_template(self, *, notification: TemplateNotification) -> Template | None:
@@ -101,9 +107,29 @@ class NotificationTemplateService(AbstractNotificationTemplateService):
 
         return None
 
-    @staticmethod
-    async def _render_text(template_string: str, data: dict) -> str:
-        return jinja2.Template(source=template_string).render(data)
+    async def render_notification_template(self,
+                                           *,
+                                           notification: TemplateNotification,
+                                           template: Template) -> None:
+        from ....tasks import process_notification_users_task
+
+        logger.info('NotificationTemplateService.render_notification_template()')
+        logger.info('notification=%r', notification)
+        logger.info('template=%r', template)
+
+        message_template = jinja2.Template(template.body, enable_async=True)
+        message_text = await message_template.render_async(**notification.template_context)
+        message = NotificationMessage(
+            type=notification.type,
+            subject=notification.subject,
+            text=message_text,
+        )
+        logger.info('message=%r', message)
+
+        await process_notification_users_task.kiq(  # type: ignore[call-overload]
+            message=message,
+            users=notification.users
+        )
 
 
 async def get_notification_template_service(
