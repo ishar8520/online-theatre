@@ -12,6 +12,9 @@ taskiq-aio-pika = "0.4.1"
 taskiq-fastapi = "0.3.4"
 taskiq-redis = "1.0.3"
 uvicorn-worker = "0.3.0"
+asyncio = "^3.4.3"
+aio-pika = "9.5.5"
+aiosmtplib = "^2.0.0"
 
 [tool.poetry.group.dev]
 optional = true

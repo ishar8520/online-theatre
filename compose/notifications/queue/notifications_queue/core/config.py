@@ -83,6 +83,18 @@ class EmailConfig(BaseSettings):
     
     from_email: str = 'email_service@example.com'
     
+class DQLRabbitMQConfig(BaseSettings):
+    model_config = SettingsConfigDict(env_prefix='dlq_rabbitmq_')
+    
+    host: str = 'localhost'
+    port: int = 5672
+    username: str
+    password: str
+    queue: str = 'undelivered_messages'
+    
+    @property
+    def url(self) -> str:
+        return f'amqp://{self.username}:{self.password}@{self.host}:{self.port}'
 
 class Settings(BaseSettings):
     notifications_queue: NotificationsQueueConfig = NotificationsQueueConfig()
@@ -91,5 +103,6 @@ class Settings(BaseSettings):
     redis: RedisConfig = RedisConfig()
     smtp: SmtpConfig = SmtpConfig()
     email: EmailConfig = EmailConfig()
+    dlq: DQLRabbitMQConfig = DQLRabbitMQConfig()
 
 settings = Settings()
