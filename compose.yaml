@@ -436,6 +436,8 @@ services:
       - movies-network
     environment:
       - GUNICORN_WORKERS=${NOTIFICATIONS_QUEUE_GUNICORN_WORKERS:-}
+      - NOTIFICATIONS_ADMIN_PANEL_HOST=notification-admin-panel-service
+      - NOTIFICATIONS_ADMIN_PANEL_PORT=8000
       - AUTH_HOST=auth-service
       - AUTH_PORT=8000
       - AUTH_SUPERUSER_LOGIN=$AUTH_SUPERUSER_LOGIN
@@ -468,6 +470,8 @@ services:
     networks:
       - movies-network
     environment:
+      - NOTIFICATIONS_ADMIN_PANEL_HOST=notification-admin-panel-service
+      - NOTIFICATIONS_ADMIN_PANEL_PORT=8000
       - AUTH_HOST=auth-service
       - AUTH_PORT=8000
       - AUTH_SUPERUSER_LOGIN=$AUTH_SUPERUSER_LOGIN
@@ -495,6 +499,8 @@ services:
       - movies-network
     environment:
       - TASKIQ_BROKER_NAME=undelivered_messages_broker
+      - NOTIFICATIONS_ADMIN_PANEL_HOST=notification-admin-panel-service
+      - NOTIFICATIONS_ADMIN_PANEL_PORT=8000
       - AUTH_HOST=auth-service
       - AUTH_PORT=8000
       - AUTH_SUPERUSER_LOGIN=$AUTH_SUPERUSER_LOGIN
@@ -605,7 +611,6 @@ services:
     networks:
       - movies-network
 
-
   notification-admin-panel-service:
     build:
       context: ./compose/notifications/admin_panel
@@ -664,7 +669,6 @@ services:
       - REDIS_HOST=admin-panel-redis
       - REDIS_PORT=6379
     command: [ '/opt/app/commands/init.sh' ]
-
 
   admin-panel-postgresql:
     image: 'bitnami/postgresql:17.2.0-debian-12-r5'

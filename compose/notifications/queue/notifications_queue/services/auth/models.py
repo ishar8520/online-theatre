@@ -8,6 +8,8 @@ from pydantic import (
     EmailStr,
 )
 
+from ..http import ParamsModel
+
 
 class AuthTokens(BaseModel):
     token_type: str
@@ -24,7 +26,7 @@ class User(BaseModel):
     modified: datetime.datetime
 
 
-class UsersListParams(BaseModel):
+class UsersListParams(ParamsModel):
     user_id: uuid.UUID | None = None
     user_created: datetime.datetime | None = None
     page_size: int | None = None
