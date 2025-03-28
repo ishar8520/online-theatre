@@ -2,8 +2,10 @@ from __future__ import annotations
 
 import abc
 import logging
+from email.message import EmailMessage
 from typing import Annotated
 
+import aiosmtplib
 from taskiq import TaskiqDepends
 
 from ..models import (
@@ -11,6 +13,7 @@ from ..models import (
     NotificationMessage,
 )
 from ...auth import User
+from ....core import settings
 
 logger = logging.getLogger(__name__)
 
@@ -52,7 +55,22 @@ class NotificationMessageService(AbstractNotificationMessageService):
         logger.info('subject=%r', subject)
         logger.info('text=%r', text)
 
-        if email.endswith('@example.com'):
+        email_message = EmailMessage()
+        email_message['From'] = settings.notifications_queue.email_from
+        email_message['To'] = email
+        email_message['Subject'] = subject
+        email_message.set_content(text)
+
+        try:
+            async with aiosmtplib.SMTP(
+                    hostname=settings.smtp.host,
+                    port=settings.smtp.port,
+            ) as smtp_client:
+                await smtp_client.send_message(email_message)
+
+        except aiosmtplib.SMTPException as e:
+            logger.exception(e)
+
             await send_email_message_retry_task.kiq(  # type: ignore[call-overload]
                 email=email,
                 subject=subject,

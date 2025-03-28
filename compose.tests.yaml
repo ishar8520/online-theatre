@@ -270,8 +270,6 @@ services:
     depends_on:
       notifications-queue-worker:
         condition: service_started
-      notifications-queue-worker-undelivered-messages:
-        condition: service_started
     networks:
       - movies-network
     environment:
@@ -289,11 +287,6 @@ services:
       - REDIS_PORT=6379
       - SMTP_HOST=mailhog
       - SMTP_PORT=1025
-      - SMTP_USERNAME=$SMTP_USERNAME
-      - SMTP_PASSWORD=$SMTP_PASSWORD
-      - SMTP_USE_TLS=false
-      - EMAIL_FROM_EMAIL=$EMAIL_FROM_EMAIL
-      - DLQ_RABBITMQ_QUEUE_NAME=$DLQ_RABBITMQ_QUEUE_NAME
     restart: unless-stopped
     healthcheck:
       test: [ 'CMD-SHELL', 'curl -s http://localhost:8000/api/_health' ]
@@ -323,6 +316,8 @@ services:
         condition: service_healthy
       notifications-queue-redis:
         condition: service_healthy
+      mailhog:
+        condition: service_healthy
     networks:
       - movies-network
     environment:
@@ -341,59 +336,6 @@ services:
       - REDIS_PORT=6379
       - SMTP_HOST=mailhog
       - SMTP_PORT=1025
-      - SMTP_USERNAME=$SMTP_USERNAME
-      - SMTP_PASSWORD=$SMTP_PASSWORD
-      - SMTP_USE_TLS=false
-      - EMAIL_FROM_EMAIL=$EMAIL_FROM_EMAIL
-      - DLQ_RABBITMQ_QUEUE_NAME=$DLQ_RABBITMQ_QUEUE_NAME
-    command: [ '/opt/app/commands/worker.sh' ]
-    restart: unless-stopped
-    develop:
-      watch:
-        - action: sync
-          path: ./compose/notifications/queue/notifications_queue
-          target: /opt/app/notifications_queue
-        - action: rebuild
-          path: ./compose/notifications/queue/commands
-        - action: rebuild
-          path: ./compose/notifications/queue/pyproject.toml
-        - action: rebuild
-          path: ./compose/notifications/queue/poetry.lock
-
-  notifications-queue-worker-undelivered-messages:
-    build:
-      context: ./compose/notifications/queue
-    depends_on:
-      auth-service:
-        condition: service_healthy
-      notifications-queue-rabbitmq:
-        condition: service_healthy
-      notifications-queue-redis:
-        condition: service_healthy
-    networks:
-      - movies-network
-    environment:
-      - TASKIQ_BROKER_NAME=undelivered_messages_broker
-      - TASKIQ_RELOAD=true
-      - NOTIFICATIONS_ADMIN_PANEL_HOST=notification-admin-panel-service
-      - NOTIFICATIONS_ADMIN_PANEL_PORT=8000
-      - AUTH_HOST=auth-service
-      - AUTH_PORT=8000
-      - AUTH_SUPERUSER_LOGIN=$AUTH_SUPERUSER_LOGIN
-      - AUTH_SUPERUSER_PASSWORD=$AUTH_SUPERUSER_PASSWORD
-      - RABBITMQ_HOST=notifications-queue-rabbitmq
-      - RABBITMQ_PORT=5672
-      - RABBITMQ_USERNAME=$NOTIFICATIONS_QUEUE_RABBITMQ_USERNAME
-      - RABBITMQ_PASSWORD=$NOTIFICATIONS_QUEUE_RABBITMQ_PASSWORD
-      - REDIS_HOST=notifications-queue-redis
-      - REDIS_PORT=6379
-      - SMTP_HOST=mailhog
-      - SMTP_PORT=1025
-      - SMTP_USERNAME=$SMTP_USERNAME
-      - SMTP_PASSWORD=$SMTP_PASSWORD
-      - SMTP_USE_TLS=false
-      - EMAIL_FROM_EMAIL=$EMAIL_FROM_EMAIL
-      - DLQ_RABBITMQ_QUEUE_NAME=$DLQ_RABBITMQ_QUEUE_NAME
     command: [ '/opt/app/commands/worker.sh' ]
     restart: unless-stopped
     develop:
@@ -560,12 +502,15 @@ services:
       start_period: 10s
 
   mailhog:
-    image: mailhog/mailhog
-    ports:
-      - '1025:1025'
-      - '8025:8025'
+    image: 'mailhog/mailhog:v1.0.1'
     networks:
       - movies-network
+    healthcheck:
+      test: [ 'CMD-SHELL', 'wget -q --spider http://localhost:8025' ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
 
 networks:
   movies-network:

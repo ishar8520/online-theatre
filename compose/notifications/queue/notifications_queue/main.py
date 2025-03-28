@@ -10,7 +10,6 @@ from fastapi import FastAPI
 from .api.v1.endpoints import notifications
 from .broker import BROKERS
 from .core import LOGGING
-from notifications_queue.services.rabbitmq import RabbitMQ
 
 logging.config.dictConfig(LOGGING)
 
@@ -26,13 +25,12 @@ async def lifespan(_app: FastAPI) -> AsyncGenerator[None]:
             if not _broker.is_worker_process:
                 await _broker.startup()
 
-        await RabbitMQ.get_connection()
         yield
 
         for _broker in BROKERS.values():
             if not _broker.is_worker_process:
                 await _broker.shutdown()
-        await RabbitMQ.close()
+
 
 base_api_prefix = '/api'
 app = FastAPI(

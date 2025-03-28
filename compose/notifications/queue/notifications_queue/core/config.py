@@ -9,6 +9,8 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class NotificationsQueueConfig(BaseSettings):
     model_config = SettingsConfigDict(env_prefix='notifications_queue_')
 
+    email_from: str = 'notifications_queue@example.com'
+
 
 class NotificationsAdminPanelConfig(BaseSettings):
     model_config = SettingsConfigDict(env_prefix='notifications_admin_panel_')
@@ -99,20 +101,7 @@ class SmtpConfig(BaseSettings):
 
     host: str = 'localhost'
     port: int = 1025
-    username: str = 'username'
-    password: str = 'password'
 
-
-class EmailConfig(BaseSettings):
-    model_config = SettingsConfigDict(env_prefix='email_')
-    
-    from_email: str = 'email_service@example.com'
-    
-class DQLRabbitMQConfig(BaseSettings):
-    model_config = SettingsConfigDict(env_prefix='dlq_rabbitmq_')
-    
-    queue_name: str = 'undelivered_messages'
-    
 
 class Settings(BaseSettings):
     notifications_queue: NotificationsQueueConfig = NotificationsQueueConfig()
@@ -121,7 +110,6 @@ class Settings(BaseSettings):
     rabbitmq: RabbitMQConfig = RabbitMQConfig()  # type: ignore[call-arg]
     redis: RedisConfig = RedisConfig()
     smtp: SmtpConfig = SmtpConfig()
-    email: EmailConfig = EmailConfig()
-    dlq: DQLRabbitMQConfig = DQLRabbitMQConfig()
+
 
 settings = Settings()
