@@ -12,7 +12,14 @@ logging.config.dictConfig(LOGGING)
 
 
 def create_broker(*, queue_name: str | None = None) -> AioPikaBroker:
-    broker_kwargs: dict = {}
+    broker_kwargs: dict = {
+        'declare_exchange_kwargs': {
+            'durable': True,
+        },
+        'declare_queues_kwargs': {
+            'durable': True,
+        },
+    }
 
     if queue_name:
         broker_kwargs.update({
