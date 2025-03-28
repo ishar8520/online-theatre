@@ -519,6 +519,8 @@ services:
       - RABBITMQ_PASSWORD=$NOTIFICATIONS_QUEUE_RABBITMQ_PASSWORD
       - REDIS_HOST=notifications-queue-redis
       - REDIS_PORT=6379
+      - SMTP_HOST=mailhog
+      - SMTP_PORT=1025
     command: [ '/opt/app/commands/fastapi.sh', 'dev' ]
     restart: unless-stopped
     healthcheck:
@@ -549,6 +551,8 @@ services:
         condition: service_healthy
       notifications-queue-redis:
         condition: service_healthy
+      mailhog:
+        condition: service_healthy
     networks:
       - movies-network
     environment:
@@ -565,6 +569,8 @@ services:
       - RABBITMQ_PASSWORD=$NOTIFICATIONS_QUEUE_RABBITMQ_PASSWORD
       - REDIS_HOST=notifications-queue-redis
       - REDIS_PORT=6379
+      - SMTP_HOST=mailhog
+      - SMTP_PORT=1025
     command: [ '/opt/app/commands/worker.sh' ]
     restart: unless-stopped
     develop:
@@ -589,6 +595,8 @@ services:
         condition: service_healthy
       notifications-queue-redis:
         condition: service_healthy
+      mailhog:
+        condition: service_healthy
     networks:
       - movies-network
     environment:
@@ -606,6 +614,8 @@ services:
       - RABBITMQ_PASSWORD=$NOTIFICATIONS_QUEUE_RABBITMQ_PASSWORD
       - REDIS_HOST=notifications-queue-redis
       - REDIS_PORT=6379
+      - SMTP_HOST=mailhog
+      - SMTP_PORT=1025
     command: [ '/opt/app/commands/worker.sh' ]
     restart: unless-stopped
     develop:
@@ -801,6 +811,19 @@ services:
     restart: unless-stopped
     healthcheck:
       test: [ 'CMD', '/bin/bash', '-c', '[[ $(redis-cli ping) == "PONG" ]]' ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+
+  mailhog:
+    image: 'mailhog/mailhog:v1.0.1'
+    ports:
+      - '8025:8025'
+    networks:
+      - movies-network
+    healthcheck:
+      test: [ 'CMD-SHELL', 'wget -q --spider http://localhost:8025' ]
       interval: 10s
       timeout: 10s
       retries: 5

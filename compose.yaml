@@ -450,11 +450,6 @@ services:
       - REDIS_PORT=6379
       - SMTP_HOST=mailhog
       - SMTP_PORT=1025
-      - SMTP_USERNAME=$SMTP_USERNAME
-      - SMTP_PASSWORD=$SMTP_PASSWORD
-      - SMTP_USE_TLS=false
-      - EMAIL_FROM_EMAIL=$EMAIL_FROM_EMAIL
-      - DLQ_RABBITMQ_QUEUE_NAME=$DLQ_RABBITMQ_QUEUE_NAME
     command: [ '/opt/app/commands/gunicorn.sh' ]
     restart: unless-stopped
     healthcheck:
@@ -474,6 +469,8 @@ services:
         condition: service_healthy
       notifications-queue-redis:
         condition: service_healthy
+      mailhog:
+        condition: service_healthy
     networks:
       - movies-network
     environment:
@@ -491,11 +488,6 @@ services:
       - REDIS_PORT=6379
       - SMTP_HOST=mailhog
       - SMTP_PORT=1025
-      - SMTP_USERNAME=$SMTP_USERNAME
-      - SMTP_PASSWORD=$SMTP_PASSWORD
-      - SMTP_USE_TLS=false
-      - EMAIL_FROM_EMAIL=$EMAIL_FROM_EMAIL
-      - DLQ_RABBITMQ_QUEUE_NAME=$DLQ_RABBITMQ_QUEUE_NAME
     command: [ '/opt/app/commands/worker.sh' ]
     restart: unless-stopped
 
@@ -508,6 +500,8 @@ services:
       notifications-queue-rabbitmq:
         condition: service_healthy
       notifications-queue-redis:
+        condition: service_healthy
+      mailhog:
         condition: service_healthy
     networks:
       - movies-network
@@ -527,11 +521,6 @@ services:
       - REDIS_PORT=6379
       - SMTP_HOST=mailhog
       - SMTP_PORT=1025
-      - SMTP_USERNAME=$SMTP_USERNAME
-      - SMTP_PASSWORD=$SMTP_PASSWORD
-      - SMTP_USE_TLS=false
-      - EMAIL_FROM_EMAIL=$EMAIL_FROM_EMAIL
-      - DLQ_RABBITMQ_QUEUE_NAME=$DLQ_RABBITMQ_QUEUE_NAME
     command: [ '/opt/app/commands/worker.sh' ]
     restart: unless-stopped
 
@@ -727,12 +716,17 @@ services:
       start_period: 10s
 
   mailhog:
-    image: mailhog/mailhog
+    image: 'mailhog/mailhog:v1.0.1'
     ports:
-      - '1025:1025'
       - '8025:8025'
     networks:
       - movies-network
+    healthcheck:
+      test: [ 'CMD-SHELL', 'wget -q --spider http://localhost:8025' ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
 
 networks:
   movies-network:
