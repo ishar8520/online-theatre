@@ -1,7 +1,7 @@
 services:
   nginx:
     build:
-      context: ./compose/nginx
+      context: ./compose/nginx_billing
     depends_on:
       movies:
         condition: service_healthy
