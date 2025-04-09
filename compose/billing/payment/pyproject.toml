@@ -1,0 +1,47 @@
+[project]
+name = "payment"
+requires-python = ">=3.12"
+
+[tool.poetry]
+package-mode = false
+
+[tool.poetry.dependencies]
+python = "^3.12"
+
+asyncpg = "0.30.0"
+croniter = "6.0.0"
+fastapi = { version = "0.115.6", extras = ["standard"] }
+fastapi-pagination = "^0.12.34"
+httpx-oauth = "0.16.1"
+pydantic = "^2.10.6"
+pydantic-settings = "2.7.1"
+redis = "5.2.1"
+sentry-sdk = {extras = ["fastapi"], version = "^2.22.0"}
+sqlalchemy = "^2.0.39"
+requests = "2.32.3"
+
+[tool.poetry.group.dev]
+optional = true
+
+[tool.poetry.group.dev.dependencies]
+ciqar = "1.0.0"
+mypy = "1.15.0"
+ruff = "0.10.0"
+types-croniter = "^5.0.1.20250322"
+
+[tool.ruff]
+target-version = "py312"
+line-length = 120
+
+[tool.ruff.lint]
+select = [
+    "E",
+]
+
+[[tool.mypy.overrides]]
+module = "apscheduler.*"
+ignore_missing_imports = true
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"

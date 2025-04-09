@@ -259,6 +259,37 @@ services:
       retries: 5
       start_period: 10s
 
+  payment-service:
+    build: ./compose/billing/payment
+    networks:
+      - movies-network
+    depends_on:
+      payment-redis:
+        condition: service_healthy
+    environment:
+      - PAYMENT_REDIS_HOST=payment-redis
+      - PAYMENT_REDIS_PORT=6379
+      - YOOMONEY_CLIENT_ID=$YOOMONEY_CLIENT_ID
+      - YOOMONEY_REDIRECT_URI=$YOOMONEY_REDIRECT_URI
+      - YOOMONEY_SECRET=$YOOMONEY_SECRET
+
+  payment-redis:
+    image: 'bitnami/redis:7.4.2-debian-12-r0'
+    networks:
+      - movies-network
+    volumes:
+      - 'payment-redis-data:/bitnami/redis/data'
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+    command: [ '/opt/bitnami/scripts/redis/run.sh', '--maxmemory', '${AUTH_REDIS_MAXMEMORY:-200mb}' ]
+    restart: unless-stopped
+    healthcheck:
+      test: [ 'CMD', '/bin/bash', '-c', '[[ $(redis-cli ping) == "PONG" ]]' ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+
 networks:
   movies-network:
 
@@ -271,4 +302,4 @@ volumes:
   postgresql-data:
   auth-postgresql-data:
   auth-redis-data:
-  
+  payment-redis-data:
