@@ -259,6 +259,57 @@ services:
       retries: 5
       start_period: 10s
 
+  billing-service:
+    build:
+      context: ./compose/billing/billing
+    networks:
+      - movies-network
+    environment:
+      - PAYMENT_SERVICE_HOST=payment-service
+      - PAYMENT_SERVICE_PORT=8000
+    command: [ '/opt/app/commands/fastapi.sh', 'dev' ]
+    healthcheck:
+      test: [ 'CMD-SHELL', 'curl -s http://localhost:8000/billing/api/_health' ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+    develop:
+      watch:
+        - action: sync
+          path: ./compose/billing/billing/src
+          target: /opt/app/src
+        - action: rebuild
+          path: ./compose/billing/billing/commands
+        - action: rebuild
+          path: ./compose/billing/billing/pyproject.toml
+        - action: rebuild
+          path: ./compose/billing/billing/poetry.lock
+
+  payment-service:
+    build:
+      context: ./compose/billing/payment
+    networks:
+      - movies-network
+    command: [ '/opt/app/commands/fastapi.sh', 'dev' ]
+    healthcheck:
+      test: [ 'CMD-SHELL', 'curl -s http://localhost:8000/payment/api/_health' ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+    develop:
+      watch:
+        - action: sync
+          path: ./compose/billing/payment/src
+          target: /opt/app/src
+        - action: rebuild
+          path: ./compose/billing/payment/commands
+        - action: rebuild
+          path: ./compose/billing/payment/pyproject.toml
+        - action: rebuild
+          path: ./compose/billing/payment/poetry.lock
+
 networks:
   movies-network:
 
