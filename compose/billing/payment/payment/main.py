@@ -3,13 +3,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from payment.api.v1.endpoints import yoomoney
 from payment.core.config import settings
 
-base_api_url = '/payment/api'
+base_api_prefix = '/payment/api'
 
 app = FastAPI(
     title='Payment service',
     description='Payment service for execute pay via external; service',
-    docs_url=f'{base_api_url}/openapi',
-    openapi_url=f'{base_api_url}/openapi.json',
+    docs_url=f'{base_api_prefix}/openapi',
+    openapi_url=f'{base_api_prefix}/openapi.json',
 )
 
 app.add_middleware(
@@ -23,6 +23,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-base_prefix_url = f'{base_api_url}/v1'
+base_prefix_url = f'{base_api_prefix}/v1'
+
+@app.get(f'{base_api_prefix}/_health')
+async def healthcheck():
+    return {}
 
 app.include_router(yoomoney.router, prefix=f'{base_prefix_url}/yoomoney')
