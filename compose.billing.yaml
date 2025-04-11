@@ -116,6 +116,8 @@ services:
     volumes:
       - 'postgresql-data:/bitnami/postgresql'
       - './compose/postgresql/database_dump.sql:/docker-entrypoint-initdb.d/init.sql'
+    ports:
+      - '5432:5432'
     environment:
       - POSTGRESQL_DATABASE=$POSTGRESQL_DATABASE
       - POSTGRESQL_USERNAME=$POSTGRESQL_USERNAME
@@ -267,6 +269,11 @@ services:
     environment:
       - PAYMENT_SERVICE_HOST=payment-service
       - PAYMENT_SERVICE_PORT=8000
+      - POSTGRESQL_HOST=postgresql
+      - POSTGRESQL_PORT=5432
+      - POSTGRESQL_DATABASE=$POSTGRESQL_BILLING_DATABASE
+      - POSTGRESQL_USERNAME=$POSTGRESQL_USERNAME
+      - POSTGRESQL_PASSWORD=$POSTGRESQL_PASSWORD
     command: [ '/opt/app/commands/fastapi.sh', 'dev' ]
     healthcheck:
       test: [ 'CMD-SHELL', 'curl -s http://localhost:8000/billing/api/_health' ]
