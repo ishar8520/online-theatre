@@ -3,7 +3,7 @@ from __future__ import annotations
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 
-from .api.v1.endpoints import payment
+from src.api.v1.endpoints import admin, payment
 
 base_api_prefix = '/billing/api'
 app = FastAPI(
@@ -20,10 +20,15 @@ async def healthcheck():
     return {}
 
 
-notify_api_prefix = f'{base_api_prefix}/v1'
+billing_api_prefix = f'{base_api_prefix}/v1'
 
 app.include_router(
     payment.router,
-    prefix=f'{notify_api_prefix}/payment',
+    prefix=f'{billing_api_prefix}/payment',
     tags=['payment']
+)
+app.include_router(
+    admin.router,
+    prefix=f'{billing_api_prefix}/admin',
+    tags=['admin_payment']
 )
