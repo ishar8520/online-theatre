@@ -1,7 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from payment.api.v1.endpoints import yoomoney
-from payment.core.config import settings
 
 base_api_prefix = '/payment/api'
 

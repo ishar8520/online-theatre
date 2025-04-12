@@ -1,11 +1,6 @@
-from fastapi import APIRouter, HTTPException, Query, Depends
-from urllib.parse import urlencode
-import json
-from http import HTTPStatus
+from fastapi import APIRouter, Request
 
-from payment.core.config import settings
 from payment.api.v1.models.yoomoney import YoomoneyPaymentModel
-from payment.database.redis import get_redis_client, RedisClient
 from payment.services.yoomoney import get_payment_url, get_callback
 
 router = APIRouter()
@@ -14,28 +9,24 @@ router = APIRouter()
 @router.post('/payment')
 async def payment(
     model: YoomoneyPaymentModel,
-    redis_client: RedisClient = Depends(get_redis_client)
 ):
-    try:
-        response = await get_payment_url(model, redis_client)
-        response = json.loads(response)
-        if 'error' in response:
-            print(response['error'])
-            raise Exception(response['error'])
-        
-    except Exception as error:
-        raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail=error)
-    return response
+    return await get_payment_url(model)
     
 
-@router.get('/_callback')
+@router.post('/callback')
 async def callback(
-    code: str = Query(...),
-    state: str = Query(...),
-    redis_client: RedisClient = Depends(get_redis_client)
+    request: Request
 ):
-    return await get_callback(code, state, redis_client)
-
-@router.get('/webhook')
-async def webhook():
-    pass
+    return await get_callback(request)
+    
+    # FormData([('notification_type', 'card-incoming'), 
+    # ('zip', ''), ('bill_id', ''), ('amount', '1.94'), 
+    # ('firstname', ''), ('codepro', 'false'), ('withdraw_amount', '2.00'), 
+    # ('city', ''), ('unaccepted', 'false'), ('label', '12345'), 
+    # ('building', ''), ('lastname', ''), ('datetime', '2025-04-11T20:06:44Z'), 
+    # ('suite', ''), ('sender', ''), ('phone', ''), 
+    # ('sha1_hash', '778ad2a8eff635eb879a59d59a0cff3cc9d1e28f'), 
+    # ('street', ''), ('flat', ''), ('fathersname', ''), 
+    # ('operation_label', '2f8b89f4-0011-5000-9000-13acc4aeffe3'), 
+    # ('operation_id', '797717204247227112'), ('currency', '643'), 
+    # ('email', '')])
