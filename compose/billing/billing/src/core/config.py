@@ -23,8 +23,8 @@ class PostgresqlSettings(BaseSettings):
     host: str = 'localhost'
     port: int = 5432
     database: str = 'billing'
-    username: str = 'movies'
-    password: str = '123456'
+    username: str
+    password: str
 
     @property
     def engine_url(self):
