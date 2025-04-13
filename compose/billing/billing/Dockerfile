@@ -38,6 +38,7 @@ FROM common
 
 COPY --from=venv "$VIRTUAL_ENV" "$VIRTUAL_ENV"
 COPY ./pyproject.toml .
+COPY ./alembic.ini .
 COPY ./src/ ./src/
 
 COPY ./commands/ ./commands/

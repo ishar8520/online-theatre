@@ -116,8 +116,6 @@ services:
     volumes:
       - 'postgresql-data:/bitnami/postgresql'
       - './compose/postgresql/database_dump.sql:/docker-entrypoint-initdb.d/init.sql'
-    ports:
-      - '5432:5432'
     environment:
       - POSTGRESQL_DATABASE=$POSTGRESQL_DATABASE
       - POSTGRESQL_USERNAME=$POSTGRESQL_USERNAME
@@ -269,11 +267,11 @@ services:
     environment:
       - PAYMENT_SERVICE_HOST=payment-service
       - PAYMENT_SERVICE_PORT=8000
-      - POSTGRESQL_HOST=postgresql
+      - POSTGRESQL_HOST=billing-service-postgresql
       - POSTGRESQL_PORT=5432
       - POSTGRESQL_DATABASE=$POSTGRESQL_BILLING_DATABASE
-      - POSTGRESQL_USERNAME=$POSTGRESQL_USERNAME
-      - POSTGRESQL_PASSWORD=$POSTGRESQL_PASSWORD
+      - POSTGRESQL_USERNAME=$POSTGRESQL_BILLING_USERNAME
+      - POSTGRESQL_PASSWORD=$POSTGRESQL_BILLING_PASSWORD
     command: [ '/opt/app/commands/fastapi.sh', 'dev' ]
     healthcheck:
       test: [ 'CMD-SHELL', 'curl -s http://localhost:8000/billing/api/_health' ]
@@ -292,6 +290,42 @@ services:
           path: ./compose/billing/billing/pyproject.toml
         - action: rebuild
           path: ./compose/billing/billing/poetry.lock
+
+  billing-service-postgresql:
+    image: 'bitnami/postgresql:17.2.0-debian-12-r5'
+    networks:
+      - movies-network
+    volumes:
+      - 'billing-service-postgresql-data:/bitnami/postgresql'
+    ports:
+      - '5432:5432'
+    environment:
+      - POSTGRESQL_DATABASE=$POSTGRESQL_BILLING_DATABASE
+      - POSTGRESQL_USERNAME=$POSTGRESQL_BILLING_USERNAME
+      - POSTGRESQL_PASSWORD=$POSTGRESQL_BILLING_PASSWORD
+    restart: unless-stopped
+    healthcheck:
+      test: [ 'CMD-SHELL', 'pg_isready --username=$POSTGRESQL_BILLING_USERNAME --dbname=$POSTGRESQL_BILLING_DATABASE' ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  billing-service-init:
+    build:
+      context: ./compose/billing/billing
+    depends_on:
+      billing-service-postgresql:
+        condition: service_healthy
+    networks:
+      - movies-network
+    environment:
+      - POSTGRESQL_HOST=billing-service-postgresql
+      - POSTGRESQL_PORT=5432
+      - POSTGRESQL_DATABASE=$POSTGRESQL_BILLING_DATABASE
+      - POSTGRESQL_USERNAME=$POSTGRESQL_BILLING_USERNAME
+      - POSTGRESQL_PASSWORD=$POSTGRESQL_BILLING_PASSWORD
+    command: [ '/opt/app/commands/init.sh' ]
 
   payment-service:
     build:
@@ -329,4 +363,6 @@ volumes:
   postgresql-data:
   auth-postgresql-data:
   auth-redis-data:
+  billing-service-postgresql-data:
+
   
