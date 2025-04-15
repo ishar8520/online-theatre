@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from payment.api.v1.endpoints import yoomoney
+from payment.api.v1.endpoints import yoomoney, yoomoney_test_callback
 
 base_api_prefix = '/payment/api'
 
@@ -29,3 +29,4 @@ async def healthcheck():
     return {}
 
 app.include_router(yoomoney.router, prefix=f'{base_prefix_url}/yoomoney')
+app.include_router(yoomoney_test_callback.router, prefix=f'{base_prefix_url}/yoomoney')

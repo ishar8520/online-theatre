@@ -17,6 +17,9 @@ services:
       - YOOMONEY_REDIRECT_URI=$YOOMONEY_REDIRECT_URI
       - YOOMONEY_SECRET=$YOOMONEY_SECRET
       - YOOMONEY_RECEIVER_ACCOUNT=$YOOMONEY_RECEIVER_ACCOUNT
+    depends_on:
+      billing-rabbitmq:
+        condition: service_healthy
     develop:
       watch:
         - action: sync
@@ -29,8 +32,27 @@ services:
         - action: rebuild
           path: ./compose/billing/payment/poetry.lock
 
+  billing-rabbitmq:
+    image: 'bitnami/rabbitmq:4.0.7-debian-12-r1'
+    networks:
+      - movies-network
+    volumes:
+      - 'billing-rabbitmq-data:/bitnami/rabbitmq/mnesia'
+    environment:
+      - RABBITMQ_USERNAME=$BILLING_RABBITMQ_USERNAME
+      - RABBITMQ_PASSWORD=$BILLING_RABBITMQ_PASSWORD
+      - RABBITMQ_LOGS=-
+      - RABBITMQ_MANAGEMENT_ALLOW_WEB_ACCESS=true
+    restart: unless-stopped
+    healthcheck:
+      test: [ 'CMD-SHELL', 'rabbitmq-diagnostics -q ping' ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
 networks:
   movies-network:
 
 volumes:
-  payment-redis-data:
+  billing-rabbitmq-data:

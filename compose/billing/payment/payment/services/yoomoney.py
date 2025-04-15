@@ -20,7 +20,6 @@ async def get_payment_url(model: YoomoneyPaymentModel):
 async def get_callback(request: Request):
     data = await request.form()
     data = dict(data)
-    print(data)
     if data['unaccepted'] == 'false':
         status = 'success'
     else:
