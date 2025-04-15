@@ -31,7 +31,24 @@ class PostgresqlSettings(BaseSettings):
         return f'postgresql+asyncpg://{self.username}:{self.password}@{self.host}:{self.port}/{self.database}'
 
 
+class AuthConfig(BaseSettings):
+    model_config = SettingsConfigDict(env_prefix='auth_')
+
+    scheme: str = 'http'
+    host: str = 'localhost'
+    port: int = 8000
+
+    @property
+    def oauth2_token_url(self) -> str:
+        return '/auth/api/v1/jwt/login'
+
+    @property
+    def user_profile_url(self) -> str:
+        return f'{self.scheme}://{self.host}:{self.port}/auth/api/v1/users/me'
+
+
 class Settings(BaseSettings):
+    auth: AuthConfig = AuthConfig()
     payment_service: PaymentServiceSettings = PaymentServiceSettings()
     postgresql: PostgresqlSettings = PostgresqlSettings()
 

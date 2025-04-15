@@ -7,6 +7,8 @@ services:
         condition: service_healthy
       auth-service:
         condition: service_healthy
+      billing-service:
+        condition: service_healthy
     ports:
       - '8000:8080'
     networks:
@@ -274,6 +276,8 @@ services:
       - POSTGRESQL_DATABASE=$POSTGRESQL_BILLING_DATABASE
       - POSTGRESQL_USERNAME=$POSTGRESQL_USERNAME
       - POSTGRESQL_PASSWORD=$POSTGRESQL_PASSWORD
+      - AUTH_HOST=auth-service
+      - AUTH_PORT=8000
     command: [ '/opt/app/commands/fastapi.sh', 'dev' ]
     healthcheck:
       test: [ 'CMD-SHELL', 'curl -s http://localhost:8000/billing/api/_health' ]

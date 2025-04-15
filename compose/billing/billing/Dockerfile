@@ -37,6 +37,7 @@ ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 FROM common
 
 COPY --from=venv "$VIRTUAL_ENV" "$VIRTUAL_ENV"
+COPY ./alembic.ini .
 COPY ./pyproject.toml .
 COPY ./src/ ./src/
 
