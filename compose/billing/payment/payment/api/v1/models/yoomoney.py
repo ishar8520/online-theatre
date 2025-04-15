@@ -12,11 +12,10 @@ class YoomoneyPaymentModel(YoomoneyUserModel):
     label: str = 'order_123'
 
 class YoomoneyCallbackModel(BaseModel):
-    operation_id: str = '797717204247227112'
-    operation_label: str = '2f8b89f4-0011-5000-9000-13acc4aeffe3'
-    notification_type: str = 'card-incoming'
+    operation_id: str
+    operation_label: str
+    notification_type: str
     sender: str = ''
-    
     firstname: str = ''
     lastname: str = ''
     fathername: str = ''
@@ -28,14 +27,10 @@ class YoomoneyCallbackModel(BaseModel):
     suite: str = ''
     phone: str = ''
     email: str = ''
-    
     label: str
     codepro: str = 'false'
     bill_id: str = ''
-    amount: str
     withdraw_amount: str
-    currency: str = '643'
-    
+    currency: str
     datetime: datetime
-    unaccepted: str = 'false'
-    sha1_hash: str = '778ad2a8eff635eb879a59d59a0cff3cc9d1e28f'       
+    sha1_hash: str       

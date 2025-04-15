@@ -1,8 +1,25 @@
 from urllib.parse import urlencode
-from fastapi import Request
+from fastapi import Request, HTTPException
+from aio_pika import Message
+import json
+from http import HTTPStatus
+
 
 from payment.api.v1.models.yoomoney import YoomoneyPaymentModel
 from payment.core.config import settings
+from payment.services.rabbitmq import rabbitmq
+
+
+async def queue_success(message, queue_name):
+    queue = await rabbitmq.channel.declare_queue(
+        name=queue_name,
+        durable=True,
+        auto_delete=False
+    )
+    await rabbitmq.channel.default_exchange.publish(
+        Message(body=json.dumps(message).encode()),
+        routing_key=queue_name,
+    )
 
 async def get_payment_url(model: YoomoneyPaymentModel):
     params = {
@@ -20,15 +37,18 @@ async def get_payment_url(model: YoomoneyPaymentModel):
 async def get_callback(request: Request):
     data = await request.form()
     data = dict(data)
-    if data['unaccepted'] == 'false':
-        status = 'success'
-    else:
-        status = 'failed'
-    
-    return {
+    response = {
         'label': data['label'],
         'amount': data['amount'],
         'withdraw_amount': data['withdraw_amount'],
         'datetime': data['datetime'],
-        'status': status
     }
+    if data['unaccepted'] == 'false':
+        response['status'] = 'success'
+        await queue_success(response, 'succeeded')
+    elif data['unaccepted'] == 'true':
+        response['status'] = 'failed'
+        await queue_success(response, 'failed')
+    else:
+        raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail='Payment status undifined')
+    return response
