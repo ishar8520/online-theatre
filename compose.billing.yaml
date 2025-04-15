@@ -1,7 +1,7 @@
 services:
   nginx:
     build:
-      context: ./compose/nginx
+      context: ./compose/nginx_billing
     depends_on:
       movies:
         condition: service_healthy
@@ -259,6 +259,91 @@ services:
       retries: 5
       start_period: 10s
 
+  billing-service:
+    build:
+      context: ./compose/billing/billing
+    networks:
+      - movies-network
+    environment:
+      - PAYMENT_SERVICE_HOST=payment-service
+      - PAYMENT_SERVICE_PORT=8000
+    command: [ '/opt/app/commands/fastapi.sh', 'dev' ]
+    healthcheck:
+      test: [ 'CMD-SHELL', 'curl -s http://localhost:8000/billing/api/_health' ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+    develop:
+      watch:
+        - action: sync
+          path: ./compose/billing/billing/src
+          target: /opt/app/src
+        - action: rebuild
+          path: ./compose/billing/billing/commands
+        - action: rebuild
+          path: ./compose/billing/billing/pyproject.toml
+        - action: rebuild
+          path: ./compose/billing/billing/poetry.lock
+
+  payment-service:
+    build: ./compose/billing/payment
+    networks:
+      - movies-network
+    command: [ '/opt/app/commands/fastapi.sh', 'dev' ]
+    healthcheck:
+      test: [ 'CMD-SHELL', 'curl -s http://localhost:8000/payment/api/_health' ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+    ports:
+      - '8000:8000'
+    environment:
+      - YOOMONEY_CLIENT_ID=$YOOMONEY_CLIENT_ID
+      - YOOMONEY_REDIRECT_URI=$YOOMONEY_REDIRECT_URI
+      - YOOMONEY_SECRET=$YOOMONEY_SECRET
+      - YOOMONEY_RECEIVER_ACCOUNT=$YOOMONEY_RECEIVER_ACCOUNT
+      - RABBITMQ_USERNAME=$BILLING_RABBITMQ_USERNAME
+      - RABBITMQ_PASSWORD=$BILLING_RABBITMQ_PASSWORD
+      - RABBITMQ_HOST=billing-rabbitmq
+      - RABBITMQ_PORT=5672
+    depends_on:
+      billing-rabbitmq:
+        condition: service_healthy
+    develop:
+      watch:
+        - action: sync
+          path: ./compose/billing/payment/src
+          target: /opt/app/src
+        - action: rebuild
+          path: ./compose/billing/payment/commands
+        - action: rebuild
+          path: ./compose/billing/payment/pyproject.toml
+        - action: rebuild
+          path: ./compose/billing/payment/poetry.lock
+
+  billing-rabbitmq:
+    image: 'bitnami/rabbitmq:4.0.7-debian-12-r1'
+    networks:
+      - movies-network
+    volumes:
+      - 'billing-rabbitmq-data:/bitnami/rabbitmq/mnesia'
+    environment:
+      - RABBITMQ_USERNAME=$BILLING_RABBITMQ_USERNAME
+      - RABBITMQ_PASSWORD=$BILLING_RABBITMQ_PASSWORD
+      - RABBITMQ_LOGS=-
+      - RABBITMQ_MANAGEMENT_ALLOW_WEB_ACCESS=true
+    restart: unless-stopped
+    ports:
+      - '15672:15672'
+    healthcheck:
+      test: [ 'CMD-SHELL', 'rabbitmq-diagnostics -q ping' ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
 networks:
   movies-network:
 
@@ -271,4 +356,4 @@ volumes:
   postgresql-data:
   auth-postgresql-data:
   auth-redis-data:
-  
+  billing-rabbitmq-data:
