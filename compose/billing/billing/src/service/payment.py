@@ -6,6 +6,9 @@ from typing import Annotated
 from fastapi import Depends
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import (
+    select,
+)
 
 from .exceptions import CreatePaymentError
 from .models import PurchaseItemCreateDto, PaymentStatus
@@ -23,7 +26,13 @@ class PaymentService:
     def __init__(self, session: AsyncSession):
         self._session = session
 
-    async def create_payment(
+    async def get_by_id(self, id: uuid.UUID) -> Payment | None:
+        statement = select(Payment).where(Payment.id == id)
+        result = await self._session.execute(statement)
+
+        return result.scalar_one_or_none()
+
+    async def create(
             self,
             user_id: uuid.UUID,
             purchase_items: list[PurchaseItemCreateDto]

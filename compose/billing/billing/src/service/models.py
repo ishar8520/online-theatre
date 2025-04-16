@@ -35,4 +35,3 @@ class PaymentCreateDto(BaseModel):
     user_id: uuid.UUID
     status: PaymentStatus = PaymentStatus.CREATED
     items: list[PurchaseItemCreateDto]
-

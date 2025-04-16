@@ -10,6 +10,9 @@ from ..models.payment import (
     PaymentPayResponseDto
 )
 from ....service.exceptions import CreatePaymentError
+from ....service.integrations.exceptions import IntegrationCreatePaymentError
+from ....service.integrations.factory import IntegrationFactoryDep
+from ....service.integrations.models import PaymentIntegrations
 from ....service.models import (
     PurchaseItemCreateDto
 )
@@ -31,7 +34,7 @@ async def create(
     user_id = "550e8400-e29b-41d4-a716-446655440000"
 
     try:
-        created_payment = await payment_service.create_payment(
+        created_payment = await payment_service.create(
             user_id=user_id,
             purchase_items=purchase_items
         )
@@ -47,17 +50,36 @@ async def create(
 
 
 @router.post(
-    path='/pay/{payment_id}',
+    path='/init_payment/{payment_id}',
     status_code=HTTPStatus.CREATED,
     summary='Generate link to payment service',
     response_model=PaymentPayResponseDto
 )
-async def pay(
+async def init_payment(
         payment_id: uuid.UUID,
-        payment_service: PaymentServiceDep
+        payment_method: PaymentIntegrations,
+        payment_service: PaymentServiceDep,
+        integration_factory: IntegrationFactoryDep
 ) -> PaymentPayResponseDto:
+    payment = await payment_service.get_by_id(id=payment_id)
 
-    return PaymentPayResponseDto()
+    if payment is None:
+        raise HTTPException(
+            HTTPStatus.NOT_FOUND,
+            'Payment is not found'
+        )
+
+    integration = await integration_factory.get(payment_method)
+
+    try:
+        url = await integration.create(payment)
+    except IntegrationCreatePaymentError:
+        raise HTTPException(
+            status_code=HTTPStatus.BAD_REQUEST,
+            detail='Creation is failed'
+        )
+
+    return PaymentPayResponseDto(url=url)
 
 
 @router.post(

@@ -9,12 +9,12 @@ from pydantic_settings import (
 class PaymentServiceSettings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="payment_service_")
 
-    host: str = "localhost"
+    host: str
     port: int = 8000
 
     @property
-    def created_url(self) -> str:
-        return f"http://{self.host}:{self.port}/api/v1/payment/create"
+    def base_url(self) -> str:
+        return f"http://{self.host}:{self.port}/api/v1"
 
 
 class PostgresqlSettings(BaseSettings):
