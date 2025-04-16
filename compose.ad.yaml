@@ -11,10 +11,12 @@ services:
       retries: 5
       start_period: 10s
     environment:
+      - SERVICE_URL=$SERVICE_URL
       - YOOMONEY_CLIENT_ID=$YOOMONEY_CLIENT_ID
       - YOOMONEY_REDIRECT_URI=$YOOMONEY_REDIRECT_URI
       - YOOMONEY_SECRET=$YOOMONEY_SECRET
       - YOOMONEY_RECEIVER_ACCOUNT=$YOOMONEY_RECEIVER_ACCOUNT
+      - YOOMONEY_TOKEN_ACCOUNT=$YOOMONEY_TOKEN_ACCOUNT
       - RABBITMQ_USERNAME=$BILLING_RABBITMQ_USERNAME
       - RABBITMQ_PASSWORD=$BILLING_RABBITMQ_PASSWORD
       - RABBITMQ_HOST=billing-rabbitmq
@@ -76,7 +78,7 @@ services:
       interval: 10s
       timeout: 10s
       retries: 5
-      start_period: 60s
+      start_period: 100s
 
   short-link-redis:
     image: 'bitnami/redis:7.4.2-debian-12-r0'
