@@ -38,7 +38,7 @@ FROM common
 
 COPY --from=venv "$VIRTUAL_ENV" "$VIRTUAL_ENV"
 COPY ./pyproject.toml .
-COPY ./src/ ./src/
+COPY ./payment/ ./payment/
 
 COPY ./commands/ ./commands/
 RUN chmod +x ./commands/*.sh

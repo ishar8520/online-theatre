@@ -2,7 +2,7 @@
 
 set -e
 
-app_path=/opt/app/src/main.py
+app_path=/opt/app/payment/main.py
 
 fastapi_dev() {
     fastapi dev --host 0.0.0.0 "$app_path"
