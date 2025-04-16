@@ -3,12 +3,15 @@ from __future__ import annotations
 import uuid
 from http import HTTPStatus
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 
 from ..models.payment import (
-    PurchaseItemCreateDto,
     PaymentResponseDto,
     PaymentPayResponseDto
+)
+from ....service.exceptions import CreatePaymentError
+from ....service.models import (
+    PurchaseItemCreateDto
 )
 from ....service.payment import PaymentServiceDep
 
@@ -25,8 +28,22 @@ async def create(
         purchase_items: list[PurchaseItemCreateDto],
         payment_service: PaymentServiceDep
 ) -> PaymentResponseDto:
+    user_id = "550e8400-e29b-41d4-a716-446655440000"
 
-    return PaymentResponseDto()
+    try:
+        created_payment = await payment_service.create_payment(
+            user_id=user_id,
+            purchase_items=purchase_items
+        )
+    except CreatePaymentError:
+        raise HTTPException(
+            status_code=HTTPStatus.BAD_REQUEST,
+            detail='Payment is failed'
+        )
+
+    return PaymentResponseDto(
+        id=created_payment.id
+    )
 
 
 @router.post(
@@ -35,7 +52,7 @@ async def create(
     summary='Generate link to payment service',
     response_model=PaymentPayResponseDto
 )
-async def create(
+async def pay(
         payment_id: uuid.UUID,
         payment_service: PaymentServiceDep
 ) -> PaymentPayResponseDto:
@@ -49,7 +66,7 @@ async def create(
     summary='Cancel payment',
     response_model=bool
 )
-async def create(
+async def cancel(
         payment_id: uuid.UUID,
         payment_service: PaymentServiceDep
 ) -> bool:
@@ -63,7 +80,7 @@ async def create(
     summary='Update information of payment',
     response_model=PaymentResponseDto
 )
-async def create(
+async def update(
         payment_id: uuid.UUID,
         payment_service: PaymentServiceDep
 ) -> PaymentResponseDto:

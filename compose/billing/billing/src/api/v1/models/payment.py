@@ -1,32 +1,32 @@
 from __future__ import annotations
 
-import enum
 import uuid
 
 from pydantic import BaseModel
 
+from ....service.models import (
+    PaymentStatus,
+    PurchaseItemType
+)
 
-class PaymentStatus(enum.StrEnum):
-    CREATED = 'created'
-    PAID = 'paid'
-    UNPAID = 'unpaid'
+
+class PurchaseItemPropertyCreateResponseDto(BaseModel):
+    name: str
+    code: str
+    value: str
 
 
-class PurchaseItemCreateDto(BaseModel):
+class PurchaseItemResponseDto(BaseModel):
+    id: uuid.UUID
     name: str
     quantity: int
     price: float
-
-
-class PurchaseItemResponseDto(PurchaseItemCreateDto):
-    id: uuid.UUID
+    type: PurchaseItemType
+    props: list[PurchaseItemPropertyCreateResponseDto] | None
 
 
 class PaymentResponseDto(BaseModel):
     id: uuid.UUID
-    user_id: uuid.UUID
-    status: PaymentStatus
-    items: list[PurchaseItemCreateDto]
 
 
 class PaymentUpdateDto(BaseModel):
