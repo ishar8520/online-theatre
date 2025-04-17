@@ -8,9 +8,9 @@ from pydantic import BaseModel
 
 
 class PaymentStatus(enum.StrEnum):
-    CREATED = 'created'
     PAID = 'paid'
     UNPAID = 'unpaid'
+    FAILED = 'failed'
     CANCELED = 'canceled'
 
 
@@ -35,7 +35,7 @@ class PurchaseItemCreateDto(BaseModel):
 
 class PaymentCreateDto(BaseModel):
     user_id: uuid.UUID
-    status: PaymentStatus = PaymentStatus.CREATED
+    status: PaymentStatus = PaymentStatus.UNPAID
     items: list[PurchaseItemCreateDto]
 
 

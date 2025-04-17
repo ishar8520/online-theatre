@@ -59,7 +59,7 @@ class PaymentService:
 
         payment = Payment(
             user_id=user_id,
-            status=PaymentStatus.CREATED,
+            status=PaymentStatus.UNPAID,
             items=payment_items
         )
 
