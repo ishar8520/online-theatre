@@ -4,15 +4,6 @@ from datetime import datetime
 class YoomoneyUserModel(BaseModel):
     user_id: str
 
-
-class YoomoneyRefundModel(BaseModel):
-    pattern_id: str='p2p'
-    to: str
-    amount: float
-    message: str
-    label: str
-
-
 class YoomoneyPaymentModel(BaseModel):
     pattern_id: str='p2p'
     amount: float
