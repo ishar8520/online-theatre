@@ -17,7 +17,8 @@ from sqlalchemy import (
 from sqlalchemy.orm import (
     DeclarativeBase,
     Mapped,
-    mapped_column, relationship,
+    mapped_column,
+    relationship,
 )
 
 billing_metadata_obj = MetaData(
@@ -44,7 +45,9 @@ class PurchaseItem(BillingBase):
         primary_key=True,
         default=uuid.uuid4,
     )
-    payment_id: Mapped[uuid.UUID] = mapped_column(ForeignKey('billing.payment.id', ondelete='CASCADE'))
+    payment_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey('billing.payment.id', ondelete='CASCADE'),
+    )
     name: Mapped[str] = mapped_column(Text, nullable=False)
     quantity: Mapped[int] = mapped_column(Integer, default=1)
     type: Mapped[str] = mapped_column(Text, nullable=False)
@@ -77,8 +80,7 @@ class PurchaseItemProperty(BillingBase):
         default=uuid.uuid4,
     )
     purchase_item_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey('billing.purchase_item.id', ondelete='CASCADE'),
-        nullable=True
+        ForeignKey('billing.purchase_item.id', ondelete='CASCADE')
     )
     name: Mapped[str] = mapped_column(Text, nullable=False)
     code: Mapped[str] = mapped_column(Text, nullable=False)
@@ -89,10 +91,7 @@ class PurchaseItemProperty(BillingBase):
     )
 
     __table_args__ = (
-        UniqueConstraint(
-            'purchase_item_id',
-            'code',
-        ),
+        UniqueConstraint('purchase_item_id', 'code'),
     )
 
     purchase_item: Mapped[PurchaseItem | None] = relationship(
