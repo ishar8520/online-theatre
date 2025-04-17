@@ -43,6 +43,8 @@ jobs:
             ./compose/notifications/queue/.lint/
             ./compose/notifications/notification/.lint/
             ./compose/notifications/admin_panel/.lint/
+            ./compose/billing/billing/.lint/
+            ./compose/billing/payment/.lint/
           include-hidden-files: true
 
   tests:
