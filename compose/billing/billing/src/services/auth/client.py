@@ -72,3 +72,29 @@ async def get_current_admin_user(
             detail="Доступ разрешён только администраторам"
         )
     return user
+
+
+async def get_current_user(
+    auth_client: AuthClient = Depends(get_auth_client)
+) -> User:
+    """Метод для проверки авторизации"""
+    try:
+        user_data = await auth_client.get_user_profile()
+    except httpx.HTTPStatusError as e:
+        if e.response.status_code == status.HTTP_403_FORBIDDEN:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Доступ запрещён: недостаточно прав"
+            )
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Пользователь не авторизован"
+            )
+    except httpx.HTTPError:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Сервис недоступен"
+        )
+
+    return User(**user_data)

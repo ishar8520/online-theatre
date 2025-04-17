@@ -3,22 +3,25 @@ from __future__ import annotations
 import uuid
 from http import HTTPStatus
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 
 from ..models.payment import (
     PaymentResponseDto,
     PaymentPayResponseDto,
     ProcessPaymentRequest, PaymentStatusRequest
 )
-from ....service.exceptions import CreatePaymentError, UpdatePaymentError
-from ....service.integrations.exceptions import IntegrationCreatePaymentError
-from ....service.integrations.factory import IntegrationFactoryDep
-from ....service.integrations.models import PaymentIntegrations
-from ....service.models import (
+from ....models.auth import User
+from ....services.auth.client import get_current_user
+from ....services.exceptions import CreatePaymentError, UpdatePaymentError
+from ....services.integrations.exceptions import IntegrationCreatePaymentError
+from ....services.integrations.factory import IntegrationFactoryDep
+from ....services.integrations.models import PaymentIntegrations
+from ....services.models import (
     PurchaseItemCreateDto,
-    PaymentUpdateDto, PaymentStatus
+    PaymentUpdateDto,
+    PaymentStatus
 )
-from ....service.payment import PaymentServiceDep
+from ....services.payment import PaymentServiceDep
 
 router = APIRouter()
 
@@ -31,13 +34,12 @@ router = APIRouter()
 )
 async def create(
         purchase_items: list[PurchaseItemCreateDto],
-        payment_service: PaymentServiceDep
+        payment_service: PaymentServiceDep,
+        user: User = Depends(get_current_user),
 ) -> PaymentResponseDto:
-    user_id = "550e8400-e29b-41d4-a716-446655440000"
-
     try:
         created_payment = await payment_service.add(
-            user_id=user_id,
+            user_id=user.id,
             purchase_items=purchase_items
         )
     except CreatePaymentError:
@@ -61,11 +63,12 @@ async def init_payment(
         payment_id: uuid.UUID,
         payment_method: PaymentIntegrations,
         payment_service: PaymentServiceDep,
-        integration_factory: IntegrationFactoryDep
+        integration_factory: IntegrationFactoryDep,
+        user: User = Depends(get_current_user),
 ) -> PaymentPayResponseDto:
     payment = await payment_service.get_by_id(id=payment_id)
 
-    if payment is None:
+    if payment is None or payment.user_id != user.id:
         raise HTTPException(
             HTTPStatus.NOT_FOUND,
             "Payment is not found"
@@ -92,11 +95,12 @@ async def init_payment(
 )
 async def cancel(
         payment_id: uuid.UUID,
-        payment_service: PaymentServiceDep
+        payment_service: PaymentServiceDep,
+        user: User = Depends(get_current_user),
 ) -> PaymentResponseDto:
     payment = await payment_service.get_by_id(id=payment_id)
 
-    if payment is None:
+    if payment is None or payment.user_id != user.id:
         raise HTTPException(
             HTTPStatus.NOT_FOUND,
             "Payment is not found"
@@ -115,46 +119,17 @@ async def cancel(
 
 
 @router.post(
-    path="/update/{payment_id}",
-    status_code=HTTPStatus.OK,
-    summary="Update information of payment",
-    response_model=PaymentResponseDto
-)
-async def update(
-        payment_id: uuid.UUID,
-        update_data: PaymentUpdateDto,
-        payment_service: PaymentServiceDep
-) -> PaymentResponseDto:
-    payment = await payment_service.get_by_id(id=payment_id)
-
-    if payment is None:
-        raise HTTPException(
-            HTTPStatus.NOT_FOUND,
-            "Payment is not found"
-        )
-
-    try:
-        updated_payment = await payment_service.update(payment, update_data)
-    except UpdatePaymentError:
-        raise HTTPException(
-            status_code=HTTPStatus.BAD_REQUEST,
-            detail="Update is failed"
-        )
-
-    return PaymentResponseDto(id=updated_payment.id)
-
-
-@router.post(
-    path="/process/",
+    path="/process/{payment_id}",
     status_code=HTTPStatus.OK,
     summary="Process result of payment",
     response_model=PaymentResponseDto
 )
 async def process(
+        payment_id: uuid.UUID,
         payment_info: ProcessPaymentRequest,
         payment_service: PaymentServiceDep
 ) -> PaymentResponseDto:
-    payment = await payment_service.get_by_id(id=payment_info.label)
+    payment = await payment_service.get_by_id(id=payment_id)
 
     if payment is None:
         raise HTTPException(

@@ -6,8 +6,8 @@ from datetime import datetime
 
 from pydantic import BaseModel
 
-from ....service.integrations.models import PaymentIntegrations
-from ....service.models import PurchaseItemType
+from ....services.integrations.models import PaymentIntegrations
+from ....services.models import PurchaseItemType
 
 
 class PurchaseItemPropertyCreateResponseDto(BaseModel):
