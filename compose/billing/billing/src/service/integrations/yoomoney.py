@@ -16,7 +16,7 @@ from ...models.sqlalchemy import Payment
 class YoomoneyService(AbstractIntegration):
     async def create(self, payment: Payment) -> str:
         base_url = self.get_url()
-        payload = {} # @todo use Payment object
+        payload = {}  # @todo use Payment object
 
         try:
             async with aiohttp.ClientSession() as session:
@@ -34,7 +34,6 @@ class YoomoneyService(AbstractIntegration):
         except Exception as err:
             logging.debug(f"Yoomoney.create: error:{err}")
             raise IntegrationCreatePaymentError
-
 
     @staticmethod
     def get_url():

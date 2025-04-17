@@ -10,8 +10,15 @@ from sqlalchemy import (
     select,
 )
 
-from .exceptions import CreatePaymentError
-from .models import PurchaseItemCreateDto, PaymentStatus
+from .exceptions import (
+    CreatePaymentError,
+    UpdatePaymentError
+)
+from .models import (
+    PurchaseItemCreateDto,
+    PaymentStatus,
+    PaymentUpdateDto
+)
 from ..db.sqlalchemy import AsyncSessionDep
 from ..models.sqlalchemy import (
     Payment,
@@ -32,7 +39,7 @@ class PaymentService:
 
         return result.scalar_one_or_none()
 
-    async def create(
+    async def add(
             self,
             user_id: uuid.UUID,
             purchase_items: list[PurchaseItemCreateDto]
@@ -64,6 +71,27 @@ class PaymentService:
         except SQLAlchemyError:
             await self._session.rollback()
             raise CreatePaymentError
+
+        return payment
+
+    async def update(
+            self,
+            payment: Payment,
+            payment_update: PaymentUpdateDto
+    ) -> Payment:
+        fields = payment_update.model_dump(exclude_unset=True)
+        print(fields)
+        for key, value in fields.items():
+            setattr(payment, key, value)
+
+        self._session.add(payment)
+
+        try:
+            await self._session.commit()
+            await self._session.refresh(payment)
+        except SQLAlchemyError:
+            await self._session.rollback()
+            raise UpdatePaymentError
 
         return payment
 

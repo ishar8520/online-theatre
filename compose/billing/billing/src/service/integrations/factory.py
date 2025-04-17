@@ -23,4 +23,7 @@ def get_integration_factory():
     return IntegrationFactory()
 
 
-IntegrationFactoryDep = Annotated[IntegrationFactory, Depends(get_integration_factory)]
+IntegrationFactoryDep = Annotated[
+    IntegrationFactory,
+    Depends(get_integration_factory)
+]

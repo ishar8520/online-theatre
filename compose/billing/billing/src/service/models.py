@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import enum
 import uuid
+from typing import Optional
 
 from pydantic import BaseModel
 
@@ -10,6 +11,7 @@ class PaymentStatus(enum.StrEnum):
     CREATED = 'created'
     PAID = 'paid'
     UNPAID = 'unpaid'
+    CANCELED = 'canceled'
 
 
 class PurchaseItemType(enum.StrEnum):
@@ -35,3 +37,9 @@ class PaymentCreateDto(BaseModel):
     user_id: uuid.UUID
     status: PaymentStatus = PaymentStatus.CREATED
     items: list[PurchaseItemCreateDto]
+
+
+class PaymentUpdateDto(BaseModel):
+    status: Optional[PaymentStatus] = None
+    ps_name: Optional[str] = None
+    ps_invoice_id: Optional[uuid.UUID] = None

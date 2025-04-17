@@ -4,10 +4,7 @@ import uuid
 
 from pydantic import BaseModel
 
-from ....service.models import (
-    PaymentStatus,
-    PurchaseItemType
-)
+from ....service.models import PurchaseItemType
 
 
 class PurchaseItemPropertyCreateResponseDto(BaseModel):
@@ -27,10 +24,6 @@ class PurchaseItemResponseDto(BaseModel):
 
 class PaymentResponseDto(BaseModel):
     id: uuid.UUID
-
-
-class PaymentUpdateDto(BaseModel):
-    status: PaymentStatus
 
 
 class PaymentPayResponseDto(BaseModel):
