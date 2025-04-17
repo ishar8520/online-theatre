@@ -5,7 +5,8 @@ from aio_pika import Message
 import json
 from http import HTTPStatus
 import secrets
-import requests
+from httpx import AsyncClient
+
 
 from payment.api.v1.models.yoomoney import YoomoneyPaymentModel, YoomoneyRefundModel
 from payment.core.config import settings
@@ -15,15 +16,20 @@ from payment.services.redis import RedisClient
 
 base_service_url = settings.service.url
 
-async def check_token():
-    response = requests.get(
-        "https://yoomoney.ru/api/account-info",
-        headers={"Authorization": f"Bearer {settings.yoomoney.token_account}"}
-    )
-    return response
 
-async def get_refund(model: YoomoneyRefundModel, redis_client: RedisClient) -> JSONResponse:
+async def check_token(httpx_client: AsyncClient) -> dict:
+    response = await httpx_client.get(
+        'https://yoomoney.ru/api/account-info',
+        headers={'Authorization': f'Bearer {settings.yoomoney.token_account}'}
+    )
+    if response.status_code != HTTPStatus.OK:
+        raise HTTPException(status_code=response.status_code)
+    return response.json()
+
+
+async def get_refund(model: YoomoneyRefundModel, redis_client: RedisClient, httpx_client: AsyncClient) -> JSONResponse:
     token = settings.yoomoney.token_account
+    
     headers = {
         'Authorization': f'Bearer {token}',
         'Content-Type': 'application/x-www-form-urlencoded'
@@ -35,17 +41,20 @@ async def get_refund(model: YoomoneyRefundModel, redis_client: RedisClient) -> J
         'message': model.message,
         'label': model.label
     }
-    response = requests.post(
+    response = await httpx_client.post(
         'https://yoomoney.ru/api/request-payment',
         headers=headers,
         data=params
     )
+    if response.status_code != HTTPStatus.OK:
+        raise HTTPException(status_code=response.status_code)
     response = response.json()
     if response['status'] == 'success':
         request_data = {
             'request_id': response['request_id'],
             'money_source': response['money_source'],
-            'token': token}
+            'token': token
+        }
         await redis_client.set_value_with_ttl(
             key=f'yoomoney:request_id:{response["request_id"]}',
             value=json.dumps(request_data),
@@ -55,7 +64,8 @@ async def get_refund(model: YoomoneyRefundModel, redis_client: RedisClient) -> J
         return JSONResponse({'accept_url': accept_url})
     return JSONResponse(response)
 
-async def get_payment(user_id: str, model: YoomoneyPaymentModel, redis_client: RedisClient) -> JSONResponse:
+
+async def get_payment(user_id: str, model: YoomoneyPaymentModel, redis_client: RedisClient, httpx_client: AsyncClient) -> JSONResponse:
     if not await redis_client.get_value(f'yoomoney:payment:{user_id}'):
         params = {
             'pattern_id': model.pattern_id,
@@ -71,7 +81,7 @@ async def get_payment(user_id: str, model: YoomoneyPaymentModel, redis_client: R
 
     if not await redis_client.get_value(key=f'yoomoney:token:{user_id}'):
         return await get_auth_url(user_id, redis_client)
-    return await get_payment_request(user_id, redis_client)
+    return await get_payment_request(user_id, redis_client, httpx_client)
 
 
 async def get_auth_url(user_id: str, redis_client: RedisClient) -> JSONResponse:
@@ -91,11 +101,11 @@ async def get_auth_url(user_id: str, redis_client: RedisClient) -> JSONResponse:
     return JSONResponse({'url': f'https://yoomoney.ru/oauth/authorize?{urlencode(params)}'})
 
 
-async def get_auth_success(code: str, state: str, redis_client: RedisClient) -> JSONResponse:
+async def get_auth_success(code: str, state: str, redis_client: RedisClient, httpx_client: AsyncClient) -> JSONResponse:
     user_id = await redis_client.get_value(f'yoomoney:state:{state}')
     user_id = user_id.decode('utf-8')
     await redis_client.delete_value(f'yoomoney:state:{state}')
-    response = requests.post(
+    response = await httpx_client.post(
         'https://yoomoney.ru/oauth/token',
         data={
             'code': code,
@@ -105,16 +115,18 @@ async def get_auth_success(code: str, state: str, redis_client: RedisClient) -> 
             'client_secret': settings.yoomoney.secret,
         }
     )
+    if response.status_code != HTTPStatus.OK:
+        raise HTTPException(status_code=response.status_code)
     token = response.json().get('access_token')
     await redis_client.set_value_with_ttl(
         key=f'yoomoney:token:{user_id}',
         value=token,
         ttl_seconds=600
     )
-    return await get_payment_request(user_id, redis_client)
+    return await get_payment_request(user_id, redis_client, httpx_client)
 
 
-async def get_payment_request(user_id: str, redis_client: RedisClient) -> JSONResponse:
+async def get_payment_request(user_id: str, redis_client: RedisClient, httpx_client: AsyncClient) -> JSONResponse:
     token = await redis_client.get_value(f'yoomoney:token:{user_id}')
     token = token.decode('utf-8')
     payment_data = await redis_client.get_value(f'yoomoney:payment:{user_id}')
@@ -125,11 +137,13 @@ async def get_payment_request(user_id: str, redis_client: RedisClient) -> JSONRe
         'Authorization': f'Bearer {token}',
         'Content-Type': 'application/x-www-form-urlencoded'
     }
-    response = requests.post(
+    response = await httpx_client.post(
         'https://yoomoney.ru/api/request-payment',
         headers=headers,
         data=data
     )
+    if response.status_code != HTTPStatus.OK:
+        raise HTTPException(status_code=response.status_code)
     response = response.json()
     if response['status'] == 'success':
         request_data = {
@@ -146,7 +160,7 @@ async def get_payment_request(user_id: str, redis_client: RedisClient) -> JSONRe
     return JSONResponse(response)
 
 
-async def get_payment_accept(request_id, redis_client: RedisClient) -> JSONResponse:
+async def get_payment_accept(request_id, redis_client: RedisClient, httpx_client: AsyncClient) -> JSONResponse:
     request_data = await redis_client.get_value(key=f'yoomoney:request_id:{request_id}')
     request_data = request_data.decode('utf-8')
     request_data = json.loads(request_data)
@@ -159,11 +173,13 @@ async def get_payment_accept(request_id, redis_client: RedisClient) -> JSONRespo
     data = {
         'request_id': request_data['request_id']
     }
-    response = requests.post(
+    response = await httpx_client.post(
         'https://yoomoney.ru/api/process-payment',
         headers=headers,
         data=data
     )
+    if response.status_code != HTTPStatus.OK:
+        raise HTTPException(status_code=response.status_code)
     return JSONResponse(response.json())
 
 
@@ -175,6 +191,7 @@ async def get_callback(request: Request) -> JSONResponse:
         'amount': data['amount'],
         'withdraw_amount': data['withdraw_amount'],
         'datetime': data['datetime'],
+        'sender': data['sender']
     }
     if data['unaccepted'] == 'false':
         response['status'] = 'success'
