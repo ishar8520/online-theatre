@@ -16,17 +16,21 @@ from ...models.sqlalchemy import Payment
 class YoomoneyService(AbstractIntegration):
     async def create(self, payment: Payment) -> str:
         base_url = self.get_url()
-        payload = {}  # @todo use Payment object
+        payload = {
+            "amount": 100,
+            "label": str(payment.id),
+            "message": f"Order for user {payment.user_id}"
+        }
 
         try:
             async with aiohttp.ClientSession() as session:
                 async with session.post(
-                    url=f"{base_url}/create",
+                    url=f"{base_url}/payment/{payment.user_id}",
                     json=payload
                 ) as response:
                     if response.status == HTTPStatus.OK:
                         data = await response.json()
-                        return data["url"]
+                        return data["accept_url"]
 
                     logging.debug(f"Yoomoney.create: status=:{response.status}, response={response}")
                     raise IntegrationCreatePaymentError

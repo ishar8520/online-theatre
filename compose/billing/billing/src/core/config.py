@@ -14,7 +14,7 @@ class PaymentServiceSettings(BaseSettings):
 
     @property
     def base_url(self) -> str:
-        return f"http://{self.host}:{self.port}/api/v1"
+        return f"http://{self.host}:{self.port}/payment/api/v1"
 
 
 class PostgresqlSettings(BaseSettings):

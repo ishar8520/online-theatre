@@ -304,9 +304,13 @@ services:
     ports:
       - '5432:5432'
     environment:
+      - PAYMENT_SERVICE_HOST=payment-service
+      - PAYMENT_SERVICE_PORT=8000
       - POSTGRESQL_DATABASE=$POSTGRESQL_BILLING_DATABASE
       - POSTGRESQL_USERNAME=$POSTGRESQL_BILLING_USERNAME
       - POSTGRESQL_PASSWORD=$POSTGRESQL_BILLING_PASSWORD
+      - AUTH_HOST=auth-service
+      - AUTH_PORT=8000
     restart: unless-stopped
     healthcheck:
       test: [ 'CMD-SHELL', 'pg_isready --username=$POSTGRESQL_BILLING_USERNAME --dbname=$POSTGRESQL_BILLING_DATABASE' ]

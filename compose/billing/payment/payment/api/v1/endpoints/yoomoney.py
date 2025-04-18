@@ -1,3 +1,5 @@
+import uuid
+
 from fastapi import APIRouter, Request, Depends, Query
 import httpx
 from collections.abc import AsyncGenerator
@@ -28,9 +30,9 @@ async def check(
 ):
     return await check_token(token, httpx_client)
 
-@router_ex.post('/payment')
+@router_ex.post('/payment/{user_id}')
 async def payment(
-    user_id: str,
+    user_id: uuid.UUID,
     model: YoomoneyPaymentModel,
     redis_client: RedisClient = Depends(get_redis_client),
     httpx_client: httpx.AsyncClient = Depends(get_httpx_client)
