@@ -74,6 +74,12 @@ async def init_payment(
             "Payment is not found"
         )
 
+    if payment.status == PaymentStatus.CANCELED:
+        raise HTTPException(
+            HTTPStatus.BAD_REQUEST,
+            "Payment is canceled"
+        )
+
     integration = await integration_factory.get(payment_method)
 
     try:
@@ -104,6 +110,12 @@ async def cancel(
         raise HTTPException(
             HTTPStatus.NOT_FOUND,
             "Payment is not found"
+        )
+
+    if payment.status == PaymentStatus.PAID:
+        raise HTTPException(
+            HTTPStatus.BAD_REQUEST,
+            "Payment is paid"
         )
 
     update_data = PaymentUpdateDto(status=PaymentStatus.CANCELED)
