@@ -299,6 +299,7 @@ services:
       start_period: 10s
     environment:
       - SERVICE_URL=$SERVICE_URL
+      - SHORT_LINK_URL=http://short-link-service:8000
       - YOOMONEY_CLIENT_ID=$YOOMONEY_CLIENT_ID
       - YOOMONEY_REDIRECT_URI=$YOOMONEY_REDIRECT_URI
       - YOOMONEY_SECRET=$YOOMONEY_SECRET
@@ -324,6 +325,25 @@ services:
           path: ./compose/billing/payment/pyproject.toml
         - action: rebuild
           path: ./compose/billing/payment/poetry.lock
+
+  payment-redis:
+    image: 'bitnami/redis:7.4.2-debian-12-r0'
+    networks:
+      - movies-network
+    volumes:
+      - 'payment-redis-data:/bitnami/redis/data'
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+    ports:
+      - '6379:6379'
+    command: [ '/opt/bitnami/scripts/redis/run.sh', '--maxmemory', '${AUTH_REDIS_MAXMEMORY:-200mb}' ]
+    restart: unless-stopped
+    healthcheck:
+      test: [ 'CMD', '/bin/bash', '-c', '[[ $(redis-cli ping) == "PONG" ]]' ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
 
   billing-rabbitmq:
     image: 'bitnami/rabbitmq:4.0.7-debian-12-r1'
@@ -371,9 +391,9 @@ services:
       short-link-redis:
         condition: service_healthy
     environment:
+      - SERVICE_URL=$SERVICE_URL
       - REDIS_HOST=short-link-redis
       - REDIS_PORT=6379
-      - PROJECT_HOST
 
 networks:
   movies-network:
@@ -389,3 +409,4 @@ volumes:
   auth-redis-data:
   billing-rabbitmq-data:
   short_links_redis_data:
+  payment-redis-data:

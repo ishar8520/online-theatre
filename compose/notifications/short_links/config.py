@@ -8,8 +8,14 @@ class RedisConfig(BaseSettings):
     host: str
     port: int
     
+class ServiceConfig(BaseSettings):
+    model_config = SettingsConfigDict(env_prefix='service_')
+    
+    url: str
+    
 class Settings(BaseSettings):
     redis: RedisConfig = RedisConfig()
+    service: ServiceConfig = ServiceConfig()
     
 
 settings = Settings()
