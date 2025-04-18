@@ -44,6 +44,8 @@ run_command() {
         notifications-queue
         notification-service
         notifications-admin-panel-service
+        billing-service
+        payment-service
     )
 
     declare -A services_set
