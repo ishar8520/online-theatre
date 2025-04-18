@@ -45,8 +45,7 @@ FROM common AS lint
 
 COPY --from=venv-dev "$VIRTUAL_ENV" "$VIRTUAL_ENV"
 COPY ./pyproject.toml .
-COPY ./alembic.ini .
-COPY ./billing/ ./billing/
+COPY ./src/ ./src/
 
 COPY ./commands/ ./commands/
 RUN chmod +x ./commands/*.sh
