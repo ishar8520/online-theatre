@@ -243,10 +243,10 @@ async def get_callback(request: Request) -> JSONResponse:
     }
     if data['unaccepted'] == 'false':
         response['status'] = 'success'
-        await send_queue(response, 'succeeded')
+        await send_queue(response, 'status_queue')
     elif data['unaccepted'] == 'true':
         response['status'] = 'failed'
-        await send_queue(response, 'failed')
+        await send_queue(response, 'status_queue')
     else:
         raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail='Payment status undifined')
     return JSONResponse(response)
