@@ -4,12 +4,11 @@ from datetime import datetime
 class YoomoneyUserModel(BaseModel):
     user_id: str
 
-class YoomoneyPaymentModel(YoomoneyUserModel):
-    quickpay_form: str = 'small'
-    targets: str = 'Описание оплаты'
-    paymentType: str = 'AC'
-    sum: str = '100'
-    label: str = 'order_123'
+class YoomoneyPaymentModel(BaseModel):
+    pattern_id: str='p2p'
+    amount: float
+    message: str
+    label: str
 
 class YoomoneyCallbackModel(BaseModel):
     operation_id: str

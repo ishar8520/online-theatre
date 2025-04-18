@@ -39,5 +39,6 @@ base_prefix_url = f'{base_api_prefix}/v1'
 async def healthcheck():
     return {}
 
-app.include_router(yoomoney.router, prefix=f'{base_prefix_url}/yoomoney')
-app.include_router(yoomoney_test_callback.router, prefix=f'{base_prefix_url}/yoomoney')
+app.include_router(yoomoney.router_ex, prefix=f'{base_prefix_url}/yoomoney', tags=['external methods'])
+app.include_router(yoomoney.router_in, prefix=f'{base_prefix_url}/yoomoney', tags=['internal methods'])
+app.include_router(yoomoney_test_callback.router, prefix=f'{base_prefix_url}/yoomoney', tags=['test methods'])
