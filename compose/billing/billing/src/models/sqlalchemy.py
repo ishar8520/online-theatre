@@ -12,8 +12,10 @@ from sqlalchemy import (
     ForeignKey,
     UniqueConstraint,
     Integer,
-    Boolean,
+    func,
+    select,
 )
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import (
     DeclarativeBase,
     Mapped,
@@ -108,6 +110,7 @@ class Payment(BillingBase):
         default=uuid.uuid4,
     )
     user_id: Mapped[uuid.UUID] = mapped_column(UUID, nullable=False)
+    price: Mapped[float] = mapped_column(Float, nullable=False)
     ps_name: Mapped[str] = mapped_column(Text, nullable=True)
     ps_invoice_id: Mapped[uuid.UUID] = mapped_column(UUID, nullable=True)
     status: Mapped[str] = mapped_column(Text, nullable=False)

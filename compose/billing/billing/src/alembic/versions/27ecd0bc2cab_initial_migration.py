@@ -26,6 +26,7 @@ def upgrade() -> None:
     op.create_table('payment',
     sa.Column('id', sa.UUID(), nullable=False),
     sa.Column('user_id', sa.UUID(), nullable=False),
+    sa.Column('price', sa.Float(), nullable=False),
     sa.Column('ps_name', sa.Text(), nullable=True),
     sa.Column('ps_invoice_id', sa.UUID(), nullable=True),
     sa.Column('status', sa.Text(), nullable=False),

@@ -7,3 +7,7 @@ class UnsupportedIntegrationType(Exception):
 
 class IntegrationCreatePaymentError(Exception):
     pass
+
+
+class IntegrationRefundPaymentError(Exception):
+    pass

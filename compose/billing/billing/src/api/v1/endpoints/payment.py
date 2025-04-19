@@ -8,12 +8,17 @@ from fastapi import APIRouter, HTTPException, Depends
 from ..models.payment import (
     PaymentResponseDto,
     PaymentPayResponseDto,
-    ProcessPaymentRequest, PaymentStatusRequest
+    ProcessPaymentRequest,
+    PaymentStatusRequest,
+    PaymentRefundResponseDto
 )
 from ....models.auth import User
 from ....services.auth.client import get_current_user
 from ....services.exceptions import CreatePaymentError, UpdatePaymentError
-from ....services.integrations.exceptions import IntegrationCreatePaymentError
+from ....services.integrations.exceptions import (
+    IntegrationCreatePaymentError,
+    IntegrationRefundPaymentError
+)
 from ....services.integrations.factory import IntegrationFactoryDep
 from ....services.integrations.models import PaymentIntegrations
 from ....services.models import (
@@ -91,6 +96,46 @@ async def init_payment(
         )
 
     return PaymentPayResponseDto(url=url)
+
+
+@router.post(
+    path="/refund/{payment_id}",
+    status_code=HTTPStatus.OK,
+    summary="Return refund link to payment service",
+    response_model=PaymentRefundResponseDto
+)
+async def refund(
+        payment_id: uuid.UUID,
+        payment_method: PaymentIntegrations,
+        payment_service: PaymentServiceDep,
+        integration_factory: IntegrationFactoryDep,
+        user: User = Depends(get_current_user),
+) -> PaymentRefundResponseDto:
+    payment = await payment_service.get_by_id(id=payment_id)
+
+    if payment is None or payment.user_id != user.id:
+        raise HTTPException(
+            HTTPStatus.NOT_FOUND,
+            "Payment is not found"
+        )
+
+    if payment.status != PaymentStatus.PAID:
+        raise HTTPException(
+            HTTPStatus.BAD_REQUEST,
+            "Payment is not paid"
+        )
+
+    integration = await integration_factory.get(payment_method)
+
+    try:
+        url = await integration.refund(payment)
+    except IntegrationRefundPaymentError:
+        raise HTTPException(
+            status_code=HTTPStatus.BAD_REQUEST,
+            detail="Refund is failed"
+        )
+
+    return PaymentRefundResponseDto(url=url)
 
 
 @router.post(

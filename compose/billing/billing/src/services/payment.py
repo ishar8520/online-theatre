@@ -45,8 +45,11 @@ class PaymentService:
             purchase_items: list[PurchaseItemCreateDto]
     ) -> Payment:
 
+        total_price = 0
         payment_items = []
         for item in purchase_items:
+            total_price += item.quantity*item.price
+
             payment_items.append(
                 PurchaseItem(
                     name=item.name,
@@ -60,6 +63,7 @@ class PaymentService:
         payment = Payment(
             user_id=user_id,
             status=PaymentStatus.UNPAID,
+            price=total_price,
             items=payment_items
         )
 

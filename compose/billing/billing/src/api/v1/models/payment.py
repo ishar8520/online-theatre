@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import enum
 import uuid
-from datetime import datetime
 
 from pydantic import BaseModel
 
@@ -33,6 +32,10 @@ class PaymentPayResponseDto(BaseModel):
     url: str
 
 
+class PaymentRefundResponseDto(BaseModel):
+    url: str
+
+
 class PaymentStatusRequest(enum.StrEnum):
     SUCCESS = 'success'
     FAILED = 'failed'
@@ -44,4 +47,4 @@ class ProcessPaymentRequest(BaseModel):
     label: uuid.UUID
     amount: float
     withdraw_amount: float
-    datetime: datetime
+    datetime: datetime.datetime

@@ -12,6 +12,7 @@ class PaymentStatus(enum.StrEnum):
     UNPAID = 'unpaid'
     FAILED = 'failed'
     CANCELED = 'canceled'
+    REFUNDED = 'refunded'
 
 
 class PurchaseItemType(enum.StrEnum):
