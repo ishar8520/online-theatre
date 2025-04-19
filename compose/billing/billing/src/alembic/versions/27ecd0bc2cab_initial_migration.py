@@ -39,6 +39,7 @@ def upgrade() -> None:
     sa.Column('id', sa.UUID(), nullable=False),
     sa.Column('payment_id', sa.UUID(), nullable=False),
     sa.Column('name', sa.Text(), nullable=False),
+    sa.Column('type', sa.Text(), nullable=False),
     sa.Column('quantity', sa.Integer(), nullable=False),
     sa.Column('price', sa.Float(), nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),

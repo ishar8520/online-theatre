@@ -9,7 +9,7 @@ from pydantic_settings import (
 class PaymentServiceSettings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="payment_service_")
 
-    host: str
+    host: str = "localhost"
     port: int = 8000
 
     @property

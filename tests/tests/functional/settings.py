@@ -84,6 +84,7 @@ class Settings(BaseSettings):
     auth_service_url: str = 'http://localhost:8000'
     ugc_url: str = 'http://localhost:8000/ugc-mongo'
     notification_service_url: str = 'http://localhost:8000/notification'
+    billing_service_url: str = 'http://localhost:8000'
 
     @property
     def movies_api_url(self) -> str:
@@ -112,6 +113,10 @@ class Settings(BaseSettings):
     @property
     def url_notification_api_messages(self) -> str:
         return urljoin(self.notification_service_url, '/notification/api/v1/messages')
+
+    @property
+    def url_billing_api(self) -> str:
+        return urljoin(self.billing_service_url, '/billing/api/v1/')
 
 
 settings = Settings()

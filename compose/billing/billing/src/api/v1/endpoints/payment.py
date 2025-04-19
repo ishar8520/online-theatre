@@ -13,7 +13,7 @@ from ..models.payment import (
     PaymentRefundResponseDto
 )
 from ....models.auth import User
-from ....services.auth.client import get_current_user
+from ....services.auth.client import get_current_user, get_current_admin_user
 from ....services.exceptions import CreatePaymentError, UpdatePaymentError
 from ....services.integrations.exceptions import (
     IntegrationCreatePaymentError,
@@ -140,7 +140,7 @@ async def refund(
 
 @router.post(
     path="/cancel/{payment_id}",
-    status_code=HTTPStatus.CREATED,
+    status_code=HTTPStatus.OK,
     summary="Cancel payment",
     response_model=PaymentResponseDto
 )
@@ -184,7 +184,8 @@ async def cancel(
 async def process(
         payment_id: uuid.UUID,
         payment_info: ProcessPaymentRequest,
-        payment_service: PaymentServiceDep
+        payment_service: PaymentServiceDep,
+        user: User = Depends(get_current_admin_user)
 ) -> PaymentResponseDto:
     payment = await payment_service.get_by_id(id=payment_id)
 

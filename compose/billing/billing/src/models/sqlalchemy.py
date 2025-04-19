@@ -12,10 +12,7 @@ from sqlalchemy import (
     ForeignKey,
     UniqueConstraint,
     Integer,
-    func,
-    select,
 )
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import (
     DeclarativeBase,
     Mapped,
@@ -96,7 +93,7 @@ class PurchaseItemProperty(BillingBase):
         UniqueConstraint('purchase_item_id', 'code'),
     )
 
-    purchase_item: Mapped[PurchaseItem | None] = relationship(
+    purchase_item: Mapped[PurchaseItem] = relationship(
         "PurchaseItem", cascade='all, delete', back_populates="properties"
     )
 
