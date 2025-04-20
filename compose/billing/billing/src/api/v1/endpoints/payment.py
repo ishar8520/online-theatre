@@ -10,7 +10,7 @@ from ..models.payment import (
     PaymentPayResponseDto,
     ProcessPaymentRequest,
     PaymentStatusRequest,
-    PaymentRefundResponseDto, InitPaymentRequest
+    PaymentRefundResponseDto, InitPaymentRequest, RefundPaymentRequest
 )
 from ....models.auth import User
 from ....services.auth.client import get_current_user, get_current_admin_user
@@ -106,7 +106,7 @@ async def init_payment(
 )
 async def refund(
         payment_id: uuid.UUID,
-        payment_method: PaymentIntegrations,
+        payment_request: RefundPaymentRequest,
         payment_service: PaymentServiceDep,
         integration_factory: IntegrationFactoryDep,
         user: User = Depends(get_current_user),
@@ -125,7 +125,7 @@ async def refund(
             "Payment is not paid"
         )
 
-    integration = await integration_factory.get(payment_method)
+    integration = await integration_factory.get(payment_request.payment_method)
 
     try:
         url = await integration.refund(payment)

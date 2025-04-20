@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import datetime
 import http
 from urllib.parse import urljoin
 
@@ -160,7 +161,7 @@ async def test_payment_cancel(
     ]
 )
 @pytest.mark.asyncio(loop_scope='session')
-async def test_payment_cancel(
+async def test_payment_init_payment(
         aiohttp_session,
         auth_headers,
         payment_items,
@@ -178,10 +179,81 @@ async def test_payment_cancel(
         }
 
         url = urljoin(settings.url_billing_api, f"payment/init_payment/{data["id"]}")
-        async with aiohttp_session.post(url, headers=auth_headers, json=payload) as response_cancel:
-            assert response_cancel.status == expected["status"]
+        async with aiohttp_session.post(url, headers=auth_headers, json=payload) as response_init:
+            assert response_init.status == expected["status"]
 
-            data_init = await response_cancel.json()
+            data_init = await response_init.json()
 
             assert "url" in data_init
             assert data_init["url"] == expected["url"]
+
+
+@pytest.mark.parametrize(
+    "payment_items, expected",
+    [
+        (
+            [
+                {
+                    "name": "Yandex Music",
+                    "quantity": 1,
+                    "price": 1000,
+                    "type": "subscribe",
+                    "props": [
+                        {
+                            "name": "Period",
+                            "code": "period",
+                            "value": "12"
+                        }
+                    ]
+                }
+            ],
+            {
+                "status": http.HTTPStatus.OK,
+                "url": "https://your_link_to_refund"
+            }
+        )
+    ]
+)
+@pytest.mark.asyncio(loop_scope='session')
+async def test_payment_refund(
+        aiohttp_session,
+        auth_headers,
+        payment_items,
+        expected
+):
+    url = urljoin(settings.url_billing_api, f"payment/create")
+    async with aiohttp_session.put(url, headers=auth_headers, json=payment_items) as response:
+        assert response.status == http.HTTPStatus.CREATED
+
+        data = await response.json()
+        assert "id" in data
+
+    payload = {
+        "service": "yoomoney",
+        "status": "success",
+        "label": data["id"],
+        "amount": payment_items[0]["price"],
+        "withdraw_amount": payment_items[0]["price"],
+        "datetime": datetime.datetime.now(datetime.UTC).isoformat()
+    }
+
+    url = urljoin(settings.url_billing_api, f"payment/process/{data["id"]}")
+    async with aiohttp_session.post(url, headers=auth_headers, json=payload) as response_process:
+        assert response_process.status == http.HTTPStatus.OK
+
+        data_process = await response_process.json()
+
+        assert "id" in data_process
+
+    payload = {
+        "payment_method": "yoomoney",
+    }
+
+    url = urljoin(settings.url_billing_api, f"payment/refund/{data["id"]}")
+    async with aiohttp_session.post(url, headers=auth_headers, json=payload) as response_refund:
+        assert response_refund.status == expected["status"]
+
+        data_refund = await response_refund.json()
+
+        assert "url" in data_refund
+        assert data_refund["url"] == expected["url"]

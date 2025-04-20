@@ -37,3 +37,7 @@ class ProcessPaymentRequest(BaseModel):
 
 class InitPaymentRequest(BaseModel):
     payment_method: PaymentIntegrations
+
+
+class RefundPaymentRequest(BaseModel):
+    payment_method: PaymentIntegrations

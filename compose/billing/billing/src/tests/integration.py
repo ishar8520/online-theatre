@@ -13,7 +13,7 @@ class TestIntegrationFactory(AbstractIntegrationFactory):
 
 class DummyService(AbstractIntegration):
     async def create(self, payment: Payment) -> str:
-        return 'https://your_link_to_pay'
+        return "https://your_link_to_pay"
 
     async def refund(self, payment: Payment) -> str:
-        return 'https://your_link_to_refund'
+        return "https://your_link_to_refund"
