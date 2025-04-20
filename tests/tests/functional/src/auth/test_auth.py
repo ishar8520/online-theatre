@@ -13,6 +13,7 @@ async def test_register(aiohttp_session, clean_all_tables_before) -> None:
     register_data = {
         'login': 'test_user',
         'password': 'password',
+        'email': 'test_user@test.loc',
     }
     url = urljoin(settings.auth_api_v1_url, 'register/')
 
@@ -26,6 +27,7 @@ async def test_register_user_exists(aiohttp_session) -> None:
     register_data = {
         'login': 'test_user',
         'password': 'password',
+        'email': 'test_user@test.loc',
     }
     url = urljoin(settings.auth_api_v1_url, 'register/')
 
@@ -64,6 +66,7 @@ async def test_login(aiohttp_session, login_data, expected_data) -> None:
     register_data = {
         'login': 'test_user',
         'password': 'password',
+        'email': 'test_user@test.loc',
     }
 
     url = urljoin(settings.auth_api_v1_url, 'register/')

@@ -17,6 +17,7 @@ user_role_id_save = {}
             {
             'login': 'test_user',
             'password': 'password',
+            'email': 'test_user@test.loc',
             'is_superuser': False
             },
             {
