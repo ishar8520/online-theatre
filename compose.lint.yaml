@@ -183,6 +183,50 @@ services:
         - action: rebuild
           path: ./compose/notifications/admin_panel/poetry.lock
 
+  billing-service:
+    build:
+      context: ./compose/billing/billing
+      target: lint
+    networks:
+      - movies-network
+    volumes:
+      - 'billing-billing-mypy-cache:/opt/app/.mypy_cache'
+      - './compose/billing/billing/.lint:/opt/app/.lint'
+    command: [ 'sleep', 'infinity' ]
+    develop:
+      watch:
+        - action: sync
+          path: ./compose/billing/billing/src
+          target: /opt/app/src
+        - action: rebuild
+          path: ./compose/billing/billing/commands
+        - action: rebuild
+          path: ./compose/billing/billing/pyproject.toml
+        - action: rebuild
+          path: ./compose/billing/billing/poetry.lock
+
+  payment-service:
+    build:
+      context: ./compose/billing/payment
+      target: lint
+    networks:
+      - movies-network
+    volumes:
+      - 'billing-payment-mypy-cache:/opt/app/.mypy_cache'
+      - './compose/billing/payment/.lint:/opt/app/.lint'
+    command: [ 'sleep', 'infinity' ]
+    develop:
+      watch:
+        - action: sync
+          path: ./compose/billing/payment/src
+          target: /opt/app/src
+        - action: rebuild
+          path: ./compose/billing/payment/commands
+        - action: rebuild
+          path: ./compose/billing/payment/pyproject.toml
+        - action: rebuild
+          path: ./compose/billing/payment/poetry.lock
+
 networks:
   movies-network:
 
@@ -195,3 +239,5 @@ volumes:
   notifications-queue-mypy-cache:
   notifications-notification-mypy-cache:
   notifications-admin-panel-mypy-cache:
+  billing-billing-mypy-cache:
+  billing-payment-mypy-cache:

@@ -20,3 +20,85 @@ aio-pika = "9.5.5"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+
+[tool.poetry.group.dev]
+optional = true
+
+[tool.poetry.group.dev.dependencies]
+ciqar = "1.0.0"
+mypy = "1.15.0"
+ruff = "0.10.0"
+
+# ——————— Настройки Ruff ———————
+
+[tool.ruff]
+exclude = [
+    # Исключенные директории и файлы для линтинга
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".git-rewrite",
+    ".hg",
+    ".ipynb_checkpoints",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".pyenv",
+    ".pytest_cache",
+    ".pytype",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    ".vscode",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    "site-packages",
+    "venv",
+]
+target-version = "py312"
+line-length = 120
+
+[tool.ruff.lint]
+# 1) Добавляем все E‑группы (включая E302) поверх дефолтных правил
+extend-select = [
+  "E",    # PEP8‑ошибки
+  "W",    # предупреждения
+  "C",    # complexity
+  "F",    # flake8‑style
+  "N",    # нейминг
+  "D",    # docstring‑правила
+  "I",
+]
+# 2) Игнорируем конфликтные D‑правила, чтобы не было ворнингов
+ignore = [
+  "D203",  # incorrect-blank-line-before-class
+  "D212",  # multi-line-summary-first-line
+  "D104",
+  "D100",
+]
+# 3) Включаем авто‑фикс для всего, что может быть поправлено
+fixable = ["ALL"]
+# 4) Включаем preview‑правила, среди которых blank‑lines‑top‑level (E302)
+preview = true
+
+# ——————— Настройки mypy ———————
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+disallow_untyped_defs = true
+ignore_missing_imports = true
+warn_unused_configs = true
+check_untyped_defs = true
+
+[[tool.mypy.overrides]]
+module = "payment.services.redis"
+allow_untyped_calls = true
+

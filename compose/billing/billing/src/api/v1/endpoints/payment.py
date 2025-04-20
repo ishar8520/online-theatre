@@ -3,31 +3,26 @@ from __future__ import annotations
 import uuid
 from http import HTTPStatus
 
-from fastapi import APIRouter, HTTPException, Depends
+import httpx
+from fastapi import APIRouter, Depends, HTTPException
 
-from ..models.payment import (
-    PaymentResponseDto,
+from src.api.v1.models.payment import (
+    InitPaymentRequest,
     PaymentPayResponseDto,
-    ProcessPaymentRequest,
+    PaymentRefundResponseDto,
+    PaymentResponseDto,
     PaymentStatusRequest,
-    PaymentRefundResponseDto, InitPaymentRequest, RefundPaymentRequest
+    ProcessPaymentRequest,
+    RefundPaymentRequest,
 )
-from ....models.auth import User
-from ....dependencies.httpx import httpx, get_httpx_client
-from ....services.auth.client import get_current_user, get_current_admin_user
-from ....services.exceptions import CreatePaymentError, UpdatePaymentError
-from ....services.integrations.exceptions import (
-    IntegrationCreatePaymentError,
-    IntegrationRefundPaymentError
-)
-from ....services.integrations.factory import IntegrationFactoryDep
-from ....services.integrations.models import PaymentIntegrations
-from ....services.models import (
-    PurchaseItemCreateDto,
-    PaymentUpdateDto,
-    PaymentStatus
-)
-from ....services.payment import PaymentServiceDep
+from src.dependencies.httpx import get_httpx_client
+from src.models.auth import User
+from src.services.auth.client import get_current_admin_user, get_current_user
+from src.services.exceptions import CreatePaymentError, UpdatePaymentError
+from src.services.integrations.exceptions import IntegrationCreatePaymentError, IntegrationRefundPaymentError
+from src.services.integrations.factory import IntegrationFactoryDep
+from src.services.models import PaymentStatus, PaymentUpdateDto, PurchaseItemCreateDto
+from src.services.payment import PaymentServiceDep
 
 router = APIRouter()
 
@@ -39,10 +34,15 @@ router = APIRouter()
     response_model=PaymentResponseDto
 )
 async def create(
-        purchase_items: list[PurchaseItemCreateDto],
-        payment_service: PaymentServiceDep,
-        user: User = Depends(get_current_user),
+    purchase_items: list[PurchaseItemCreateDto],
+    payment_service: PaymentServiceDep,
+    user: User = Depends(get_current_user),
 ) -> PaymentResponseDto:
+    """
+    Создаёт новую покупку (платёж).
+
+    :return: Результат создания новой покупки
+    """
     try:
         created_payment = await payment_service.add(
             user_id=user.id,
@@ -66,12 +66,22 @@ async def create(
     response_model=PaymentPayResponseDto
 )
 async def init_payment(
-        payment_id: uuid.UUID,
-        payment_request: InitPaymentRequest,
-        payment_service: PaymentServiceDep,
-        integration_factory: IntegrationFactoryDep,
-        user: User = Depends(get_current_user),
+    payment_id: uuid.UUID,
+    payment_request: InitPaymentRequest,
+    payment_service: PaymentServiceDep,
+    integration_factory: IntegrationFactoryDep,
+    user: User = Depends(get_current_user),
 ) -> PaymentPayResponseDto:
+    """
+    Генерирует ссылку на платёжный сервис для инициации платежа.
+
+    :param payment_id: UUID платежа
+    :param payment_request: данные для инициализации платежа
+    :param payment_service: сервис обработки платежей
+    :param integration_factory: фабрика интеграций для методов оплаты
+    :param user: текущий пользователь
+    :return: DTO с URL для оплаты
+    """
     payment = await payment_service.get_by_id(id=payment_id)
 
     if payment is None or payment.user_id != user.id:
@@ -106,12 +116,22 @@ async def init_payment(
     response_model=PaymentRefundResponseDto
 )
 async def refund(
-        payment_id: uuid.UUID,
-        payment_request: RefundPaymentRequest,
-        payment_service: PaymentServiceDep,
-        integration_factory: IntegrationFactoryDep,
-        user: User = Depends(get_current_user),
+    payment_id: uuid.UUID,
+    payment_request: RefundPaymentRequest,
+    payment_service: PaymentServiceDep,
+    integration_factory: IntegrationFactoryDep,
+    user: User = Depends(get_current_user),
 ) -> PaymentRefundResponseDto:
+    """
+    Формирует ссылку для возврата платежа через платёжный сервис.
+
+    :param payment_id: UUID платежа
+    :param payment_request: данные для возврата платежа
+    :param payment_service: сервис обработки платежей
+    :param integration_factory: фабрика интеграций для методов оплаты
+    :param user: текущий пользователь
+    :return: DTO с URL для возврата платежа
+    """
     payment = await payment_service.get_by_id(id=payment_id)
 
     if payment is None or payment.user_id != user.id:
@@ -146,10 +166,18 @@ async def refund(
     response_model=PaymentResponseDto
 )
 async def cancel(
-        payment_id: uuid.UUID,
-        payment_service: PaymentServiceDep,
-        user: User = Depends(get_current_user),
+    payment_id: uuid.UUID,
+    payment_service: PaymentServiceDep,
+    user: User = Depends(get_current_user),
 ) -> PaymentResponseDto:
+    """
+    Отменяет указанный платёж.
+
+    :param payment_id: UUID платежа
+    :param payment_service: сервис обработки платежей
+    :param user: текущий пользователь
+    :return: DTO с ID отменённого платежа
+    """
     payment = await payment_service.get_by_id(id=payment_id)
 
     if payment is None or payment.user_id != user.id:
@@ -183,12 +211,22 @@ async def cancel(
     response_model=PaymentResponseDto
 )
 async def process(
-        payment_id: uuid.UUID,
-        payment_info: ProcessPaymentRequest,
-        payment_service: PaymentServiceDep,
-        user: User = Depends(get_current_admin_user),
-        httpx_client: httpx.AsyncClient = Depends(get_httpx_client)
+    payment_id: uuid.UUID,
+    payment_info: ProcessPaymentRequest,
+    payment_service: PaymentServiceDep,
+    user: User = Depends(get_current_admin_user),
+    httpx_client: httpx.AsyncClient = Depends(get_httpx_client)
 ) -> PaymentResponseDto:
+    """
+    Обрабатывает результат платежа и отправляет уведомление.
+
+    :param payment_id: UUID платежа
+    :param payment_info: данные с результатом платежа
+    :param payment_service: сервис обработки платежей
+    :param user: текущий администратор
+    :param httpx_client: HTTP-клиент для отправки уведомления
+    :return: DTO с ID обновлённого платежа
+    """
     payment = await payment_service.get_by_id(id=payment_id)
 
     if payment is None:
@@ -222,9 +260,9 @@ async def process(
             'Content-Type': 'application/json'
         }
         await httpx_client.post(
-            f'http://notification-service:8000/notification/api/v1/events/payment_status',
+            'http://notification-service:8000/notification/api/v1/events/payment_status',
             headers=headers,
-            json=data 
+            json=data,
         )
     except UpdatePaymentError:
         raise HTTPException(

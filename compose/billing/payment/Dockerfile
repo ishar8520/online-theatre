@@ -25,6 +25,13 @@ RUN --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
     --mount=type=cache,target=/root/.cache/pypoetry \
     poetry install --no-ansi --no-interaction
 
+FROM venv AS venv-dev
+
+RUN --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
+    --mount=type=bind,source=poetry.lock,target=poetry.lock \
+    --mount=type=cache,target=/root/.cache/pypoetry \
+    poetry install --no-ansi --no-interaction --only dev
+
 FROM base AS common
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -33,6 +40,18 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 ENV VIRTUAL_ENV=/venv
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+
+FROM common AS lint
+
+COPY --from=venv-dev "$VIRTUAL_ENV" "$VIRTUAL_ENV"
+COPY ./pyproject.toml .
+COPY ./payment/ ./payment/
+
+COPY ./commands/ ./commands/
+RUN chmod +x ./commands/*.sh
+
+COPY ./docker-entrypoint.sh .
+RUN chmod +x docker-entrypoint.sh
 
 FROM common
 

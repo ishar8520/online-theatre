@@ -1,4 +1,7 @@
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
+from typing import Any
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -9,10 +12,16 @@ base_api_prefix = '/payment/api'
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+    """
+    Управляет временем жизни приложения: устанавливает и закрывает подключения к внешним сервисам.
+
+    :param app: Экземпляр FastAPI-приложения
+    """
     await rabbitmq.connect()
     yield
     await rabbitmq.close()
+
 
 app = FastAPI(
     title='Payment service',
@@ -35,9 +44,16 @@ app.add_middleware(
 
 base_prefix_url = f'{base_api_prefix}/v1'
 
+
 @app.get(f'{base_api_prefix}/_health')
-async def healthcheck():
+async def healthcheck() -> dict[str, Any]:
+    """
+    Эндпоинт проверки работоспособности сервиса.
+
+    :return: Пустой JSON-объект в случае доступности сервиса
+    """
     return {}
+
 
 app.include_router(yoomoney.router_ex, prefix=f'{base_prefix_url}/yoomoney', tags=['external methods'])
 app.include_router(yoomoney.router_in, prefix=f'{base_prefix_url}/yoomoney', tags=['internal methods'])

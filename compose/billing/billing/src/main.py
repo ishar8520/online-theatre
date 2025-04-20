@@ -1,22 +1,35 @@
 from __future__ import annotations
 
-from fastapi.responses import JSONResponse
-import httpx
-from src.api.v1.endpoints import admin, payment
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
+from typing import Any
+
+import httpx
 from fastapi import FastAPI
+from fastapi.responses import JSONResponse
+from httpx import AsyncClient
+
+from src.api.v1.endpoints import admin, payment
 
 
 @asynccontextmanager
-async def lifespan(_app) -> AsyncGenerator[dict]:
+async def lifespan(_app: FastAPI) -> AsyncGenerator[dict[str, AsyncClient], None]:
+    """
+    Контекстный менеджер жизненного цикла приложения.
 
+    При старте создаёт асинхронный HTTPX-клиент и передаёт его в состояние приложения,
+    а при завершении автоматически закрывает клиент.
+
+    :param _app: экземпляр FastAPI-приложения
+    :yield: словарь с ключом 'httpx_client' для доступа к AsyncClient
+    """
     async with (
         httpx.AsyncClient() as httpx_client,
     ):
         yield {
             'httpx_client': httpx_client,
         }
+
 
 base_api_prefix = '/billing/api'
 app = FastAPI(
@@ -30,7 +43,12 @@ app = FastAPI(
 
 
 @app.get(f'{base_api_prefix}/_health')
-async def healthcheck():
+async def healthcheck() -> dict[str, Any]:
+    """
+    Эндпоинт проверки работоспособности сервиса.
+
+    :return: Пустой JSON-объект в случае доступности сервиса
+    """
     return {}
 
 

@@ -1,26 +1,38 @@
+from typing import Any
+from urllib.parse import urlencode
+
 import aiohttp
 from fastapi import APIRouter
-from urllib.parse import urlencode
+
 from payment.api.v1.models.yoomoney import YoomoneyCallbackModel
 
 router = APIRouter()
+
 
 @router.post('/_test_callback')
 async def test_callback_success(
     callback: YoomoneyCallbackModel,
     amount: float,
     payment_status: bool
-):
+) -> Any:
+    """
+    Тестовый эндпоинт для проверки обработки callback от YooMoney.
+
+    :param callback: модель данных callback от YooMoney
+    :param amount: ожидаемая сумма платежа
+    :param payment_status: ожидаемый статус платежа (True — оплачен, False — отклонён)
+    :return: результат выполнения внутренней проверки (_test_callback)
+    """
     return await _test_callback(callback, amount, payment_status)
 
 
-async def _test_callback(model: YoomoneyCallbackModel, amount: float, payment_status: bool):
+async def _test_callback(model: YoomoneyCallbackModel, amount: float, payment_status: bool) -> Any:
     async with aiohttp.ClientSession() as session:
-        if payment_status == True:
+        if payment_status:
             unaccepted = 'false'
-        elif payment_status == False:
+        elif not payment_status:
             unaccepted = 'true'
-        amount = str(amount)
+        amount_str = str(amount)
         data = {
             'operation_id': model.operation_id,
             'operation_label': model.operation_label,
@@ -40,13 +52,13 @@ async def _test_callback(model: YoomoneyCallbackModel, amount: float, payment_st
             'label': model.label,
             'codepro': model.codepro,
             'bill_id': model.bill_id,
-            'amount': amount,
+            'amount': amount_str,
             'withdraw_amount': model.withdraw_amount,
             'currency': model.currency,
             'datetime': model.datetime,
             'unaccepted': unaccepted,
-            'sha1_hash': model.sha1_hash 
-        } 
+            'sha1_hash': model.sha1_hash
+        }
         headers = {
             'Content-Type': 'application/x-www-form-urlencoded',
             'Authorization': 'Bearer YOUR_ACCESS_TOKEN'

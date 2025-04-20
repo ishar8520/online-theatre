@@ -15,6 +15,12 @@ OAuth2TokenDep = Annotated[str, Depends(oauth2_scheme)]
 
 
 async def get_token(token: OAuth2TokenDep) -> str:
+    """
+    Извлекает OAuth2 токен из зависимости FastAPI.
+
+    :param token: строка токена, полученная через OAuth2PasswordBearer
+    :return: тот же токен для передачи дальше в зависимостях
+    """
     return token
 
 
