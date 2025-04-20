@@ -15,3 +15,8 @@ class EventRegistrationRequestDto(BaseModel):
 class EventNewMovieRequestDto(BaseModel):
     film_id: uuid.UUID
     notification_type: NotificationType = NotificationType.EMAIL
+
+class EventPaymentStatusRequestDto(BaseModel):
+    user_id: uuid.UUID
+    payment_status: str
+    notification_type: NotificationType = NotificationType.EMAIL

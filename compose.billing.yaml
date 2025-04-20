@@ -7,6 +7,8 @@ services:
         condition: service_healthy
       auth-service:
         condition: service_healthy
+      billing-service:
+        condition: service_healthy
     ports:
       - '8000:8080'
     networks:
@@ -267,6 +269,13 @@ services:
     environment:
       - PAYMENT_SERVICE_HOST=payment-service
       - PAYMENT_SERVICE_PORT=8000
+      - POSTGRESQL_HOST=billing-service-postgresql
+      - POSTGRESQL_PORT=5432
+      - POSTGRESQL_DATABASE=$POSTGRESQL_BILLING_DATABASE
+      - POSTGRESQL_USERNAME=$POSTGRESQL_BILLING_USERNAME
+      - POSTGRESQL_PASSWORD=$POSTGRESQL_BILLING_PASSWORD
+      - AUTH_HOST=auth-service
+      - AUTH_PORT=8000
     command: [ '/opt/app/commands/fastapi.sh', 'dev' ]
     healthcheck:
       test: [ 'CMD-SHELL', 'curl -s http://localhost:8000/billing/api/_health' ]
@@ -285,6 +294,42 @@ services:
           path: ./compose/billing/billing/pyproject.toml
         - action: rebuild
           path: ./compose/billing/billing/poetry.lock
+
+  billing-service-postgresql:
+    image: 'bitnami/postgresql:17.2.0-debian-12-r5'
+    networks:
+      - movies-network
+    volumes:
+      - 'billing-service-postgresql-data:/bitnami/postgresql'
+    ports:
+      - '5432:5432'
+    environment:
+      - POSTGRESQL_DATABASE=$POSTGRESQL_BILLING_DATABASE
+      - POSTGRESQL_USERNAME=$POSTGRESQL_BILLING_USERNAME
+      - POSTGRESQL_PASSWORD=$POSTGRESQL_BILLING_PASSWORD
+    restart: unless-stopped
+    healthcheck:
+      test: [ 'CMD-SHELL', 'pg_isready --username=$POSTGRESQL_BILLING_USERNAME --dbname=$POSTGRESQL_BILLING_DATABASE' ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  billing-service-init:
+    build:
+      context: ./compose/billing/billing
+    depends_on:
+      billing-service-postgresql:
+        condition: service_healthy
+    networks:
+      - movies-network
+    environment:
+      - POSTGRESQL_HOST=billing-service-postgresql
+      - POSTGRESQL_PORT=5432
+      - POSTGRESQL_DATABASE=$POSTGRESQL_BILLING_DATABASE
+      - POSTGRESQL_USERNAME=$POSTGRESQL_BILLING_USERNAME
+      - POSTGRESQL_PASSWORD=$POSTGRESQL_BILLING_PASSWORD
+    command: [ '/opt/app/commands/init.sh' ]
 
   payment-service:
     build: ./compose/billing/payment
@@ -395,6 +440,262 @@ services:
       - REDIS_HOST=short-link-redis
       - REDIS_PORT=6379
 
+  worker-billing-notify:
+    build:
+      context: ./compose/billing/notify_worker
+    networks:
+      - movies-network
+    depends_on:
+      billing-rabbitmq:
+        condition: service_healthy
+    environment:
+      - RABBITMQ_USERNAME=$BILLING_RABBITMQ_USERNAME
+      - RABBITMQ_PASSWORD=$BILLING_RABBITMQ_PASSWORD
+      - RABBITMQ_HOST=billing-rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_QUEUE_NAME=status_queue
+      - AUTH_LOGIN=$AUTH_SUPERUSER_LOGIN
+      - AUTH_PASSWORD=$AUTH_SUPERUSER_PASSWORD
+      - AUTH_HOST=auth-service
+      - AUTH_PORT=8000
+      - BILLING_SERVICE_HOST=billing-service
+      - BILLING_SERVICE_PORT=8000
+
+  notifications-queue-service:
+    build:
+      context: ./compose/notifications/queue
+    depends_on:
+      notifications-queue-worker:
+        condition: service_started
+    networks:
+      - movies-network
+    environment:
+      - GUNICORN_WORKERS=${NOTIFICATIONS_QUEUE_GUNICORN_WORKERS:-}
+      - NOTIFICATIONS_ADMIN_PANEL_HOST=notification-admin-panel-service
+      - NOTIFICATIONS_ADMIN_PANEL_PORT=8000
+      - AUTH_HOST=auth-service
+      - AUTH_PORT=8000
+      - AUTH_SUPERUSER_LOGIN=$AUTH_SUPERUSER_LOGIN
+      - AUTH_SUPERUSER_PASSWORD=$AUTH_SUPERUSER_PASSWORD
+      - RABBITMQ_HOST=notifications-queue-rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USERNAME=$NOTIFICATIONS_QUEUE_RABBITMQ_USERNAME
+      - RABBITMQ_PASSWORD=$NOTIFICATIONS_QUEUE_RABBITMQ_PASSWORD
+      - REDIS_HOST=notifications-queue-redis
+      - REDIS_PORT=6379
+      - SMTP_HOST=mailhog
+      - SMTP_PORT=1025
+    command: [ '/opt/app/commands/gunicorn.sh' ]
+    restart: unless-stopped
+    healthcheck:
+      test: [ 'CMD-SHELL', 'curl -s http://localhost:8000/api/_health' ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+
+  notifications-queue-worker:
+    build:
+      context: ./compose/notifications/queue
+    depends_on:
+      auth-service:
+        condition: service_healthy
+      notifications-queue-rabbitmq:
+        condition: service_healthy
+      notifications-queue-redis:
+        condition: service_healthy
+      mailhog:
+        condition: service_healthy
+    networks:
+      - movies-network
+    environment:
+      - NOTIFICATIONS_ADMIN_PANEL_HOST=notification-admin-panel-service
+      - NOTIFICATIONS_ADMIN_PANEL_PORT=8000
+      - AUTH_HOST=auth-service
+      - AUTH_PORT=8000
+      - AUTH_SUPERUSER_LOGIN=$AUTH_SUPERUSER_LOGIN
+      - AUTH_SUPERUSER_PASSWORD=$AUTH_SUPERUSER_PASSWORD
+      - RABBITMQ_HOST=notifications-queue-rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USERNAME=$NOTIFICATIONS_QUEUE_RABBITMQ_USERNAME
+      - RABBITMQ_PASSWORD=$NOTIFICATIONS_QUEUE_RABBITMQ_PASSWORD
+      - REDIS_HOST=notifications-queue-redis
+      - REDIS_PORT=6379
+      - SMTP_HOST=mailhog
+      - SMTP_PORT=1025
+    command: [ '/opt/app/commands/worker.sh' ]
+    restart: unless-stopped
+
+  notifications-queue-rabbitmq:
+    image: 'bitnami/rabbitmq:4.0.7-debian-12-r1'
+    networks:
+      - movies-network
+    volumes:
+      - 'notifications-queue-rabbitmq-data:/bitnami/rabbitmq/mnesia'
+    environment:
+      - RABBITMQ_USERNAME=$NOTIFICATIONS_QUEUE_RABBITMQ_USERNAME
+      - RABBITMQ_PASSWORD=$NOTIFICATIONS_QUEUE_RABBITMQ_PASSWORD
+      - RABBITMQ_LOGS=-
+      - RABBITMQ_MANAGEMENT_ALLOW_WEB_ACCESS=true
+    restart: unless-stopped
+    healthcheck:
+      test: [ 'CMD-SHELL', 'rabbitmq-diagnostics -q ping' ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  notifications-queue-redis:
+    image: 'bitnami/redis:7.4.2-debian-12-r0'
+    networks:
+      - movies-network
+    volumes:
+      - 'notifications-queue-redis-data:/bitnami/redis/data'
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+    command: [ '/opt/bitnami/scripts/redis/run.sh', '--maxmemory', '${NOTIFICATIONS_QUEUE_REDIS_MAXMEMORY:-200mb}' ]
+    restart: unless-stopped
+    healthcheck:
+      test: [ 'CMD', '/bin/bash', '-c', '[[ $(redis-cli ping) == "PONG" ]]' ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+
+  notification-service:
+    build:
+      context: ./compose/notifications/notification
+    networks:
+      - movies-network
+    environment:
+      - QUEUE_HOST=notifications-queue-service
+      - QUEUE_PORT=8000
+    command: [ '/opt/app/commands/fastapi.sh', 'dev' ]
+    healthcheck:
+      test: [ 'CMD-SHELL', 'curl -s http://localhost:8000/notification/api/_health' ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+    develop:
+      watch:
+        - action: sync
+          path: ./compose/notifications/notification/src
+          target: /opt/app/src
+        - action: rebuild
+          path: ./compose/notifications/notification/commands
+        - action: rebuild
+          path: ./compose/notifications/notification/pyproject.toml
+        - action: rebuild
+          path: ./compose/notifications/notification/poetry.lock
+
+  notification-admin-panel-service:
+      build:
+        context: ./compose/notifications/admin_panel
+      depends_on:
+        admin-panel-postgresql:
+          condition: service_healthy
+        notification-admin-panel-init:
+          condition: service_completed_successfully
+        jaeger:
+          condition: service_healthy
+      networks:
+        - movies-network
+      environment:
+        - POSTGRESQL_HOST=admin-panel-postgresql
+        - POSTGRESQL_PORT=5432
+        - POSTGRESQL_DATABASE=$ADMIN_PANEL_POSTGRESQL_DATABASE
+        - POSTGRESQL_USERNAME=$ADMIN_PANEL_POSTGRESQL_USERNAME
+        - POSTGRESQL_PASSWORD=$ADMIN_PANEL_POSTGRESQL_PASSWORD
+        - REDIS_HOST=admin-panel-redis
+        - REDIS_PORT=6379
+      command: [ '/opt/app/commands/fastapi.sh', 'dev' ]
+      healthcheck:
+        test: [ 'CMD-SHELL', 'curl -s -H "X-Request-Id: healthcheck" http://localhost:8000/admin_panel/api/_health' ]
+        interval: 10s
+        timeout: 10s
+        retries: 5
+        start_period: 10s
+      develop:
+        watch:
+          - action: sync
+            path: ./compose/notifications/admin_panel/admin_panel
+            target: /opt/app/src
+          - action: rebuild
+            path: ./compose/notifications/admin_panel/commands
+          - action: rebuild
+            path: ./compose/notifications/admin_panel/pyproject.toml
+          - action: rebuild
+            path: ./compose/notifications/admin_panel/poetry.lock
+
+  notification-admin-panel-init:
+    build:
+      context: ./compose/notifications/admin_panel
+    depends_on:
+      admin-panel-postgresql:
+        condition: service_healthy
+      jaeger:
+        condition: service_healthy
+    networks:
+      - movies-network
+    environment:
+      - POSTGRESQL_HOST=admin-panel-postgresql
+      - POSTGRESQL_PORT=5432
+      - POSTGRESQL_DATABASE=$ADMIN_PANEL_POSTGRESQL_DATABASE
+      - POSTGRESQL_USERNAME=$ADMIN_PANEL_POSTGRESQL_USERNAME
+      - POSTGRESQL_PASSWORD=$ADMIN_PANEL_POSTGRESQL_PASSWORD
+      - REDIS_HOST=admin-panel-redis
+      - REDIS_PORT=6379
+    command: [ '/opt/app/commands/init.sh' ]
+
+  admin-panel-postgresql:
+    image: 'bitnami/postgresql:17.2.0-debian-12-r5'
+    networks:
+      - movies-network
+    volumes:
+      - 'admin-panel-postgresql-data:/bitnami/postgresql'
+    environment:
+      - POSTGRESQL_DATABASE=$ADMIN_PANEL_POSTGRESQL_DATABASE
+      - POSTGRESQL_USERNAME=$ADMIN_PANEL_POSTGRESQL_USERNAME
+      - POSTGRESQL_PASSWORD=$ADMIN_PANEL_POSTGRESQL_PASSWORD
+    restart: unless-stopped
+    healthcheck:
+      test: [ 'CMD-SHELL', 'pg_isready --username=$ADMIN_PANEL_POSTGRESQL_USERNAME --dbname=$ADMIN_PANEL_POSTGRESQL_DATABASE' ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  admin-panel-redis:
+    image: 'bitnami/redis:7.4.2-debian-12-r0'
+    networks:
+      - movies-network
+    volumes:
+      - 'admin-panel-redis-data:/bitnami/redis/data'
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+    command: [ '/opt/bitnami/scripts/redis/run.sh', '--maxmemory', '${AUTH_REDIS_MAXMEMORY:-200mb}' ]
+    restart: unless-stopped
+    healthcheck:
+      test: [ 'CMD', '/bin/bash', '-c', '[[ $(redis-cli ping) == "PONG" ]]' ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+
+  mailhog:
+    image: 'mailhog/mailhog:v1.0.1'
+    ports:
+      - '8025:8025'
+    networks:
+      - movies-network
+    healthcheck:
+      test: [ 'CMD-SHELL', 'wget -q --spider http://localhost:8025' ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+
 networks:
   movies-network:
 
@@ -410,3 +711,8 @@ volumes:
   billing-rabbitmq-data:
   short_links_redis_data:
   payment-redis-data:
+  billing-service-postgresql-data:
+  admin-panel-redis-data:
+  admin-panel-postgresql-data:
+  notifications-queue-redis-data:
+  notifications-queue-rabbitmq-data:

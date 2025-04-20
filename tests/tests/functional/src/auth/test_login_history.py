@@ -14,6 +14,7 @@ from ...settings import settings
         (
                 {
                     'login': 'test_user',
+                    'email': 'test_user@test.loc',
                     'password': '123456',
                 },
                 {
@@ -32,6 +33,7 @@ async def test_get_login_history(
     user_create_data = {
         'login': input_data['login'],
         'password': input_data['password'],
+        'email': input_data['email'],
     }
     register_url = urljoin(settings.auth_api_v1_url, 'register')
 

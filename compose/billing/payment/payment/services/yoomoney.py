@@ -236,6 +236,7 @@ async def get_callback(request: Request) -> JSONResponse:
     data = await request.form()
     data = dict(data)
     response = {
+        'service': 'yoomoney',
         'label': data['label'],
         'amount': data['amount'],
         'withdraw_amount': data['withdraw_amount'],
