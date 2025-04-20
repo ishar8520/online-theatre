@@ -572,7 +572,7 @@ services:
       - QUEUE_PORT=8000
     command: [ '/opt/app/commands/fastapi.sh', 'dev' ]
     healthcheck:
-      test: [ 'CMD-SHELL', 'curl -s http://localhost:8000/api/_health' ]
+      test: [ 'CMD-SHELL', 'curl -s http://localhost:8000/notification/api/_health' ]
       interval: 10s
       timeout: 10s
       retries: 5
