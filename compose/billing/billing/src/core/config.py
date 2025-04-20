@@ -1,12 +1,11 @@
 from __future__ import annotations
 
-from pydantic_settings import (
-    BaseSettings,
-    SettingsConfigDict
-)
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class PaymentServiceSettings(BaseSettings):
+    """Конфигурация подключения к сервису оплаты."""
+
     model_config = SettingsConfigDict(env_prefix="payment_service_")
 
     host: str = "localhost"
@@ -48,6 +47,8 @@ class AuthConfig(BaseSettings):
 
 
 class Settings(BaseSettings):
+    """Основные настройки приложения."""
+
     test_mode: bool = False
 
     auth: AuthConfig = AuthConfig()

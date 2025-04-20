@@ -31,6 +31,11 @@ app = FastAPI(
 
 @app.get(f'{base_api_prefix}/_health')
 async def healthcheck():
+    """
+    Эндпоинт проверки работоспособности сервиса.
+
+    :return: Пустой JSON-объект в случае доступности сервиса
+    """
     return {}
 
 

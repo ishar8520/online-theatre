@@ -1,23 +1,30 @@
-from urllib.parse import urlencode
-from fastapi import Request, HTTPException
-from fastapi.responses import JSONResponse
-from aio_pika import Message
 import json
-from http import HTTPStatus
 import secrets
-from httpx import AsyncClient
+from http import HTTPStatus
+from urllib.parse import urlencode
 from uuid import UUID
+
+from aio_pika import Message
+from fastapi import HTTPException, Request
+from fastapi.responses import JSONResponse
+from httpx import AsyncClient
 
 from payment.api.v1.models.yoomoney import YoomoneyPaymentModel
 from payment.core.config import settings
 from payment.services.rabbitmq import rabbitmq
 from payment.services.redis import RedisClient
 
-
 base_service_url = settings.service.url
 
 
 async def check_token(token: str, httpx_client: AsyncClient) -> dict:
+    """
+    Проверяет валидность токена через запрос к YooMoney API.
+
+    :param token: Токен авторизации YooMoney
+    :param httpx_client: Асинхронный HTTP-клиент
+    :return: JSON с информацией об аккаунте
+    """
     response = await httpx_client.get(
         'https://yoomoney.ru/api/account-info',
         headers={'Authorization': f'Bearer {token}'}
@@ -27,7 +34,21 @@ async def check_token(token: str, httpx_client: AsyncClient) -> dict:
     return response.json()
 
 
-async def get_refund(user_id: UUID, model: YoomoneyPaymentModel, redis_client: RedisClient, httpx_client: AsyncClient) -> JSONResponse:
+async def get_refund(
+    user_id: UUID,
+    model: YoomoneyPaymentModel,
+    redis_client: RedisClient,
+    httpx_client: AsyncClient
+) -> JSONResponse:
+    """
+    Инициирует процесс возврата платежа через YooMoney.
+
+    :param user_id: UUID пользователя в системе
+    :param model: Данные о платеже для возврата
+    :param redis_client: Клиент Redis для кеширования
+    :param httpx_client: Асинхронный HTTP-клиент
+    :return: JSONResponse со ссылкой для подтверждения или статусом операции
+    """
     if not await redis_client.get_value(f'yoomoney:refund:{user_id}'):
         params = {
             'pattern_id': 'p2p',
@@ -43,13 +64,22 @@ async def get_refund(user_id: UUID, model: YoomoneyPaymentModel, redis_client: R
         return await get_auth_url(user_id, 'refund', redis_client, httpx_client)
     return await get_refund_request(user_id, redis_client, httpx_client)
 
+
 async def get_refund_request(user_id: UUID, redis_client: RedisClient, httpx_client: AsyncClient):
+    """
+    Выполняет запрос возврата платежа на YooMoney с предварительно сохранёнными данными.
+
+    :param user_id: UUID пользователя
+    :param redis_client: Клиент Redis
+    :param httpx_client: Асинхронный HTTP-клиент
+    :return: JSONResponse с результатом запроса возврата
+    """
     token = await redis_client.get_value(f'yoomoney:token:{user_id}')
     token = token.decode('utf-8')
     account_data = await check_token(token, httpx_client)
-    
+
     account_token = settings.yoomoney.token_account
-    
+
     refund_data = await redis_client.get_value(f'yoomoney:refund:{user_id}')
     refund_data = refund_data.decode('utf-8')
     await redis_client.delete_value(f'yoomoney:refund:{user_id}')
@@ -87,12 +117,26 @@ async def get_refund_request(user_id: UUID, redis_client: RedisClient, httpx_cli
             json=data
         )
         response = response.json()
-        
+
         return JSONResponse({'accept_url': response['short_url']})
     return JSONResponse(response)
 
 
-async def get_payment(user_id: UUID, model: YoomoneyPaymentModel, redis_client: RedisClient, httpx_client: AsyncClient) -> JSONResponse:
+async def get_payment(
+    user_id: UUID,
+    model: YoomoneyPaymentModel,
+    redis_client: RedisClient,
+    httpx_client: AsyncClient
+) -> JSONResponse:
+    """
+    Инициирует платёж через YooMoney.
+
+    :param user_id: UUID пользователя
+    :param model: Данные платежа
+    :param redis_client: Клиент Redis
+    :param httpx_client: Асинхронный HTTP-клиент
+    :return: JSONResponse со ссылкой на подтверждение платежа
+    """
     if not await redis_client.get_value(f'yoomoney:payment:{user_id}'):
         params = {
             'pattern_id': 'p2p',
@@ -111,7 +155,18 @@ async def get_payment(user_id: UUID, model: YoomoneyPaymentModel, redis_client: 
     return await get_payment_request(user_id, redis_client, httpx_client)
 
 
-async def get_auth_url(user_id: str, operation: str, redis_client: RedisClient, httpx_client: AsyncClient) -> JSONResponse:
+async def get_auth_url(
+        user_id: str, operation: str, redis_client: RedisClient, httpx_client: AsyncClient
+) -> JSONResponse:
+    """
+    Создаёт и возвращает короткую ссылку для авторизации через YooMoney.
+
+    :param user_id: ID пользователя
+    :param operation: Операция после авторизации ('payment' или 'refund')
+    :param redis_client: Клиент Redis
+    :param httpx_client: Асинхронный HTTP-клиент
+    :return: JSONResponse с сокращённой ссылкой авторизации
+    """
     state = secrets.token_urlsafe(16)
     await redis_client.set_value_with_ttl(
         key=f'yoomoney:state:{state}',
@@ -137,7 +192,19 @@ async def get_auth_url(user_id: str, operation: str, redis_client: RedisClient, 
     return JSONResponse({'url': response['short_url']})
 
 
-async def get_auth_success(code: str, state: str, operation:str, redis_client: RedisClient, httpx_client: AsyncClient) -> JSONResponse:
+async def get_auth_success(
+        code: str, state: str, operation: str, redis_client: RedisClient, httpx_client: AsyncClient
+) -> JSONResponse:
+    """
+    Обрабатывает успешную авторизацию и сохраняет токен YooMoney.
+
+    :param code: Код авторизации от YooMoney
+    :param state: Состояние, идентифицирующее пользователя
+    :param operation: Операция после авторизации ('payment' или 'refund')
+    :param redis_client: Клиент Redis
+    :param httpx_client: Асинхронный HTTP-клиент
+    :return: JSONResponse с результатом следующей операции
+    """
     user_id = await redis_client.get_value(f'yoomoney:state:{state}')
     user_id = user_id.decode('utf-8')
     await redis_client.delete_value(f'yoomoney:state:{state}')
@@ -166,6 +233,14 @@ async def get_auth_success(code: str, state: str, operation:str, redis_client: R
 
 
 async def get_payment_request(user_id: str, redis_client: RedisClient, httpx_client: AsyncClient) -> JSONResponse:
+    """
+    Отправляет запрос на выполнение платежа в YooMoney с ранее сохранёнными параметрами.
+
+    :param user_id: ID пользователя
+    :param redis_client: Клиент Redis
+    :param httpx_client: Асинхронный HTTP-клиент
+    :return: JSONResponse с результатом запроса платежа
+    """
     token = await redis_client.get_value(f'yoomoney:token:{user_id}')
     token = token.decode('utf-8')
     payment_data = await redis_client.get_value(f'yoomoney:payment:{user_id}')
@@ -204,17 +279,25 @@ async def get_payment_request(user_id: str, redis_client: RedisClient, httpx_cli
             json=data
         )
         response = response.json()
-        
+
         return JSONResponse({'accept_url': response['short_url']})
     return JSONResponse(response)
 
 
 async def get_payment_accept(request_id, redis_client: RedisClient, httpx_client: AsyncClient) -> JSONResponse:
+    """
+    Подтверждает выполнение ранее созданного платежа в YooMoney.
+
+    :param request_id: Идентификатор запроса платежа
+    :param redis_client: Клиент Redis
+    :param httpx_client: Асинхронный HTTP-клиент
+    :return: JSONResponse с результатом подтверждения платежа
+    """
     request_data = await redis_client.get_value(key=f'yoomoney:request_id:{request_id}')
     request_data = request_data.decode('utf-8')
     request_data = json.loads(request_data)
     await redis_client.delete_value(f'yoomoney:request_id:{request_id}')
-    
+
     headers = {
         'Authorization': f'Bearer {request_data["token"]}',
         'Content-Type': 'application/x-www-form-urlencoded',
@@ -233,6 +316,12 @@ async def get_payment_accept(request_id, redis_client: RedisClient, httpx_client
 
 
 async def get_callback(request: Request) -> JSONResponse:
+    """
+    Обрабатывает callback от YooMoney о статусе платежа.
+
+    :param request: Запрос от YooMoney
+    :return: JSONResponse с результатом обработки callback
+    """
     data = await request.form()
     data = dict(data)
     response = {
@@ -254,6 +343,12 @@ async def get_callback(request: Request) -> JSONResponse:
 
 
 async def send_queue(message, queue_name) -> None:
+    """
+    Отправляет сообщение в очередь RabbitMQ.
+
+    :param message: Сообщение для отправки
+    :param queue_name: Имя очереди для отправки сообщения
+    """
     await rabbitmq.channel.declare_queue(
         name=queue_name,
         durable=True,

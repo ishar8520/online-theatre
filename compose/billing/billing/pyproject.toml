@@ -26,14 +26,61 @@ ciqar = "1.0.0"
 mypy = "1.15.0"
 ruff = "0.10.0"
 
+# ——————— Настройки Ruff ———————
+
 [tool.ruff]
+exclude = [
+    # Исключенные директории и файлы для линтинга
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".git-rewrite",
+    ".hg",
+    ".ipynb_checkpoints",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".pyenv",
+    ".pytest_cache",
+    ".pytype",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    ".vscode",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    "site-packages",
+    "venv",
+]
 target-version = "py312"
 line-length = 120
 
 [tool.ruff.lint]
-select = [
-    "E",
+extend-select = [
+  "E",    # PEP8‑ошибки
+  "W",    # предупреждения
+  "C",    # complexity
+  "F",    # flake8‑style
+  "N",    # нейминг
+  "D",    # docstring‑правила
+  "I",
 ]
+ignore = [
+  "D203",
+  "D212",
+  "D104",
+  "D100",
+]
+fixable = ["ALL"]
+preview = true
+
+# ——————— Настройки mypy ———————
 
 [[tool.mypy.overrides]]
 module = "apscheduler.*"

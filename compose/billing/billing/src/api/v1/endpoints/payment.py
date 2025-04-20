@@ -43,6 +43,11 @@ async def create(
         payment_service: PaymentServiceDep,
         user: User = Depends(get_current_user),
 ) -> PaymentResponseDto:
+    """
+    Создаёт новую покупку (платёж).
+
+    :return: Результат создания новой покупки
+    """
     try:
         created_payment = await payment_service.add(
             user_id=user.id,
