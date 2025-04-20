@@ -10,7 +10,7 @@ from ..models.payment import (
     PaymentPayResponseDto,
     ProcessPaymentRequest,
     PaymentStatusRequest,
-    PaymentRefundResponseDto
+    PaymentRefundResponseDto, InitPaymentRequest
 )
 from ....models.auth import User
 from ....services.auth.client import get_current_user, get_current_admin_user
@@ -60,13 +60,13 @@ async def create(
 
 @router.post(
     path="/init_payment/{payment_id}",
-    status_code=HTTPStatus.CREATED,
+    status_code=HTTPStatus.OK,
     summary="Generate link to payment service",
     response_model=PaymentPayResponseDto
 )
 async def init_payment(
         payment_id: uuid.UUID,
-        payment_method: PaymentIntegrations,
+        payment_request: InitPaymentRequest,
         payment_service: PaymentServiceDep,
         integration_factory: IntegrationFactoryDep,
         user: User = Depends(get_current_user),
@@ -85,7 +85,7 @@ async def init_payment(
             "Payment is canceled"
         )
 
-    integration = await integration_factory.get(payment_method)
+    integration = await integration_factory.get(payment_request.payment_method)
 
     try:
         url = await integration.create(payment)

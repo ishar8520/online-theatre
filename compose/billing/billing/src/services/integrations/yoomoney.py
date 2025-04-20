@@ -68,9 +68,3 @@ class YoomoneyService(AbstractIntegration):
     def get_url():
         return f"{settings.payment_service.base_url}/yoomoney"
 
-
-def get_yoomoney_service():
-    return YoomoneyService()
-
-
-YoomoneyServiceDep = Annotated[YoomoneyService, Depends(get_yoomoney_service)]

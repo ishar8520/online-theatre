@@ -519,6 +519,7 @@ services:
     networks:
       - movies-network
     environment:
+      - TEST_MODE=True
       - PAYMENT_SERVICE_HOST=payment-service
       - PAYMENT_SERVICE_PORT=8000
       - POSTGRESQL_HOST=billing-service-postgresql

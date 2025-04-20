@@ -129,5 +129,59 @@ async def test_payment_cancel(
 
             data_cancel = await response.json()
 
-            assert "id" in data
+            assert "id" in data_cancel
             assert data_cancel["id"] == data["id"]
+
+
+@pytest.mark.parametrize(
+    "payment_items, expected",
+    [
+        (
+            [
+                {
+                    "name": "Yandex Music",
+                    "quantity": 1,
+                    "price": 1000,
+                    "type": "subscribe",
+                    "props": [
+                        {
+                            "name": "Period",
+                            "code": "period",
+                            "value": "12"
+                        }
+                    ]
+                }
+            ],
+            {
+                "status": http.HTTPStatus.OK,
+                "url": "https://your_link_to_pay"
+            }
+        )
+    ]
+)
+@pytest.mark.asyncio(loop_scope='session')
+async def test_payment_cancel(
+        aiohttp_session,
+        auth_headers,
+        payment_items,
+        expected
+):
+    url = urljoin(settings.url_billing_api, f"payment/create")
+    async with aiohttp_session.put(url, headers=auth_headers, json=payment_items) as response:
+        assert response.status == http.HTTPStatus.CREATED
+
+        data = await response.json()
+        assert "id" in data
+
+        payload = {
+            "payment_method": "yoomoney"
+        }
+
+        url = urljoin(settings.url_billing_api, f"payment/init_payment/{data["id"]}")
+        async with aiohttp_session.post(url, headers=auth_headers, json=payload) as response_cancel:
+            assert response_cancel.status == expected["status"]
+
+            data_init = await response_cancel.json()
+
+            assert "url" in data_init
+            assert data_init["url"] == expected["url"]

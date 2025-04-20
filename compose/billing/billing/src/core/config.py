@@ -48,6 +48,8 @@ class AuthConfig(BaseSettings):
 
 
 class Settings(BaseSettings):
+    test_mode: bool = False
+
     auth: AuthConfig = AuthConfig()
     payment_service: PaymentServiceSettings = PaymentServiceSettings()
     postgresql: PostgresqlSettings = PostgresqlSettings()

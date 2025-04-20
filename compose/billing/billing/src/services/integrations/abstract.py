@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 
+from .models import PaymentIntegrations
 from ...models.sqlalchemy import Payment
 
 
@@ -24,4 +25,11 @@ class AbstractIntegration(ABC):
         :return str: redirect url
         :raise IntegrationCreatePaymentError: if creation is failed
         """
+        pass
+
+
+class AbstractIntegrationFactory(ABC):
+    @staticmethod
+    @abstractmethod
+    async def get(integration: PaymentIntegrations) -> AbstractIntegration:
         pass

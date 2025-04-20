@@ -7,22 +7,6 @@ import datetime
 from pydantic import BaseModel
 
 from ....services.integrations.models import PaymentIntegrations
-from ....services.models import PurchaseItemType
-
-
-class PurchaseItemPropertyCreateResponseDto(BaseModel):
-    name: str
-    code: str
-    value: str
-
-
-class PurchaseItemResponseDto(BaseModel):
-    id: uuid.UUID
-    name: str
-    quantity: int
-    price: float
-    type: PurchaseItemType
-    props: list[PurchaseItemPropertyCreateResponseDto] | None
 
 
 class PaymentResponseDto(BaseModel):
@@ -49,3 +33,7 @@ class ProcessPaymentRequest(BaseModel):
     amount: float
     withdraw_amount: float
     datetime: datetime.datetime
+
+
+class InitPaymentRequest(BaseModel):
+    payment_method: PaymentIntegrations

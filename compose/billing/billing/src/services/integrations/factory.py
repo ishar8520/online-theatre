@@ -4,13 +4,18 @@ from typing import Annotated
 
 from fastapi import Depends
 
-from .abstract import AbstractIntegration
+from .abstract import (
+    AbstractIntegration,
+    AbstractIntegrationFactory
+)
 from .exceptions import UnsupportedIntegrationType
 from .models import PaymentIntegrations
 from .yoomoney import YoomoneyService
+from ...core.config import settings
+from ...tests.integration import TestIntegrationFactory
 
 
-class IntegrationFactory():
+class IntegrationFactory(AbstractIntegrationFactory):
     @staticmethod
     async def get(integration: PaymentIntegrations) -> AbstractIntegration:
         if integration == PaymentIntegrations.YOOMONEY:
@@ -20,6 +25,9 @@ class IntegrationFactory():
 
 
 def get_integration_factory():
+    if settings.test_mode:
+        return TestIntegrationFactory()
+
     return IntegrationFactory()
 
 
