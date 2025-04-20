@@ -1,12 +1,26 @@
 from __future__ import annotations
 
-from fastapi import FastAPI
 from fastapi.responses import JSONResponse
+import httpx
+from src.api.v1.endpoints import admin, payment
+from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
+from fastapi import FastAPI
 
-from .api.v1.endpoints import payment
+
+@asynccontextmanager
+async def lifespan(_app) -> AsyncGenerator[dict]:
+
+    async with (
+        httpx.AsyncClient() as httpx_client,
+    ):
+        yield {
+            'httpx_client': httpx_client,
+        }
 
 base_api_prefix = '/billing/api'
 app = FastAPI(
+    lifespan=lifespan,
     title='Billing service',
     description='Service for purchase subscribe, movies and emoji',
     docs_url=f'{base_api_prefix}/openapi',
@@ -20,10 +34,15 @@ async def healthcheck():
     return {}
 
 
-notify_api_prefix = f'{base_api_prefix}/v1'
+billing_api_prefix = f'{base_api_prefix}/v1'
 
 app.include_router(
     payment.router,
-    prefix=f'{notify_api_prefix}/payment',
+    prefix=f'{billing_api_prefix}/payment',
     tags=['payment']
+)
+app.include_router(
+    admin.router,
+    prefix=f'{billing_api_prefix}/admin',
+    tags=['admin_payment']
 )

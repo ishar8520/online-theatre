@@ -22,6 +22,7 @@ services:
       - AUTH_SERVICE_URL=http://auth-service:8000
       - UGC_URL=http://ugc-mongo-service:5002
       - NOTIFICATION_SERVICE_URL=http://notification-service:8000
+      - BILLING_SERVICE_URL=http://billing-service:8000
       - AUTH_POSTGRESQL_HOST=auth-postgresql
       - AUTH_POSTGRESQL_PASSWORD=$AUTH_POSTGRESQL_PASSWORD
       - AUTH_REDIS_HOST=auth-redis
@@ -512,6 +513,76 @@ services:
       retries: 5
       start_period: 10s
 
+  billing-service:
+    build:
+      context: ./compose/billing/billing
+    networks:
+      - movies-network
+    environment:
+      - PAYMENT_SERVICE_HOST=payment-service
+      - PAYMENT_SERVICE_PORT=8000
+      - POSTGRESQL_HOST=billing-service-postgresql
+      - POSTGRESQL_PORT=5432
+      - POSTGRESQL_DATABASE=$POSTGRESQL_BILLING_DATABASE
+      - POSTGRESQL_USERNAME=$POSTGRESQL_BILLING_USERNAME
+      - POSTGRESQL_PASSWORD=$POSTGRESQL_BILLING_PASSWORD
+      - AUTH_HOST=auth-service
+      - AUTH_PORT=8000
+    command: [ '/opt/app/commands/fastapi.sh', 'dev' ]
+    healthcheck:
+      test: [ 'CMD-SHELL', 'curl -s http://localhost:8000/billing/api/_health' ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+    develop:
+      watch:
+        - action: sync
+          path: ./compose/billing/billing/src
+          target: /opt/app/src
+        - action: rebuild
+          path: ./compose/billing/billing/commands
+        - action: rebuild
+          path: ./compose/billing/billing/pyproject.toml
+        - action: rebuild
+          path: ./compose/billing/billing/poetry.lock
+
+  billing-service-postgresql:
+    image: 'bitnami/postgresql:17.2.0-debian-12-r5'
+    networks:
+      - movies-network
+    volumes:
+      - 'billing-service-postgresql-data:/bitnami/postgresql'
+    ports:
+      - '5432:5432'
+    environment:
+      - POSTGRESQL_DATABASE=$POSTGRESQL_BILLING_DATABASE
+      - POSTGRESQL_USERNAME=$POSTGRESQL_BILLING_USERNAME
+      - POSTGRESQL_PASSWORD=$POSTGRESQL_BILLING_PASSWORD
+    restart: unless-stopped
+    healthcheck:
+      test: [ 'CMD-SHELL', 'pg_isready --username=$POSTGRESQL_BILLING_USERNAME --dbname=$POSTGRESQL_BILLING_DATABASE' ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  billing-service-init:
+    build:
+      context: ./compose/billing/billing
+    depends_on:
+      billing-service-postgresql:
+        condition: service_healthy
+    networks:
+      - movies-network
+    environment:
+      - POSTGRESQL_HOST=billing-service-postgresql
+      - POSTGRESQL_PORT=5432
+      - POSTGRESQL_DATABASE=$POSTGRESQL_BILLING_DATABASE
+      - POSTGRESQL_USERNAME=$POSTGRESQL_BILLING_USERNAME
+      - POSTGRESQL_PASSWORD=$POSTGRESQL_BILLING_PASSWORD
+    command: [ '/opt/app/commands/init.sh' ]
+
 networks:
   movies-network:
 
@@ -525,3 +596,4 @@ volumes:
   notifications-queue-redis-data:
   admin-panel-postgresql-data:
   admin-panel-redis-data:
+  billing-service-postgresql-data:
