@@ -1,1 +1,1 @@
-from .httpx import HTTPXClientDep
+from .httpx import HTTPXClientDep as HTTPXClientDep

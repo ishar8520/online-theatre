@@ -1,10 +1,16 @@
 from abc import ABC, abstractmethod
 
-from .models import PaymentIntegrations
-from ...models.sqlalchemy import Payment
+from src.models.sqlalchemy import Payment
+from src.services.integrations.models import PaymentIntegrations
 
 
 class AbstractIntegration(ABC):
+    """
+    Base abstract class for payment provider integrations.
+
+    Defines the interface for creating payments and issuing refunds.
+    """
+
     @abstractmethod
     async def create(self, payment: Payment) -> str:
         """
@@ -29,7 +35,20 @@ class AbstractIntegration(ABC):
 
 
 class AbstractIntegrationFactory(ABC):
+    """
+    Abstract factory for obtaining payment integration instances.
+
+    Provides a method to retrieve the appropriate integration
+    implementation based on the specified provider.
+    """
+
     @staticmethod
     @abstractmethod
     async def get(integration: PaymentIntegrations) -> AbstractIntegration:
+        """
+        Return an integration instance for the given provider.
+
+        :param integration: Member of the PaymentIntegrations enum
+        :return: Instance implementing AbstractIntegration
+        """
         pass

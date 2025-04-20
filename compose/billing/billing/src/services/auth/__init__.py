@@ -1,1 +1,1 @@
-from .user import AuthUserDep
+from .user import AuthUserDep as AuthUserDep
