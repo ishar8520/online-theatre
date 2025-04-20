@@ -16,6 +16,7 @@ class UserRead(BaseModel):
 class UserCreate(BaseModel):
     login: str
     password: str
+    email: str
 
 
 class UserUpdate(BaseModel):
