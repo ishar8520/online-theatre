@@ -13,6 +13,7 @@ from ..models.payment import (
     PaymentRefundResponseDto, InitPaymentRequest, RefundPaymentRequest
 )
 from ....models.auth import User
+from ....dependencies.httpx import httpx, get_httpx_client
 from ....services.auth.client import get_current_user, get_current_admin_user
 from ....services.exceptions import CreatePaymentError, UpdatePaymentError
 from ....services.integrations.exceptions import (
@@ -185,7 +186,8 @@ async def process(
         payment_id: uuid.UUID,
         payment_info: ProcessPaymentRequest,
         payment_service: PaymentServiceDep,
-        user: User = Depends(get_current_admin_user)
+        user: User = Depends(get_current_admin_user),
+        httpx_client: httpx.AsyncClient = Depends(get_httpx_client)
 ) -> PaymentResponseDto:
     payment = await payment_service.get_by_id(id=payment_id)
 
@@ -205,13 +207,25 @@ async def process(
         status = PaymentStatus.FAILED
         if payment_info.status == PaymentStatusRequest.SUCCESS:
             status = PaymentStatus.PAID
-
         update_data = PaymentUpdateDto(
             status=status,
             ps_name=payment_info.service
         )
-
         updated_payment = await payment_service.update(payment, update_data)
+        data = {
+            'user_id': str(payment.user_id),
+            'payment_status': payment_info.status,
+            'notification_type': 'email'
+        }
+        headers = {
+            'accept': 'application/json',
+            'Content-Type': 'application/json'
+        }
+        await httpx_client.post(
+            f'http://notification-service:8000/notification/api/v1/events/payment_status',
+            headers=headers,
+            json=data 
+        )
     except UpdatePaymentError:
         raise HTTPException(
             status_code=HTTPStatus.BAD_REQUEST,

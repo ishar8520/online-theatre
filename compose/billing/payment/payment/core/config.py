@@ -5,6 +5,10 @@ class ServiceConfig(BaseSettings):
     
     url: str
 
+class ShortlinkConfig(BaseSettings):
+    model_config = SettingsConfigDict(env_prefix='short_link_')
+    
+    url: str
 
 class RedisConfig(BaseSettings):
     model_config = SettingsConfigDict(env_prefix='redis_')
@@ -35,6 +39,7 @@ class YooMoneyConfig(BaseSettings):
     
 class Settings(BaseSettings):
     service: ServiceConfig = ServiceConfig()
+    short_link: ShortlinkConfig = ShortlinkConfig()
     redis: RedisConfig = RedisConfig()
     rabbitmq: RabbitConfig = RabbitConfig()
     yoomoney: YooMoneyConfig = YooMoneyConfig()

@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import RedirectResponse
 from models import ShortenRequest, ShortenResponse
 from services.shortener import ShortenerService
+from config import settings
 
 router = APIRouter()
 
@@ -13,7 +14,7 @@ async def shorten_url(
     shortener_service: ShortenerService = Depends(get_shortener_service),
 ):
     short_code = await shortener_service.create_short_url(request.url, request.user_id)
-    return {"short_url": f"http://localhost:8000/{short_code}"}
+    return {"short_url": f"{settings.service.url}/short_link/{short_code}"}
 
 
 @router.get("/{short_code}")

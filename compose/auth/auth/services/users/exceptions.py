@@ -15,3 +15,6 @@ class UserDoesNotExist(UsersException):
 
 class UserAlreadyExists(UsersException):
     pass
+
+class BadEmailException(UsersException):
+    pass

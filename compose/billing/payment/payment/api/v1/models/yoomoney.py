@@ -5,7 +5,6 @@ class YoomoneyUserModel(BaseModel):
     user_id: str
 
 class YoomoneyPaymentModel(BaseModel):
-    pattern_id: str='p2p'
     amount: float
     message: str
     label: str

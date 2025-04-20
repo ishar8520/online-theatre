@@ -3,7 +3,7 @@
 set -e
 
 gunicorn \
-    src.main:app \
+    payment.main:app \
     --bind 0.0.0.0:8000 \
     --workers "${GUNICORN_WORKERS:-4}" \
     --worker-class uvicorn_worker.UvicornWorker

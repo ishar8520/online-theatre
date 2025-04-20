@@ -6,6 +6,7 @@ import json
 from http import HTTPStatus
 import secrets
 from httpx import AsyncClient
+from uuid import UUID
 
 from payment.api.v1.models.yoomoney import YoomoneyPaymentModel
 from payment.core.config import settings
@@ -26,10 +27,10 @@ async def check_token(token: str, httpx_client: AsyncClient) -> dict:
     return response.json()
 
 
-async def get_refund(user_id: str, model: YoomoneyPaymentModel, redis_client: RedisClient, httpx_client: AsyncClient) -> JSONResponse:
+async def get_refund(user_id: UUID, model: YoomoneyPaymentModel, redis_client: RedisClient, httpx_client: AsyncClient) -> JSONResponse:
     if not await redis_client.get_value(f'yoomoney:refund:{user_id}'):
         params = {
-            'pattern_id': model.pattern_id,
+            'pattern_id': 'p2p',
             'amount': str(model.amount),
             'message': model.message,
             'label': model.label
@@ -39,10 +40,10 @@ async def get_refund(user_id: str, model: YoomoneyPaymentModel, redis_client: Re
             value=json.dumps(params),
             ttl_seconds=600)
     if not await redis_client.get_value(key=f'yoomoney:token:{user_id}'):
-        return await get_auth_url(user_id, 'refund', redis_client)
+        return await get_auth_url(user_id, 'refund', redis_client, httpx_client)
     return await get_refund_request(user_id, redis_client, httpx_client)
 
-async def get_refund_request(user_id, redis_client, httpx_client):
+async def get_refund_request(user_id: UUID, redis_client: RedisClient, httpx_client: AsyncClient):
     token = await redis_client.get_value(f'yoomoney:token:{user_id}')
     token = token.decode('utf-8')
     account_data = await check_token(token, httpx_client)
@@ -77,14 +78,24 @@ async def get_refund_request(user_id, redis_client, httpx_client):
             ttl_seconds=600
         )
         accept_url = f'{base_service_url}/payment/api/v1/yoomoney/_accept_payment/{response["request_id"]}'
-        return JSONResponse({'accept_url': accept_url})
+        data = {
+            'user_id': str(user_id),
+            'url': accept_url
+        }
+        response = await httpx_client.post(
+            f'{settings.short_link.url}/short_link/shorten',
+            json=data
+        )
+        response = response.json()
+        
+        return JSONResponse({'accept_url': response['short_url']})
     return JSONResponse(response)
 
 
-async def get_payment(user_id: str, model: YoomoneyPaymentModel, redis_client: RedisClient, httpx_client: AsyncClient) -> JSONResponse:
+async def get_payment(user_id: UUID, model: YoomoneyPaymentModel, redis_client: RedisClient, httpx_client: AsyncClient) -> JSONResponse:
     if not await redis_client.get_value(f'yoomoney:payment:{user_id}'):
         params = {
-            'pattern_id': model.pattern_id,
+            'pattern_id': 'p2p',
             'to': settings.yoomoney.receiver_account,
             'amount': str(model.amount),
             'message': model.message,
@@ -96,15 +107,15 @@ async def get_payment(user_id: str, model: YoomoneyPaymentModel, redis_client: R
             ttl_seconds=600)
 
     if not await redis_client.get_value(key=f'yoomoney:token:{user_id}'):
-        return await get_auth_url(user_id, 'payment', redis_client)
+        return await get_auth_url(user_id, 'payment', redis_client, httpx_client)
     return await get_payment_request(user_id, redis_client, httpx_client)
 
 
-async def get_auth_url(user_id: str, operation: str, redis_client: RedisClient) -> JSONResponse:
+async def get_auth_url(user_id: str, operation: str, redis_client: RedisClient, httpx_client: AsyncClient) -> JSONResponse:
     state = secrets.token_urlsafe(16)
     await redis_client.set_value_with_ttl(
         key=f'yoomoney:state:{state}',
-        value=user_id,
+        value=str(user_id),
         ttl_seconds=600
     )
     params = {
@@ -114,7 +125,16 @@ async def get_auth_url(user_id: str, operation: str, redis_client: RedisClient) 
         'scope': 'account-info payment-p2p',
         'state': state
     }
-    return JSONResponse({'url': f'https://yoomoney.ru/oauth/authorize?{urlencode(params)}'})
+    data = {
+        'user_id': str(user_id),
+        'url': f'https://yoomoney.ru/oauth/authorize?{urlencode(params)}'
+    }
+    response = await httpx_client.post(
+        f'{settings.short_link.url}/short_link/shorten',
+        json=data
+    )
+    response = response.json()
+    return JSONResponse({'url': response['short_url']})
 
 
 async def get_auth_success(code: str, state: str, operation:str, redis_client: RedisClient, httpx_client: AsyncClient) -> JSONResponse:
@@ -175,7 +195,17 @@ async def get_payment_request(user_id: str, redis_client: RedisClient, httpx_cli
             ttl_seconds=600
         )
         accept_url = f'{base_service_url}/payment/api/v1/yoomoney/_accept_payment/{response["request_id"]}'
-        return JSONResponse({'accept_url': accept_url})
+        data = {
+            'user_id': str(user_id),
+            'url': accept_url
+        }
+        response = await httpx_client.post(
+            f'{settings.short_link.url}/short_link/shorten',
+            json=data
+        )
+        response = response.json()
+        
+        return JSONResponse({'accept_url': response['short_url']})
     return JSONResponse(response)
 
 
@@ -206,6 +236,7 @@ async def get_callback(request: Request) -> JSONResponse:
     data = await request.form()
     data = dict(data)
     response = {
+        'service': 'yoomoney',
         'label': data['label'],
         'amount': data['amount'],
         'withdraw_amount': data['withdraw_amount'],
@@ -213,10 +244,10 @@ async def get_callback(request: Request) -> JSONResponse:
     }
     if data['unaccepted'] == 'false':
         response['status'] = 'success'
-        await send_queue(response, 'succeeded')
+        await send_queue(response, 'status_queue')
     elif data['unaccepted'] == 'true':
         response['status'] = 'failed'
-        await send_queue(response, 'failed')
+        await send_queue(response, 'status_queue')
     else:
         raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail='Payment status undifined')
     return JSONResponse(response)

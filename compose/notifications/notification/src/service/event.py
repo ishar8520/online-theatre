@@ -52,6 +52,29 @@ class EventService:
 
         return await self._queue.send(settings.queue.notification_url_template, payload)
 
+    async def on_payment_status(
+        self,
+        user_id: uuid.UUID,
+        payment_status: str,
+        notification_type: NotificationType
+    ) -> bool:
+        if payment_status == 'success':
+            payment_status = 'прошел успешно'
+        elif payment_status == 'failed':
+            payment_status = 'завершился с ошибкой'
+        
+        payload = {
+            "users": [str(user_id)],
+            "subject": "Payment status",
+            "type": notification_type,
+            "template_code": TemplateList.PAYMENT_STATUS,
+            "template_context": {
+                "payment_status": payment_status
+            }
+        }
+        
+        return await self._queue.send(settings.queue.notification_url_template, payload)
+
 
 async def get_event_service(queue: QueueServiceDep) -> EventService:
     return EventService(queue=queue)

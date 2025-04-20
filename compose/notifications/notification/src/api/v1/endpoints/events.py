@@ -5,7 +5,8 @@ from fastapi import APIRouter, HTTPException
 from ....service.event import EventServiceDep
 from ..models.events import (
     EventRegistrationRequestDto,
-    EventNewMovieRequestDto
+    EventNewMovieRequestDto,
+    EventPaymentStatusRequestDto
 )
 from ....service.exceptions.queue import QueueSendException
 
@@ -45,6 +46,26 @@ async def notify_on_new_movie(
 ) -> dict:
     try:
         result = await event_service.on_add_new_movie(**event.model_dump())
+    except QueueSendException:
+        raise HTTPException(
+            status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
+            detail='Internal error'
+        )
+
+    return {"result": result}
+
+@router.post(
+    path='/payment_status',
+    status_code=HTTPStatus.ACCEPTED,
+    summary='On payment status',
+    description='Send notification about payment status'
+)
+async def notify_on_payment_status(
+    event: EventPaymentStatusRequestDto,
+    event_service: EventServiceDep
+) -> dict:
+    try:
+        result = await event_service.on_payment_status(**event.model_dump())
     except QueueSendException:
         raise HTTPException(
             status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
