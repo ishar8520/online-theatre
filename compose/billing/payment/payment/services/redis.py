@@ -1,3 +1,6 @@
+# mypy: disable-error-code=no-any-return
+from typing import Any
+
 import redis.asyncio as async_redis
 
 from payment.core.config import settings
@@ -14,7 +17,7 @@ class RedisClient:
         """Инициализирует экземпляр RedisClient с асинхронным клиентом Redis."""
         self._client = client
 
-    async def get_value(self, key: str):
+    async def get_value(self, key: str) -> Any:
         """
         Получает значение по ключу из Redis.
 
@@ -23,7 +26,7 @@ class RedisClient:
         """
         return await self._client.get(key)
 
-    async def set_value(self, key: str, value: str):
+    async def set_value(self, key: str, value: str) -> bool:
         """
         Устанавливает значение по ключу в Redis.
 
@@ -33,7 +36,7 @@ class RedisClient:
         """
         return await self._client.set(key, value)
 
-    async def delete_value(self, key: str):
+    async def delete_value(self, key: str) -> int:
         """
         Удаляет значение по ключу из Redis.
 

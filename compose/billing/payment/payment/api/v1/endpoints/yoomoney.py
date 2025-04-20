@@ -3,10 +3,12 @@ import uuid
 from fastapi import APIRouter, Request, Depends, Query
 import httpx
 from collections.abc import AsyncGenerator
+from typing import Any
 from uuid import UUID
 
 import httpx
 from fastapi import APIRouter, Depends, Query, Request
+from fastapi.responses import JSONResponse
 
 from payment.api.v1.models.yoomoney import YoomoneyPaymentModel
 from payment.services.redis import RedisClient, get_redis_client
@@ -37,7 +39,7 @@ async def get_httpx_client() -> AsyncGenerator[httpx.AsyncClient]:
 async def check(
     token: str,
     httpx_client: httpx.AsyncClient = Depends(get_httpx_client)
-):
+) -> dict[Any, Any]:
     """
     Проверяет статус платёжной операции в YooMoney.
 
@@ -54,7 +56,7 @@ async def payment(
     model: YoomoneyPaymentModel,
     redis_client: RedisClient = Depends(get_redis_client),
     httpx_client: httpx.AsyncClient = Depends(get_httpx_client)
-):
+) -> JSONResponse:
     """
     Инициализирует платёж через YooMoney.
 
@@ -73,7 +75,7 @@ async def refund(
     model: YoomoneyPaymentModel,
     redis_client: RedisClient = Depends(get_redis_client),
     httpx_client: httpx.AsyncClient = Depends(get_httpx_client)
-):
+) -> JSONResponse:
     """
     Создаёт запрос на возврат платежа через YooMoney.
 
@@ -89,7 +91,7 @@ async def refund(
 @router_in.post('/_callback')
 async def callback(
     request: Request,
-):
+) -> JSONResponse:
     """
     Обрабатывает callback от YooMoney при изменении статуса платежа.
 
@@ -106,7 +108,7 @@ async def auth_success(
     operation: str = Query(...),
     redis_client: RedisClient = Depends(get_redis_client),
     httpx_client: httpx.AsyncClient = Depends(get_httpx_client)
-):
+) -> JSONResponse:
     """
     Обрабатывает успешную авторизацию пользователя через YooMoney.
 
@@ -125,7 +127,7 @@ async def accept_payment(
     request_id: str,
     redis_client: RedisClient = Depends(get_redis_client),
     httpx_client: httpx.AsyncClient = Depends(get_httpx_client)
-):
+) -> JSONResponse:
     """
     Обрабатывает подтверждение платежа в YooMoney по идентификатору запроса.
 

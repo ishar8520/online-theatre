@@ -90,7 +90,15 @@ preview = true
 
 # ——————— Настройки mypy ———————
 
-[[tool.mypy.overrides]]
-module = "apscheduler.*"
+[tool.mypy]
+python_version = "3.12"
+strict = true
+disallow_untyped_defs = true
 ignore_missing_imports = true
+warn_unused_configs = true
+check_untyped_defs = true
+
+[[tool.mypy.overrides]]
+module = "payment.services.redis"
+allow_untyped_calls = true
 

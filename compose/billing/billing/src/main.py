@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+from typing import Any
+
+from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 import httpx
 from src.api.v1.endpoints import admin, payment
@@ -30,7 +33,7 @@ app = FastAPI(
 
 
 @app.get(f'{base_api_prefix}/_health')
-async def healthcheck():
+async def healthcheck() -> dict[str, Any]:
     """
     Эндпоинт проверки работоспособности сервиса.
 

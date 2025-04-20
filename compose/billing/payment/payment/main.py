@@ -1,4 +1,6 @@
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
+from typing import Any
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -10,7 +12,7 @@ base_api_prefix = '/payment/api'
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """
     Управляет временем жизни приложения: устанавливает и закрывает подключения к внешним сервисам.
 
@@ -44,7 +46,7 @@ base_prefix_url = f'{base_api_prefix}/v1'
 
 
 @app.get(f'{base_api_prefix}/_health')
-async def healthcheck():
+async def healthcheck() -> dict[str, Any]:
     """
     Эндпоинт проверки работоспособности сервиса.
 
