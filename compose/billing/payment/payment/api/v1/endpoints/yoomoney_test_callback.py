@@ -52,7 +52,7 @@ async def _test_callback(model: YoomoneyCallbackModel, amount: float, payment_st
             'Authorization': 'Bearer YOUR_ACCESS_TOKEN'
         }
         response = await session.post(
-            url='http://localhost:8000/payment/api/v1/yoomoney/callback',
+            url='http://localhost:8000/payment/api/v1/yoomoney/_callback',
             data=urlencode(data),
             headers=headers)
         return await response.json()
