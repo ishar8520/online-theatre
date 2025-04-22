@@ -23,6 +23,8 @@ from src.services.integrations.exceptions import IntegrationCreatePaymentError, 
 from src.services.integrations.factory import IntegrationFactoryDep
 from src.services.models import PaymentStatus, PaymentUpdateDto, PurchaseItemCreateDto
 from src.services.payment import PaymentServiceDep
+from src.core.config import settings
+
 
 router = APIRouter()
 
@@ -260,7 +262,7 @@ async def process(
             'Content-Type': 'application/json'
         }
         await httpx_client.post(
-            'http://notification-service:8000/notification/api/v1/events/payment_status',
+            f'{settings.notification.schema}://{settings.notification.host}:{settings.notification.port}/notification/api/v1/events/payment_status',
             headers=headers,
             json=data,
         )

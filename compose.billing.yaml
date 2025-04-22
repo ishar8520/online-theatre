@@ -276,6 +276,8 @@ services:
       - POSTGRESQL_PASSWORD=$POSTGRESQL_BILLING_PASSWORD
       - AUTH_HOST=auth-service
       - AUTH_PORT=8000
+      - NOTIFICATION_HOST=notification-service
+      - NOTIFICATION_PORT=8000
     command: [ '/opt/app/commands/fastapi.sh', 'dev' ]
     healthcheck:
       test: [ 'CMD-SHELL', 'curl -s http://localhost:8000/billing/api/_health' ]
@@ -344,7 +346,8 @@ services:
       start_period: 10s
     environment:
       - SERVICE_URL=$SERVICE_URL
-      - SHORT_LINK_URL=http://short-link-service:8000
+      - SHORT_LINK_HOST=short-link-service
+      - SHORT_LINK_PORT=8000
       - YOOMONEY_CLIENT_ID=$YOOMONEY_CLIENT_ID
       - YOOMONEY_REDIRECT_URI=$YOOMONEY_REDIRECT_URI
       - YOOMONEY_SECRET=$YOOMONEY_SECRET

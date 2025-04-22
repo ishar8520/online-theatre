@@ -55,6 +55,15 @@ class AuthConfig(BaseSettings):
         return f'{self.scheme}://{self.host}:{self.port}/auth/api/v1/users/me'
 
 
+class NotificationConfig(BaseSettings):
+    """Конфигурация для сервиса уведомлений"""
+    
+    model_config = SettingsConfigDict(env_prefix='notification_')
+
+    scheme: str = 'http'
+    host: str# = 'localhost'
+    port: int# = 8000
+
 class Settings(BaseSettings):
     """Основные настройки приложения."""
 
@@ -63,6 +72,7 @@ class Settings(BaseSettings):
     auth: AuthConfig = AuthConfig()
     payment_service: PaymentServiceSettings = PaymentServiceSettings()
     postgresql: PostgresqlSettings = PostgresqlSettings()
+    notification: NotificationConfig = NotificationConfig()
 
 
 settings = Settings()

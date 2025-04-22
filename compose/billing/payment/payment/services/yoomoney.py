@@ -115,7 +115,7 @@ async def get_refund_request(user_id: UUID, redis_client: RedisClient, httpx_cli
             'url': accept_url
         }
         shorten_response = await httpx_client.post(
-            f'{settings.short_link.url}/short_link/shorten',
+            f'http://{settings.short_link.host}:{settings.short_link.port}/short_link/shorten',
             json=data
         )
         shortened_data: dict[str, Any] = shorten_response.json()
@@ -187,7 +187,7 @@ async def get_auth_url(
         'url': f'https://yoomoney.ru/oauth/authorize?{urlencode(params)}'
     }
     response = await httpx_client.post(
-        f'{settings.short_link.url}/short_link/shorten',
+        f'http://{settings.short_link.host}:{settings.short_link.port}/short_link/shorten',
         json=data
     )
 
@@ -300,7 +300,7 @@ async def get_payment_request(
         }
 
         short_response = await httpx_client.post(
-            f'{settings.short_link.url}/short_link/shorten',
+            f'http://{settings.short_link.host}:{settings.short_link.port}/short_link/shorten',
             json=shorten_payload
         )
         short_data: dict[str, Any] = short_response.json()

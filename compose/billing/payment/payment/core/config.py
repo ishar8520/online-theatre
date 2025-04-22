@@ -15,7 +15,8 @@ class ShortlinkConfig(BaseSettings):
 
     model_config = SettingsConfigDict(env_prefix='short_link_')
 
-    url: str
+    host: str
+    port: int
 
 
 class RedisConfig(BaseSettings):
