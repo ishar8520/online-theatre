@@ -11,7 +11,7 @@ from config import settings
 
 logging.basicConfig(level=logging.INFO)
 
-async def get_superuser():
+async def get_superuser() -> dict:
     async with aiohttp.ClientSession() as session:
         headers = {
             'accept': 'application/json',
@@ -37,13 +37,16 @@ async def get_superuser():
             return headers
 
 class RabbitWorker:
-    def __init__(self, rabbitmq_url, queue_name, api_url, max_tasks):
+    def __init__(self, rabbitmq_url: str, queue_name: str, api_url: str, max_tasks: int) -> None:
         self.rabbitmq_url = rabbitmq_url
         self.queue_name = queue_name
         self.api_url = api_url
         self.max_tasks = max_tasks
         self.semaphore = asyncio.Semaphore(max_tasks)
         self.client = httpx.AsyncClient(timeout=httpx.Timeout(timeout=5))
+        self.connection = None
+        self.channel = None
+        self.superuser_headers = {}
 
     async def make_api_request(self, message_data: dict) -> bool:
         try:
@@ -72,7 +75,7 @@ class RabbitWorker:
             logging.error(f'Unexpected error making API request: {str(e)}')
             return False
 
-    async def setup_rabbitmq(self):
+    async def setup_rabbitmq(self) -> None:
         self.connection = await connect_robust(self.rabbitmq_url)
         self.channel = await self.connection.channel()
         await self.channel.set_qos(prefetch_count=self.max_tasks)
@@ -81,10 +84,10 @@ class RabbitWorker:
             durable=True,
         )
         
-    async def consume(self):
+    async def consume(self) -> None:
         await self.queue.consume(self.process_message)
 
-    async def process_message(self, message: AbstractIncomingMessage):
+    async def process_message(self, message: AbstractIncomingMessage) -> None:
         async with message.process(requeue=False):
             try:
                 async with self.semaphore:
@@ -97,7 +100,7 @@ class RabbitWorker:
             except Exception as e:
                 logging.error(f'Error processing message: {str(e)}')
 
-    async def run(self):
+    async def run(self) -> None:
         logging.info('Starting async worker...')
         await self.setup_rabbitmq()
         await self.consume()
@@ -115,7 +118,7 @@ class RabbitWorker:
         logging.info('Worker shutdown completed')
 
 
-async def worker():
+async def worker() -> None:
     worker = RabbitWorker(
         rabbitmq_url=settings.rabbitmq.url,
         queue_name=settings.rabbitmq.queue_name,

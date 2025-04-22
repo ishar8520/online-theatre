@@ -262,7 +262,7 @@ async def process(
             'Content-Type': 'application/json'
         }
         await httpx_client.post(
-            f'{settings.notification.schema}://{settings.notification.host}:{settings.notification.port}/notification/api/v1/events/payment_status',
+            f'{settings.notification.scheme}://{settings.notification.host}:{settings.notification.port}/notification/api/v1/events/payment_status',
             headers=headers,
             json=data,
         )

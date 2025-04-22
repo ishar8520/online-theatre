@@ -61,8 +61,8 @@ class NotificationConfig(BaseSettings):
     model_config = SettingsConfigDict(env_prefix='notification_')
 
     scheme: str = 'http'
-    host: str# = 'localhost'
-    port: int# = 8000
+    host: str = 'localhost'
+    port: int = 8000
 
 class Settings(BaseSettings):
     """Основные настройки приложения."""

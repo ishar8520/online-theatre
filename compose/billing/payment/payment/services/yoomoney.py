@@ -350,6 +350,8 @@ async def get_callback(request: Request) -> JSONResponse:
     """
     form_data = await request.form()
     data: dict[str, Any] = dict(form_data)
+    if not data:
+        raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail='Request body is empty')
     response = {
         'service': 'yoomoney',
         'label': data['label'],
