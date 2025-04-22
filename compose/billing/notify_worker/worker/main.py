@@ -46,6 +46,7 @@ class RabbitWorker:
         self.client = httpx.AsyncClient(timeout=httpx.Timeout(timeout=5))
         self.connection = None
         self.channel = None
+        self.queue = None
         self.superuser_headers = {}
 
     async def make_api_request(self, message_data: dict) -> bool:
