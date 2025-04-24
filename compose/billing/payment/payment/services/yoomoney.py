@@ -193,7 +193,7 @@ async def get_auth_url(
 
     response_data: dict[str, Any] = response.json()
 
-    return JSONResponse({'url': response_data['short_url']})
+    return JSONResponse({'accept_url': response_data['short_url']})
 
 
 async def get_auth_success(
